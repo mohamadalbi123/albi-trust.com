@@ -48,7 +48,7 @@ export function HomeHeroCard() {
       onMouseLeave={handlePointerLeave}
     >
       <div className="eyebrow">Built from real trading experience</div>
-      <h1>Know your trading level. Fix what is actually holding you back.</h1>
+      <h1>Find Out Exactly What Is Stopping You From Becoming Profitable and Start Fixing It in 30 Days.</h1>
       <p>
         A serious assessment system for traders who want more structure, clearer self-awareness, and better execution.
       </p>

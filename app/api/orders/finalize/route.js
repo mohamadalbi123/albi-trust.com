@@ -21,7 +21,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Order ID is required." }, { status: 400 });
     }
 
-    const order = finalizeTailoredPlanOrder({ orderId });
+    const order = finalizeTailoredPlanOrder({ orderId, currentUserId: user.id });
     return NextResponse.json({ ok: true, order });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Unable to finalize order." }, { status: 400 });

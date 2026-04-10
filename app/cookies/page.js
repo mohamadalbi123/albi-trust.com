@@ -23,7 +23,7 @@ const cookieCopy = {
     [
       "What happens if you block cookies",
       [
-        "Blocking essential cookies may prevent parts of the website, login flow, or future journaling features from working correctly.",
+        "Blocking essential cookies may prevent parts of the website, login flow, checkout experience, or account area from working correctly.",
       ],
     ],
     [
@@ -39,7 +39,7 @@ const cookieCopy = {
       ],
     ],
   ],
-  updated: "Last updated: April 9, 2026",
+  updated: "Last updated: April 10, 2026",
 };
 
 export default function CookiesPage() {

@@ -523,12 +523,22 @@ export function createTailoredPlanDraft({
   return order;
 }
 
-export function finalizeTailoredPlanOrder({ orderId }) {
+export function finalizeTailoredPlanOrder({ orderId, currentUserId }) {
   const db = readDb();
   const order = (db.orders || []).find((entry) => entry.id === orderId);
 
   if (!order) {
     throw new Error("Order not found.");
+  }
+
+  const currentUser = findUserByAnyId(db, currentUserId);
+
+  if (!currentUser) {
+    throw new Error("User not found.");
+  }
+
+  if (order.userId !== currentUser.id) {
+    throw new Error("You cannot finalize an order that does not belong to your account.");
   }
 
   if (order.status === "paid") {

@@ -30,12 +30,19 @@ const disclaimerCopy = {
     [
       "Examples and experience",
       [
-        "Examples, journals, educational material, and practical frameworks may be based on real trading experience, but your own outcome may be different.",
+        "Examples, educational material, and practical frameworks may be based on real trading experience, but your own outcome may be different.",
         "Past experience, past examples, or previous performance do not guarantee future results.",
       ],
     ],
+    [
+      "Personalized paid work",
+      [
+        "Tailored action plans are prepared manually and personally by Albi Trust based on your assessment and intake details.",
+        "Because the service is custom and work begins specifically for your order, paid tailored action plan purchases are non-refundable.",
+      ],
+    ],
   ],
-  updated: "Last updated: April 9, 2026",
+  updated: "Last updated: April 10, 2026",
 };
 
 export default function DisclaimerPage() {

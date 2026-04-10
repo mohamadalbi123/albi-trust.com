@@ -36,7 +36,7 @@ export default function HomePage() {
               </div>
               <div className="stat-card">
                 <strong>Track the pattern</strong>
-                <span className="muted">Use journaling and charts to see what is really improving over time.</span>
+                <span className="muted">Use honest review and structured feedback to see what is really improving over time.</span>
               </div>
               <div className="stat-card">
                 <strong>Get a tailored action plan</strong>
@@ -66,7 +66,7 @@ export default function HomePage() {
                 <div className="eyebrow">Built from experience</div>
                 <div className="tag-row" style={{ marginTop: 18 }}>
                   <span className="tag">64 practical intervention ideas</span>
-                  <span className="tag">Years of daily trading journals</span>
+                  <span className="tag">Years of real trader pattern review</span>
                   <span className="tag">Psychology + execution focus</span>
                   <span className="tag">A simpler, cleaner trading philosophy</span>
                 </div>

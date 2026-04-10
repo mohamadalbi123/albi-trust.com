@@ -4,12 +4,12 @@ const termsCopy = {
   badge: "Terms of Use",
   title: "The rules for using Albi Trust.",
   intro:
-    "These Terms of Use govern your access to and use of Albi Trust. By using the website, the assessment, the journaling area, or any related digital products, you agree to these terms.",
+    "These Terms of Use govern your access to and use of Albi Trust. By using the website, the assessment, the account area, or any related digital products, you agree to these terms.",
   sections: [
     [
       "Use of the service",
       [
-        "Albi Trust provides trading assessment, journaling, educational, and self-development tools.",
+        "Albi Trust provides trading assessment, tailored educational guidance, and self-development tools for traders.",
         "The service is intended to help traders reflect, organize, and improve, not to provide guaranteed financial outcomes.",
       ],
     ],
@@ -25,7 +25,7 @@ const termsCopy = {
       [
         "Nothing on Albi Trust should be interpreted as personalized investment, legal, tax, or financial advice.",
         "Trading involves risk, and past results, examples, or educational material do not guarantee future outcomes.",
-        "Any tailored action plan, journal suggestion, or educational framework provided by Albi Trust is intended for educational and self-development purposes only.",
+        "Any tailored action plan or educational framework provided by Albi Trust is intended for educational and self-development purposes only.",
       ],
     ],
     [
@@ -38,16 +38,18 @@ const termsCopy = {
     [
       "Paid products and tailored plans",
       [
-        "Albi Trust may offer paid tailored action plans, digital products, journals, or future subscription features.",
-        "If paid access is introduced, pricing, renewal terms, and restrictions will be described clearly in the relevant checkout or product area.",
+        "Albi Trust may offer paid tailored action plans, digital products, or future subscription features.",
+        "Pricing, delivery timing, and restrictions will be described clearly in the relevant checkout or product area.",
         "Payment for a tailored action plan does not create any guarantee of profitability, trading performance, or financial result.",
+        "Tailored action plans are prepared personally based on the user intake and assessment result. Because work begins specifically for your order and the service is personalized, payments are non-refundable once placed.",
+        "Current tailored action plans are delivered by email within the timeframe stated on the website, currently within 48 hours unless delayed by technical issues, incomplete user information, or force majeure.",
       ],
     ],
     [
       "Intellectual property",
       [
-        "Albi Trust, its educational materials, assessment structure, journaling system, copy, and original frameworks remain the property of Albi Trust unless otherwise stated.",
-        "You retain ownership of the personal trading notes and journal data you lawfully submit to the platform.",
+        "Albi Trust, its educational materials, assessment structure, copy, and original frameworks remain the property of Albi Trust unless otherwise stated.",
+        "You retain ownership of the personal information and background details you lawfully submit to the platform.",
       ],
     ],
     [
@@ -66,8 +68,15 @@ const termsCopy = {
         "We may also update these terms from time to time by publishing a revised version on this page.",
       ],
     ],
+    [
+      "Business identity and contact",
+      [
+        "The service is operated under the name Albi Trust.",
+        "For support, legal, or account questions, contact: noreply@albi-trust.com.",
+      ],
+    ],
   ],
-  updated: "Last updated: April 9, 2026",
+  updated: "Last updated: April 10, 2026",
 };
 
 export default function TermsPage() {
