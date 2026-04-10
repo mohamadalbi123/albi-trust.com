@@ -11,13 +11,7 @@ export function AssessmentClient() {
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [leadName, setLeadName] = useState("");
-  const [leadEmail, setLeadEmail] = useState("");
-  const [leadPassword, setLeadPassword] = useState("");
   const [startError, setStartError] = useState("");
-  const [startNotice, setStartNotice] = useState("");
-  const [verifyUrl, setVerifyUrl] = useState("");
   const router = useRouter();
   const { status, user, refresh } = useCurrentUser();
 
@@ -32,20 +26,13 @@ export function AssessmentClient() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const savedLead = window.localStorage.getItem("albi-trust-user-profile");
-    if (savedLead) {
-      try {
-        const parsed = JSON.parse(savedLead);
-        setLeadName(parsed.name || "");
-        setLeadEmail(parsed.email || "");
-      } catch {}
+    if (status === "ready" && !user) {
+      router.replace("/signup");
     }
-  }, []);
+  }, [router, status, user]);
 
   useEffect(() => {
     if (!user) return;
-    setLeadName(user.fullName || "");
-    setLeadEmail(user.email || "");
     if (user.nextAssessmentAt && new Date(user.nextAssessmentAt) > new Date()) {
       setIsLocked(true);
     } else {
@@ -92,73 +79,24 @@ export function AssessmentClient() {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
   }
 
-  async function handleStart() {
-    const trimmedName = leadName.trim();
-    const trimmedEmail = leadEmail.trim().toLowerCase();
-
-    if (user) {
-      setHasStarted(true);
-      return;
-    }
-
-    if (!trimmedName || !trimmedEmail || !leadPassword.trim()) {
-      setStartError("Please enter your full name, email, and password before starting.");
-      return;
-    }
-
-    if (!trimmedEmail.includes("@")) {
-      setStartError("Please enter a valid email address.");
-      return;
-    }
-
-    if (leadPassword.trim().length < 8) {
-      setStartError("Password should be at least 8 characters.");
-      return;
-    }
-
-    setStartError("");
-    setStartNotice("");
-    setVerifyUrl("");
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: trimmedName,
-          email: trimmedEmail,
-          password: leadPassword,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setStartError(data.error || "Unable to create account.");
-        return;
-      }
-
-      window.localStorage.setItem(
-        "albi-trust-user-profile",
-        JSON.stringify({
-          name: trimmedName,
-          email: trimmedEmail,
-        }),
-      );
-
-      setStartNotice(
-        data.emailSent
-          ? "Account created. Check your inbox or spam folder to confirm your email before starting."
-          : data.emailError
-            ? `Account created, but the confirmation email was not sent: ${data.emailError}`
-            : "Account created, but the confirmation email was not sent.",
-      );
-      setVerifyUrl(data.verifyUrl || "");
-    } catch (error) {
-      setStartError(error.message || "Unable to create account.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (status === "loading" || !user) {
+    return (
+      <div className="assessment-shell">
+        <div className="eyebrow">Assessment</div>
+        <h1 className="page-title">Create your account first.</h1>
+        <p className="page-lead">
+          We will send you to signup so your result can be saved and your assessment can continue from your account.
+        </p>
+        <div className="stack-actions">
+          <Link href="/signup" className="button-primary">
+            Create account
+          </Link>
+          <Link href="/login" className="button-secondary">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (isLocked) {
@@ -203,83 +141,7 @@ export function AssessmentClient() {
 
   return (
     <>
-      {!hasStarted ? (
-        <div className="assessment-start-overlay">
-          <div className="assessment-start-modal">
-            <div className="eyebrow">Before you begin</div>
-            <h1 className="page-title assessment-start-title">
-              {user ? "You can take this assessment now." : "Create your account before you begin."}
-            </h1>
-            <p className="page-lead">
-              {user
-                ? "Set aside around 30 to 60 minutes and answer honestly so the result actually means something."
-                : "Enter your details to create your account and begin the assessment flow."}
-            </p>
-
-            {!user ? (
-              <div className="assessment-start-form">
-                <label className="form-field form-field-full">
-                  <input
-                    type="text"
-                    placeholder="Full name"
-                    value={leadName}
-                    onChange={(event) => setLeadName(event.target.value)}
-                    onInput={(event) => setLeadName(event.currentTarget.value)}
-                  />
-                </label>
-
-                <label className="form-field form-field-full">
-                  <input
-                    type="email"
-                    placeholder="Email address"
-                    value={leadEmail}
-                    onChange={(event) => setLeadEmail(event.target.value)}
-                    onInput={(event) => setLeadEmail(event.currentTarget.value)}
-                  />
-                </label>
-
-                <label className="form-field form-field-full">
-                  <input
-                    type="password"
-                    placeholder="Create password"
-                    value={leadPassword}
-                    onChange={(event) => setLeadPassword(event.target.value)}
-                    onInput={(event) => setLeadPassword(event.currentTarget.value)}
-                  />
-                </label>
-              </div>
-            ) : null}
-
-            {startError ? <p className="start-error">{startError}</p> : null}
-            {startNotice ? <p className="auth-notice">{startNotice}</p> : null}
-            {verifyUrl ? (
-              <div className="auth-dev-preview" style={{ marginTop: 14 }}>
-                <strong>Confirm your email</strong>
-                <p className="muted">
-                  Local development preview only. Use this link to confirm the account while email delivery is being tested.
-                </p>
-                <Link href={verifyUrl}>Confirm email now</Link>
-              </div>
-            ) : null}
-
-            <div className="stack-actions">
-              <button
-                type="button"
-                className="button-primary"
-                onClick={handleStart}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Creating account..." : "Start the test if you are ready"}
-              </button>
-              <Link href="/" className="button-secondary">
-                Go back
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div className={`assessment-shell ${!hasStarted ? "assessment-shell-blurred" : ""}`}>
+      <div className="assessment-shell">
         <div className="panel-label">
           <span>{questions.length}-question trading assessment</span>
           <span>{answeredCount}/{questions.length} answered</span>
@@ -317,6 +179,8 @@ export function AssessmentClient() {
               {isLastQuestion ? "See my result" : "Continue"}
             </button>
           </div>
+
+          {startError ? <p className="start-error">{startError}</p> : null}
         </div>
       </div>
     </>
