@@ -15,6 +15,7 @@ export function AuthClient({ mode = "login" }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [verifyUrl, setVerifyUrl] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const verifiedStatus = searchParams.get("verified");
@@ -25,6 +26,7 @@ export function AuthClient({ mode = "login" }) {
     setError("");
     setNotice("");
     setVerifyUrl("");
+    setEmailSent(false);
     setIsSubmitting(true);
 
     try {
@@ -44,7 +46,12 @@ export function AuthClient({ mode = "login" }) {
           throw new Error(data.error || "Unable to create account.");
         }
 
-        setNotice("Account created. Please confirm your email before signing in.");
+        setEmailSent(Boolean(data.emailSent));
+        setNotice(
+          data.emailSent
+            ? "Confirm your email in your inbox or spam folder, then come back to start the assessment."
+            : "Account created. Please confirm your email before signing in.",
+        );
         setVerifyUrl(data.verifyUrl || "");
       } else {
         const response = await fetch("/api/login", {
@@ -155,7 +162,7 @@ export function AuthClient({ mode = "login" }) {
             <div className="auth-dev-preview">
               <strong>Verification link preview</strong>
               <p className="muted">
-                Email sending is not connected yet in this local build, so use the preview link below to confirm the account.
+                Real email delivery is not available in this environment, so use the preview link below to confirm the account.
               </p>
               <Link href={verifyUrl}>Confirm email now</Link>
             </div>
