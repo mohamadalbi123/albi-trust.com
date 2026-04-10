@@ -2,9 +2,28 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR =
+  process.env.VERCEL || process.env.NODE_ENV === "production"
+    ? path.join("/tmp", "albi-trust-data")
+    : path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "app-db.json");
 const SESSION_COOKIE = "albi_trust_session";
+
+function inferBaseUrl() {
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return "http://localhost:3001";
+}
 
 function ensureDb() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -114,7 +133,15 @@ function makeTokenHash(token) {
 }
 
 function appBaseUrl() {
-  return process.env.NEXTAUTH_URL || "http://localhost:3002";
+  return inferBaseUrl();
+}
+
+export function getAppBaseUrl() {
+  return inferBaseUrl();
+}
+
+export function shouldUseSecureCookies() {
+  return inferBaseUrl().startsWith("https://");
 }
 
 function getLatestPaidOrderForUser(db, internalUserId) {

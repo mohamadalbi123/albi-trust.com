@@ -4,6 +4,7 @@ import { authOptions } from "../../lib/auth";
 import {
   createSession,
   getSessionCookieName,
+  shouldUseSecureCookies,
   upsertGoogleUser,
 } from "../../lib/localAuth";
 
@@ -30,7 +31,7 @@ export async function GET(request) {
   response.cookies.set(getSessionCookieName(), appSession.token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: shouldUseSecureCookies(),
     path: "/",
     expires: new Date(appSession.expiresAt),
   });

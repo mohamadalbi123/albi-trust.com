@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { createSession, getSessionCookieName, loginUser } from "../../lib/localAuth";
+import {
+  createSession,
+  getSessionCookieName,
+  loginUser,
+  shouldUseSecureCookies,
+} from "../../lib/localAuth";
 
 export async function POST(request) {
   try {
@@ -18,7 +23,7 @@ export async function POST(request) {
     response.cookies.set(getSessionCookieName(), session.token, {
       httpOnly: true,
       sameSite: "lax",
-      secure: false,
+      secure: shouldUseSecureCookies(),
       path: "/",
       expires: new Date(session.expiresAt),
     });

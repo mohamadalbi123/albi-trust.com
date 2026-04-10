@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { createSession, getSessionCookieName, verifyEmailToken } from "../../lib/localAuth";
+import {
+  createSession,
+  getSessionCookieName,
+  shouldUseSecureCookies,
+  verifyEmailToken,
+} from "../../lib/localAuth";
 
 export async function GET(request) {
   const token = request.nextUrl.searchParams.get("token");
@@ -20,7 +25,7 @@ export async function GET(request) {
   response.cookies.set(getSessionCookieName(), session.token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: shouldUseSecureCookies(),
     path: "/",
     expires: new Date(session.expiresAt),
   });
