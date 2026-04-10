@@ -13,10 +13,21 @@ export async function sendVerificationEmail({ to, fullName, verifyUrl }) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
-    return { sent: false, reason: "missing_api_key" };
+    return { sent: false, reason: "Missing RESEND_API_KEY." };
   }
 
-  const from = process.env.EMAIL_FROM || "onboarding@resend.dev";
+  const from =
+    process.env.EMAIL_FROM ||
+    (process.env.NODE_ENV === "production" ? "" : "Albi Trust <onboarding@resend.dev>");
+
+  if (!from) {
+    return {
+      sent: false,
+      reason:
+        "Missing EMAIL_FROM. Use an address on a verified Resend domain, for example Albi Trust <noreply@albi-trust.com>.",
+    };
+  }
+
   const appUrl = getAppBaseUrl();
   const safeName = escapeHtml(fullName || "there");
   const safeUrl = escapeHtml(verifyUrl);
@@ -50,7 +61,14 @@ export async function sendVerificationEmail({ to, fullName, verifyUrl }) {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || "Unable to send verification email.");
+    let message = text;
+
+    try {
+      const parsed = JSON.parse(text);
+      message = parsed.message || parsed.error || text;
+    } catch {}
+
+    throw new Error(message || `Unable to send verification email. Resend returned ${response.status}.`);
   }
 
   return { sent: true };

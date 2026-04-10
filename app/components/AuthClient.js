@@ -50,7 +50,9 @@ export function AuthClient({ mode = "login" }) {
         setNotice(
           data.emailSent
             ? "Confirm your email in your inbox or spam folder, then come back to start the assessment."
-            : "Account created. Please confirm your email before signing in.",
+            : data.emailError
+              ? `Account created, but the confirmation email was not sent: ${data.emailError}`
+              : "Account created, but the confirmation email was not sent.",
         );
         setVerifyUrl(data.verifyUrl || "");
       } else {
@@ -162,7 +164,7 @@ export function AuthClient({ mode = "login" }) {
             <div className="auth-dev-preview">
               <strong>Verification link preview</strong>
               <p className="muted">
-                Real email delivery is not available in this environment, so use the preview link below to confirm the account.
+                Local development preview only. Use this link to confirm the account while email delivery is being tested.
               </p>
               <Link href={verifyUrl}>Confirm email now</Link>
             </div>

@@ -144,7 +144,13 @@ export function AssessmentClient() {
       }),
     );
 
-    setStartNotice("Account created. Confirm your email before you can start the assessment.");
+    setStartNotice(
+      data.emailSent
+        ? "Account created. Check your inbox or spam folder to confirm your email before starting."
+        : data.emailError
+          ? `Account created, but the confirmation email was not sent: ${data.emailError}`
+          : "Account created, but the confirmation email was not sent.",
+    );
     setVerifyUrl(data.verifyUrl || "");
   }
 
@@ -242,7 +248,7 @@ export function AssessmentClient() {
               <div className="auth-dev-preview" style={{ marginTop: 14 }}>
                 <strong>Confirm your email</strong>
                 <p className="muted">
-                  Check your inbox or spam folder. In this local build, use the preview link below to confirm your email now.
+                  Local development preview only. Use this link to confirm the account while email delivery is being tested.
                 </p>
                 <Link href={verifyUrl}>Confirm email now</Link>
               </div>

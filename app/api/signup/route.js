@@ -20,6 +20,7 @@ export async function POST(request) {
     const { user, verifyUrl } = signupUser({ fullName, email, password });
 
     let emailSent = false;
+    let emailError = "";
 
     try {
       const result = await sendVerificationEmail({
@@ -28,18 +29,24 @@ export async function POST(request) {
         verifyUrl,
       });
       emailSent = Boolean(result.sent);
-    } catch {
+      emailError = result.reason || "";
+    } catch (error) {
       emailSent = false;
+      emailError = error.message || "Unable to send verification email.";
+      console.error("Verification email failed:", emailError);
     }
+
+    const canShowPreviewLink = process.env.NODE_ENV !== "production";
 
     return NextResponse.json({
       ok: true,
       user,
-      verifyUrl: emailSent ? null : verifyUrl,
+      verifyUrl: !emailSent && canShowPreviewLink ? verifyUrl : null,
       emailSent,
+      emailError: emailSent ? null : emailError || "Email delivery is not configured.",
       message: emailSent
         ? "Account created. Please check your inbox or spam folder to confirm your email."
-        : "Account created. Please confirm your email before continuing.",
+        : "Account created, but the confirmation email could not be sent. Please contact support.",
     });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Unable to create account." }, { status: 400 });
