@@ -119,39 +119,46 @@ export function AssessmentClient() {
     setStartError("");
     setStartNotice("");
     setVerifyUrl("");
+    setIsSubmitting(true);
 
-    const response = await fetch("/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullName: trimmedName,
-        email: trimmedEmail,
-        password: leadPassword,
-      }),
-    });
-    const data = await response.json();
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: trimmedName,
+          email: trimmedEmail,
+          password: leadPassword,
+        }),
+      });
+      const data = await response.json();
 
-    if (!response.ok) {
-      setStartError(data.error || "Unable to create account.");
-      return;
+      if (!response.ok) {
+        setStartError(data.error || "Unable to create account.");
+        return;
+      }
+
+      window.localStorage.setItem(
+        "albi-trust-user-profile",
+        JSON.stringify({
+          name: trimmedName,
+          email: trimmedEmail,
+        }),
+      );
+
+      setStartNotice(
+        data.emailSent
+          ? "Account created. Check your inbox or spam folder to confirm your email before starting."
+          : data.emailError
+            ? `Account created, but the confirmation email was not sent: ${data.emailError}`
+            : "Account created, but the confirmation email was not sent.",
+      );
+      setVerifyUrl(data.verifyUrl || "");
+    } catch (error) {
+      setStartError(error.message || "Unable to create account.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    window.localStorage.setItem(
-      "albi-trust-user-profile",
-      JSON.stringify({
-        name: trimmedName,
-        email: trimmedEmail,
-      }),
-    );
-
-    setStartNotice(
-      data.emailSent
-        ? "Account created. Check your inbox or spam folder to confirm your email before starting."
-        : data.emailError
-          ? `Account created, but the confirmation email was not sent: ${data.emailError}`
-          : "Account created, but the confirmation email was not sent.",
-    );
-    setVerifyUrl(data.verifyUrl || "");
   }
 
   if (isLocked) {
@@ -244,6 +251,7 @@ export function AssessmentClient() {
             ) : null}
 
             {startError ? <p className="start-error">{startError}</p> : null}
+            {startNotice ? <p className="auth-notice">{startNotice}</p> : null}
             {verifyUrl ? (
               <div className="auth-dev-preview" style={{ marginTop: 14 }}>
                 <strong>Confirm your email</strong>
@@ -259,8 +267,9 @@ export function AssessmentClient() {
                 type="button"
                 className="button-primary"
                 onClick={handleStart}
+                disabled={isSubmitting}
               >
-                Start the test if you are ready
+                {isSubmitting ? "Creating account..." : "Start the test if you are ready"}
               </button>
               <Link href="/" className="button-secondary">
                 Go back
