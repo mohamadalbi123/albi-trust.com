@@ -1382,6 +1382,24 @@ select {
   border-bottom: 0;
 }
 
+.admin-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 320px;
+}
+
+.admin-table-actions .button-secondary {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.82rem;
+}
+
+.admin-danger-button {
+  border-color: rgba(165, 61, 61, 0.24);
+  color: #8c2c2c;
+}
+
 .action-plan-status-card .mini-grid {
   grid-template-columns: repeat(2, minmax(150px, 1fr));
 }

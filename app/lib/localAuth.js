@@ -219,6 +219,7 @@ function makeEmptyDb() {
     sessions: [],
     orders: [],
     outbox: [],
+    deletedSessionEmails: [],
   };
 }
 
@@ -228,6 +229,7 @@ function normalizeDbShape(db) {
     sessions: Array.isArray(db?.sessions) ? db.sessions : [],
     orders: Array.isArray(db?.orders) ? db.orders : [],
     outbox: Array.isArray(db?.outbox) ? db.outbox : [],
+    deletedSessionEmails: Array.isArray(db?.deletedSessionEmails) ? db.deletedSessionEmails : [],
   };
 }
 
@@ -465,6 +467,11 @@ async function ensureSessionUser(db, session) {
   }
 
   let user = findUserByAnyId(db, session.sub) || db.users.find((entry) => entry.email === session.email);
+  const normalizedEmail = normalizeEmail(session.email);
+
+  if ((db.deletedSessionEmails || []).includes(normalizedEmail)) {
+    return null;
+  }
 
   if (!user) {
     user = {
@@ -569,6 +576,7 @@ export async function signupUser({ fullName, email, password, returnTo }) {
   const verificationExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString();
 
   let user = db.users.find((entry) => entry.email === normalizedEmail);
+  db.deletedSessionEmails = (db.deletedSessionEmails || []).filter((entry) => entry !== normalizedEmail);
 
   if (user && user.emailVerifiedAt) {
     throw new Error("An account with this email already exists.");
@@ -696,6 +704,7 @@ export async function setVerifiedUserPassword({ fullName, email, password }) {
   const db = await readDb();
   const normalizedEmail = normalizeEmail(email);
   const now = new Date().toISOString();
+  db.deletedSessionEmails = (db.deletedSessionEmails || []).filter((entry) => entry !== normalizedEmail);
 
   if (!normalizedEmail || !normalizedEmail.includes("@")) {
     throw new Error("Valid email is required.");
@@ -769,6 +778,7 @@ export async function resetPasswordWithToken({ token, newPassword }) {
 
   const db = await readDb();
   let user = db.users.find((entry) => entry.email === resetPayload.email);
+  db.deletedSessionEmails = (db.deletedSessionEmails || []).filter((entry) => entry !== resetPayload.email);
 
   if (!user) {
     const now = new Date().toISOString();
@@ -810,6 +820,7 @@ export async function upsertGoogleUser({ fullName, email }) {
   }
 
   let user = db.users.find((entry) => entry.email === normalizedEmail);
+  db.deletedSessionEmails = (db.deletedSessionEmails || []).filter((entry) => entry !== normalizedEmail);
 
   if (!user) {
     user = {
@@ -1050,6 +1061,61 @@ export async function getAdminClientDashboardData() {
     orders,
     users,
   };
+}
+
+export async function adminResetUserAssessment(userId) {
+  const db = await readDb();
+  const user = findUserByAnyId(db, userId);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  user.latestAssessmentAt = null;
+  user.nextAssessmentAt = null;
+  user.latestAssessment = null;
+  user.assessments = [];
+
+  await writeDb(db);
+  return adminUserSummary(user, db);
+}
+
+export async function adminVerifyUserEmail(userId) {
+  const db = await readDb();
+  const user = findUserByAnyId(db, userId);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  user.emailVerifiedAt = user.emailVerifiedAt || new Date().toISOString();
+  user.verificationTokenHash = null;
+  user.verificationExpiresAt = null;
+
+  await writeDb(db);
+  return adminUserSummary(user, db);
+}
+
+export async function adminDeleteUser(userId) {
+  const db = await readDb();
+  const user = findUserByAnyId(db, userId);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  if (normalizeEmail(user.email) === normalizeEmail(process.env.ADMIN_EMAIL || "mohalbi123@hotmail.com")) {
+    throw new Error("Admin account cannot be deleted here.");
+  }
+
+  const normalizedEmail = normalizeEmail(user.email);
+  db.deletedSessionEmails = Array.from(new Set([...(db.deletedSessionEmails || []), normalizedEmail]));
+  db.users = (db.users || []).filter((entry) => entry.id !== user.id);
+  db.sessions = (db.sessions || []).filter((entry) => entry.userId !== user.id);
+  db.orders = (db.orders || []).filter((entry) => entry.userId !== user.id);
+
+  await writeDb(db);
+  return adminUserSummary(user, db);
 }
 
 export async function uploadTailoredPlanPdf({ orderId, fileName, mimeType, dataBase64, size }) {

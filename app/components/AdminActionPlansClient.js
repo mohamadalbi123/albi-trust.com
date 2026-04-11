@@ -75,6 +75,7 @@ export function AdminActionPlansClient() {
   const [selectedFiles, setSelectedFiles] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingOrderId, setUploadingOrderId] = useState("");
+  const [activeUserAction, setActiveUserAction] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
@@ -191,6 +192,39 @@ export function AdminActionPlansClient() {
       setError("Unable to upload PDF.");
     } finally {
       setUploadingOrderId("");
+    }
+  }
+
+  async function handleUserAction({ userId, action, confirmMessage }) {
+    if (confirmMessage && !window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setError("");
+    setNotice("");
+    setActiveUserAction(`${action}:${userId}`);
+
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to update user.");
+        return;
+      }
+
+      setOrders(data.orders || []);
+      setUsers(data.users || []);
+      setActiveView("users");
+      setNotice("User updated. The change is now live on the website.");
+    } catch {
+      setError("Unable to update user.");
+    } finally {
+      setActiveUserAction("");
     }
   }
 
@@ -381,6 +415,7 @@ export function AdminActionPlansClient() {
                   <th>Joined</th>
                   <th>Assessment taken</th>
                   <th>Paid order</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -395,6 +430,52 @@ export function AdminActionPlansClient() {
                     <td>{formatDate(client.createdAt)}</td>
                     <td>{formatDate(client.latestAssessmentAt)}</td>
                     <td>{client.latestOrderDisplayId || "No order"}</td>
+                    <td>
+                      <div className="admin-table-actions">
+                        {!client.emailVerified ? (
+                          <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => handleUserAction({ userId: client.id, action: "verify_email" })}
+                            disabled={Boolean(activeUserAction)}
+                          >
+                            Verify email
+                          </button>
+                        ) : null}
+                        {client.latestAssessmentAt ? (
+                          <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() =>
+                              handleUserAction({
+                                userId: client.id,
+                                action: "reset_assessment",
+                                confirmMessage: `Reset assessment for ${client.email}? They will be able to take it again.`,
+                              })
+                            }
+                            disabled={Boolean(activeUserAction)}
+                          >
+                            Reset assessment
+                          </button>
+                        ) : null}
+                        {client.email !== ADMIN_EMAIL ? (
+                          <button
+                            type="button"
+                            className="button-secondary admin-danger-button"
+                            onClick={() =>
+                              handleUserAction({
+                                userId: client.id,
+                                action: "delete_user",
+                                confirmMessage: `Delete ${client.email}? This removes the user, sessions, and their orders from the live website.`,
+                              })
+                            }
+                            disabled={Boolean(activeUserAction)}
+                          >
+                            Delete user
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
