@@ -11,17 +11,12 @@ export function AuthClient({ mode = "login" }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [resetEmail, setResetEmail] = useState("");
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [resetNotice, setResetNotice] = useState("");
-  const [resetError, setResetError] = useState("");
   const [verifyUrl, setVerifyUrl] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSendingReset, setIsSendingReset] = useState(false);
-  const [showResetForm, setShowResetForm] = useState(false);
 
   const verifiedStatus = searchParams.get("verified");
   const googleStatus = searchParams.get("google");
@@ -85,32 +80,6 @@ export function AuthClient({ mode = "login" }) {
       setError(submitError.message || "Something went wrong.");
     } finally {
       setIsSubmitting(false);
-    }
-  }
-
-  async function handleForgotPassword(event) {
-    event.preventDefault();
-    setResetError("");
-    setResetNotice("");
-    setIsSendingReset(true);
-
-    try {
-      const response = await fetch("/api/password/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail || email }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to send reset email.");
-      }
-
-      setResetNotice(data.message || "If an account exists for this email, a reset link has been sent.");
-    } catch (resetSubmitError) {
-      setResetError(resetSubmitError.message || "Unable to send reset email.");
-    } finally {
-      setIsSendingReset(false);
     }
   }
 
@@ -195,36 +164,9 @@ export function AuthClient({ mode = "login" }) {
                 <input type="checkbox" />
                 <span>Remember me</span>
               </label>
-              <button
-                type="button"
-                className="auth-forgot"
-                onClick={() => {
-                  setResetEmail(email);
-                  setShowResetForm((prev) => !prev);
-                }}
-              >
+              <Link href="/forgot-password" className="auth-forgot">
                 Forgot password?
-              </button>
-            </div>
-          ) : null}
-
-          {!isSignup && showResetForm ? (
-            <div className="auth-reset-box">
-              <p className="muted">Enter your email and we will send a password reset link.</p>
-              <label className="form-field form-field-full">
-                <span className="auth-field-label">Email address</span>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={resetEmail}
-                  onChange={(event) => setResetEmail(event.target.value)}
-                />
-              </label>
-              {resetError ? <p className="auth-error">{resetError}</p> : null}
-              {resetNotice ? <p className="auth-notice">{resetNotice}</p> : null}
-              <button type="button" className="button-secondary auth-submit" onClick={handleForgotPassword} disabled={isSendingReset}>
-                {isSendingReset ? "Sending..." : "Send reset link"}
-              </button>
+              </Link>
             </div>
           ) : null}
 
