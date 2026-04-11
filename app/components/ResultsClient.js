@@ -75,7 +75,10 @@ export function ResultsClient() {
   return (
     <div className="result-shell">
       <div className="eyebrow">Assessment result</div>
-      <h1 className="page-title">{result.level.title}</h1>
+      <div className="result-level-card">
+        <span>Your trader level</span>
+        <h1>{result.level.title}</h1>
+      </div>
       <p className="page-lead">{result.level.summary}</p>
 
       <div className="mini-grid" style={{ marginTop: 28 }}>
