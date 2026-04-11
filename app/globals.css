@@ -1156,17 +1156,17 @@ select {
 }
 
 .dashboard-hero-panel {
-  border: 1px solid rgba(16, 33, 63, 0.1);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #10213f;
-  color: #ffffff;
+  background: #ffffff;
+  color: var(--text);
   padding: 24px;
 }
 
 .dashboard-hero-panel span,
 .dashboard-status-item span {
   display: block;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1182,7 +1182,7 @@ select {
 
 .dashboard-hero-panel p {
   margin: 12px 0 0;
-  color: rgba(255, 255, 255, 0.76);
+  color: var(--muted);
   line-height: 1.55;
 }
 
