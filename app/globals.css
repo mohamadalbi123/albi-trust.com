@@ -493,6 +493,7 @@ select {
   max-width: 960px;
   margin-left: auto;
   margin-right: auto;
+  align-items: stretch;
 }
 
 .home-page .progress-bar {
@@ -528,8 +529,14 @@ select {
 
 .home-section-light .stat-card {
   border-color: rgba(18, 53, 107, 0.08);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   box-shadow: 0 16px 34px rgba(54, 103, 164, 0.08);
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 12px;
 }
 
 .home-page .home-main-board .section-title,
@@ -668,7 +675,7 @@ select {
 .journal-card {
   border: 1px solid var(--border);
   background: #ffffff;
-  border-radius: 24px;
+  border-radius: 8px;
   padding: 24px;
 }
 
@@ -720,6 +727,26 @@ select {
   font-size: 1rem;
   margin-bottom: 10px;
   letter-spacing: -0.01em;
+}
+
+.home-section-light .stat-card strong {
+  margin-bottom: 0;
+}
+
+.step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #10213f;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.stat-card .muted {
+  margin: 0;
 }
 
 .payment-list-shell {
@@ -1695,6 +1722,10 @@ select {
 
   .account-settings-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-section-light .stat-card {
+    min-height: auto;
   }
 }
 

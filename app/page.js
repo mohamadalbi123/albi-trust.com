@@ -27,19 +27,23 @@ export default function HomePage() {
 
             <div className="stats-grid stats-grid-compact">
               <div className="stat-card">
-                <strong>1. Take the Assessment</strong>
+                <span className="step-number">1</span>
+                <strong>Take the Assessment</strong>
                 <span className="muted">Answer honestly. This is where real clarity starts.</span>
               </div>
               <div className="stat-card">
-                <strong>2. Know Your Level</strong>
+                <span className="step-number">2</span>
+                <strong>Know Your Level</strong>
                 <span className="muted">Understand exactly where you stand as a trader based on your behavior and habits.</span>
               </div>
               <div className="stat-card">
-                <strong>3. Get Your Tailored Plan</strong>
+                <span className="step-number">3</span>
+                <strong>Get Your Tailored Plan</strong>
                 <span className="muted">We analyze your weaknesses and build a personalized action plan with clear, practical steps to help you improve and reach the next level.</span>
               </div>
               <div className="stat-card">
-                <strong>4. Measure Your Progress</strong>
+                <span className="step-number">4</span>
+                <strong>Measure Your Progress</strong>
                 <span className="muted">Return after 30 days, retake the assessment, and see how you have improved.</span>
               </div>
             </div>
