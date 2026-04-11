@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  getPaidTailoredPlanOrders,
+  getAdminClientDashboardData,
   getSessionCookieName,
   getUserFromSessionToken,
   uploadTailoredPlanPdf,
@@ -30,8 +30,8 @@ export async function GET(request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const orders = await getPaidTailoredPlanOrders();
-  return NextResponse.json({ ok: true, orders });
+  const data = await getAdminClientDashboardData();
+  return NextResponse.json({ ok: true, ...data });
 }
 
 export async function POST(request) {

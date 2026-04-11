@@ -424,6 +424,25 @@ function adminOrderSummary(order, db) {
   };
 }
 
+function adminUserSummary(user, db) {
+  const latestPaidOrder = getLatestPaidOrderForUser(db, user.id);
+
+  return {
+    id: String(user.publicId ?? user.id),
+    fullName: user.fullName || "",
+    email: user.email || "",
+    emailVerified: Boolean(user.emailVerifiedAt),
+    createdAt: user.createdAt || null,
+    latestAssessmentAt: user.latestAssessmentAt || null,
+    nextAssessmentAt: user.nextAssessmentAt || null,
+    traderLevel: user.latestAssessment?.level?.title || null,
+    primaryWeakness: user.latestAssessment?.primaryWeakness?.label || null,
+    hasPaidTailoredPlan: Boolean(latestPaidOrder),
+    latestPaidOrderAt: latestPaidOrder?.paidAt || latestPaidOrder?.createdAt || null,
+    latestOrderId: latestPaidOrder?.id || null,
+  };
+}
+
 function findUserByAnyId(db, userId) {
   const normalized = String(userId || "");
   return (
@@ -1009,6 +1028,21 @@ export async function getPaidTailoredPlanOrders() {
   return (db.orders || [])
     .filter((entry) => entry.status === "paid")
     .map((entry) => adminOrderSummary(entry, db));
+}
+
+export async function getAdminClientDashboardData() {
+  const db = await readDb();
+  const orders = (db.orders || [])
+    .filter((entry) => entry.status === "paid")
+    .map((entry) => adminOrderSummary(entry, db));
+  const users = (db.users || []).map((entry) => adminUserSummary(entry, db));
+  const assessmentOnlyUsers = users.filter((entry) => entry.latestAssessmentAt && !entry.hasPaidTailoredPlan);
+
+  return {
+    orders,
+    assessmentOnlyUsers,
+    users,
+  };
 }
 
 export async function uploadTailoredPlanPdf({ orderId, fileName, mimeType, dataBase64, size }) {

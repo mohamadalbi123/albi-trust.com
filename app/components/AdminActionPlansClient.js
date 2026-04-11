@@ -27,6 +27,9 @@ function visibleIntake(intake) {
 export function AdminActionPlansClient() {
   const { status, user, refresh } = useCurrentUser();
   const [orders, setOrders] = useState([]);
+  const [assessmentOnlyUsers, setAssessmentOnlyUsers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [activeView, setActiveView] = useState("orders");
   const [selectedFiles, setSelectedFiles] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingOrderId, setUploadingOrderId] = useState("");
@@ -85,7 +88,7 @@ export function AdminActionPlansClient() {
     }
   }
 
-  async function loadOrders() {
+  async function loadAdminData(nextView = activeView) {
     setError("");
     setNotice("");
     setIsLoading(true);
@@ -101,8 +104,11 @@ export function AdminActionPlansClient() {
       }
 
       setOrders(data.orders || []);
+      setAssessmentOnlyUsers(data.assessmentOnlyUsers || []);
+      setUsers(data.users || []);
+      setActiveView(nextView);
     } catch {
-      setError("Unable to load orders.");
+      setError("Unable to load admin data.");
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +145,7 @@ export function AdminActionPlansClient() {
 
       setNotice("PDF uploaded. The client can download it from the dashboard now.");
       setSelectedFiles((prev) => ({ ...prev, [orderId]: null }));
-      await loadOrders();
+      await loadAdminData("orders");
     } catch {
       setError("Unable to upload PDF.");
     } finally {
@@ -149,7 +155,7 @@ export function AdminActionPlansClient() {
 
   useEffect(() => {
     if (isAdmin) {
-      loadOrders();
+      loadAdminData("orders");
     }
   }, [isAdmin]);
 
@@ -205,8 +211,14 @@ export function AdminActionPlansClient() {
       <p className="page-lead">Upload the finished PDF after the client payment is confirmed.</p>
 
       <div className="stack-actions" style={{ marginTop: 24 }}>
-        <button type="button" className="button-primary" onClick={() => loadOrders()} disabled={isLoading}>
+        <button type="button" className="button-primary" onClick={() => loadAdminData("orders")} disabled={isLoading}>
           {isLoading ? "Loading..." : "Refresh paid orders"}
+        </button>
+        <button type="button" className="button-secondary" onClick={() => loadAdminData("assessments")} disabled={isLoading}>
+          Assessment taken, no order
+        </button>
+        <button type="button" className="button-secondary" onClick={() => loadAdminData("users")} disabled={isLoading}>
+          User list
         </button>
         <button type="button" className="button-secondary" onClick={handleAdminLogout} disabled={isSigningOut}>
           {isSigningOut ? "Signing out..." : "Sign out"}
@@ -217,7 +229,7 @@ export function AdminActionPlansClient() {
       {notice ? <p className="auth-notice" style={{ marginTop: 16 }}>{notice}</p> : null}
 
       <div className="admin-order-list">
-        {orders.length ? (
+        {activeView === "orders" && orders.length ? (
           orders.map((order) => (
             <article className="action-card admin-order-card" key={order.id}>
               <div className="admin-order-heading">
@@ -296,12 +308,90 @@ export function AdminActionPlansClient() {
               ) : null}
             </article>
           ))
-        ) : (
+        ) : null}
+
+        {activeView === "assessments" && assessmentOnlyUsers.length ? (
+          assessmentOnlyUsers.map((client) => (
+            <article className="action-card admin-order-card" key={client.id}>
+              <div className="admin-order-heading">
+                <div>
+                  <strong>{client.fullName || "No name"}</strong>
+                  <p className="muted">{client.email}</p>
+                </div>
+                <span className="status-pill status-pill-final_review">Assessment only</span>
+              </div>
+              <div className="mini-grid" style={{ marginTop: 16 }}>
+                <div className="metric">
+                  <span>User ID</span>
+                  <strong>{client.id}</strong>
+                </div>
+                <div className="metric">
+                  <span>Trader level</span>
+                  <strong>{client.traderLevel || "Not available"}</strong>
+                </div>
+                <div className="metric">
+                  <span>Assessment taken</span>
+                  <strong>{formatDate(client.latestAssessmentAt)}</strong>
+                </div>
+                <div className="metric">
+                  <span>Main blocker</span>
+                  <strong>{client.primaryWeakness || "Not available"}</strong>
+                </div>
+              </div>
+            </article>
+          ))
+        ) : null}
+
+        {activeView === "users" && users.length ? (
+          users.map((client) => (
+            <article className="action-card admin-order-card" key={client.id}>
+              <div className="admin-order-heading">
+                <div>
+                  <strong>{client.fullName || "No name"}</strong>
+                  <p className="muted">{client.email}</p>
+                </div>
+                <span className={`status-pill ${client.hasPaidTailoredPlan ? "status-pill-ready" : "status-pill-under_preparation"}`}>
+                  {client.hasPaidTailoredPlan ? "Paid" : "No order"}
+                </span>
+              </div>
+              <div className="mini-grid" style={{ marginTop: 16 }}>
+                <div className="metric">
+                  <span>User ID</span>
+                  <strong>{client.id}</strong>
+                </div>
+                <div className="metric">
+                  <span>Email verified</span>
+                  <strong>{client.emailVerified ? "Yes" : "No"}</strong>
+                </div>
+                <div className="metric">
+                  <span>Trader level</span>
+                  <strong>{client.traderLevel || "Not available"}</strong>
+                </div>
+                <div className="metric">
+                  <span>Joined</span>
+                  <strong>{formatDate(client.createdAt)}</strong>
+                </div>
+                <div className="metric">
+                  <span>Assessment taken</span>
+                  <strong>{formatDate(client.latestAssessmentAt)}</strong>
+                </div>
+                <div className="metric">
+                  <span>Paid order</span>
+                  <strong>{client.latestOrderId || "No order"}</strong>
+                </div>
+              </div>
+            </article>
+          ))
+        ) : null}
+
+        {((activeView === "orders" && !orders.length) ||
+          (activeView === "assessments" && !assessmentOnlyUsers.length) ||
+          (activeView === "users" && !users.length)) ? (
           <div className="action-card">
-            <strong>No paid orders yet</strong>
-            <p className="muted">Paid action-plan orders will appear here.</p>
+            <strong>No records yet</strong>
+            <p className="muted">Nothing to show in this admin view yet.</p>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
