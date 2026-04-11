@@ -34,6 +34,10 @@ export function AuthClient({ mode = "login" }) {
 
     try {
       if (isSignup) {
+        if (!fullName.trim()) {
+          throw new Error("Please enter your full name.");
+        }
+
         if (!agree) {
           throw new Error("Please agree to the Terms of Use and Privacy Policy.");
         }
@@ -124,6 +128,8 @@ export function AuthClient({ mode = "login" }) {
                 placeholder="Full name"
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
+                autoComplete="name"
+                required
               />
             </label>
           ) : null}
@@ -135,6 +141,8 @@ export function AuthClient({ mode = "login" }) {
               placeholder="Email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
             />
           </label>
 
@@ -145,6 +153,8 @@ export function AuthClient({ mode = "login" }) {
               placeholder="Password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              autoComplete={isSignup ? "new-password" : "current-password"}
+              required
             />
           </label>
 
