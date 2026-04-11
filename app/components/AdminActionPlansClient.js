@@ -282,8 +282,8 @@ export function AdminActionPlansClient() {
   return (
     <section className="result-shell admin-action-plan-shell">
       <div className="eyebrow">Admin</div>
-      <h1 className="page-title">Action plan orders.</h1>
-      <p className="page-lead">Upload the finished PDF after the client payment is confirmed.</p>
+      <h1 className="page-title">Admin page.</h1>
+      <p className="page-lead">Manage paid orders, client records, and action-plan PDFs.</p>
 
       <div className="stack-actions" style={{ marginTop: 24 }}>
         <button
