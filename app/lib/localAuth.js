@@ -105,6 +105,12 @@ function writeDb(db) {
   fs.writeFileSync(DB_PATH, JSON.stringify(normalizeDbShape(db), null, 2));
 }
 
+export function resetAppData() {
+  const emptyDb = makeEmptyDb();
+  writeDb(emptyDb);
+  return emptyDb;
+}
+
 function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
