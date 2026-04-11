@@ -25,22 +25,60 @@ function getSqlClient() {
   return sqlClient;
 }
 
+function wait(milliseconds) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
+function isRetryablePostgresError(error) {
+  const message = String(error?.message || "");
+  return Boolean(
+    error?.["neon:retryable"] ||
+      message.includes("Couldn't connect to compute node") ||
+      message.includes("fetch failed") ||
+      message.includes("ECONNRESET") ||
+      message.includes("ETIMEDOUT"),
+  );
+}
+
+async function runPostgresQuery(queryFn) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await queryFn(getSqlClient());
+    } catch (error) {
+      lastError = error;
+
+      if (!isRetryablePostgresError(error) || attempt === 3) {
+        throw error;
+      }
+
+      sqlClient = null;
+      databaseReady = false;
+      await wait(350 * (attempt + 1));
+    }
+  }
+
+  throw lastError;
+}
+
 async function ensurePostgresDb() {
   if (databaseReady) return;
 
-  const sql = getSqlClient();
-  await sql`
+  await runPostgresQuery((sql) => sql`
     CREATE TABLE IF NOT EXISTS app_state (
       id TEXT PRIMARY KEY,
       data JSONB NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
-  `;
-  await sql`
+  `);
+  await runPostgresQuery((sql) => sql`
     INSERT INTO app_state (id, data)
     VALUES ('main', ${JSON.stringify(makeEmptyDb())}::jsonb)
     ON CONFLICT (id) DO NOTHING
-  `;
+  `);
   databaseReady = true;
 }
 
@@ -233,8 +271,7 @@ function ensureUserPublicIds(db) {
 async function readDb() {
   if (shouldUsePostgres()) {
     await ensurePostgresDb();
-    const sql = getSqlClient();
-    const rows = await sql`SELECT data FROM app_state WHERE id = 'main'`;
+    const rows = await runPostgresQuery((sql) => sql`SELECT data FROM app_state WHERE id = 'main'`);
     const db = normalizeDbShape(parseStoredDb(rows[0]?.data));
 
     if (ensureUserPublicIds(db)) {
@@ -270,12 +307,11 @@ async function writeDb(db) {
 
   if (shouldUsePostgres()) {
     await ensurePostgresDb();
-    const sql = getSqlClient();
-    await sql`
+    await runPostgresQuery((sql) => sql`
       INSERT INTO app_state (id, data, updated_at)
       VALUES ('main', ${JSON.stringify(normalizedDb)}::jsonb, NOW())
       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
-    `;
+    `);
     return;
   }
 
