@@ -24,6 +24,49 @@ function visibleIntake(intake) {
   return rest;
 }
 
+function csvValue(value) {
+  return `"${String(value ?? "").replaceAll('"', '""')}"`;
+}
+
+function downloadUsersCsv(users) {
+  const headers = [
+    "User ID",
+    "Name",
+    "Email",
+    "Email verified",
+    "Trader level",
+    "Main blocker",
+    "Joined",
+    "Assessment taken",
+    "Next retake",
+    "Paid action plan",
+    "Paid order ID",
+    "Paid order date",
+  ];
+  const rows = users.map((client) => [
+    client.id,
+    client.fullName,
+    client.email,
+    client.emailVerified ? "Yes" : "No",
+    client.traderLevel || "",
+    client.primaryWeakness || "",
+    client.createdAt || "",
+    client.latestAssessmentAt || "",
+    client.nextAssessmentAt || "",
+    client.hasPaidTailoredPlan ? "Yes" : "No",
+    client.latestOrderId || "",
+    client.latestPaidOrderAt || "",
+  ]);
+  const csv = [headers, ...rows].map((row) => row.map(csvValue).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "albi-trust-users.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export function AdminActionPlansClient() {
   const { status, user, refresh } = useCurrentUser();
   const [orders, setOrders] = useState([]);
@@ -220,6 +263,11 @@ export function AdminActionPlansClient() {
         <button type="button" className="button-secondary" onClick={() => loadAdminData("users")} disabled={isLoading}>
           User list
         </button>
+        {activeView === "users" ? (
+          <button type="button" className="button-secondary" onClick={() => downloadUsersCsv(users)} disabled={!users.length}>
+            Download CSV
+          </button>
+        ) : null}
         <button type="button" className="button-secondary" onClick={handleAdminLogout} disabled={isSigningOut}>
           {isSigningOut ? "Signing out..." : "Sign out"}
         </button>
@@ -343,45 +391,38 @@ export function AdminActionPlansClient() {
         ) : null}
 
         {activeView === "users" && users.length ? (
-          users.map((client) => (
-            <article className="action-card admin-order-card" key={client.id}>
-              <div className="admin-order-heading">
-                <div>
-                  <strong>{client.fullName || "No name"}</strong>
-                  <p className="muted">{client.email}</p>
-                </div>
-                <span className={`status-pill ${client.hasPaidTailoredPlan ? "status-pill-ready" : "status-pill-under_preparation"}`}>
-                  {client.hasPaidTailoredPlan ? "Paid" : "No order"}
-                </span>
-              </div>
-              <div className="mini-grid" style={{ marginTop: 16 }}>
-                <div className="metric">
-                  <span>User ID</span>
-                  <strong>{client.id}</strong>
-                </div>
-                <div className="metric">
-                  <span>Email verified</span>
-                  <strong>{client.emailVerified ? "Yes" : "No"}</strong>
-                </div>
-                <div className="metric">
-                  <span>Trader level</span>
-                  <strong>{client.traderLevel || "Not available"}</strong>
-                </div>
-                <div className="metric">
-                  <span>Joined</span>
-                  <strong>{formatDate(client.createdAt)}</strong>
-                </div>
-                <div className="metric">
-                  <span>Assessment taken</span>
-                  <strong>{formatDate(client.latestAssessmentAt)}</strong>
-                </div>
-                <div className="metric">
-                  <span>Paid order</span>
-                  <strong>{client.latestOrderId || "No order"}</strong>
-                </div>
-              </div>
-            </article>
-          ))
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Email verified</th>
+                  <th>Trader level</th>
+                  <th>Main blocker</th>
+                  <th>Joined</th>
+                  <th>Assessment taken</th>
+                  <th>Paid order</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((client) => (
+                  <tr key={client.id}>
+                    <td>{client.id}</td>
+                    <td>{client.fullName || "No name"}</td>
+                    <td>{client.email}</td>
+                    <td>{client.emailVerified ? "Yes" : "No"}</td>
+                    <td>{client.traderLevel || "Not available"}</td>
+                    <td>{client.primaryWeakness || "Not available"}</td>
+                    <td>{formatDate(client.createdAt)}</td>
+                    <td>{formatDate(client.latestAssessmentAt)}</td>
+                    <td>{client.latestOrderId || "No order"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : null}
 
         {((activeView === "orders" && !orders.length) ||
