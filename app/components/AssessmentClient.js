@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { answerOptions, evaluateAnswers, questions } from "../lib/assessmentData";
@@ -12,7 +12,9 @@ export function AssessmentClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [showReadyPrompt, setShowReadyPrompt] = useState(false);
+  const [isRepairingAssessment, setIsRepairingAssessment] = useState(false);
   const [startError, setStartError] = useState("");
+  const repairAttemptedRef = useRef(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status, user, refresh } = useCurrentUser();
@@ -43,10 +45,42 @@ export function AssessmentClient() {
   }, [user]);
 
   useEffect(() => {
-    if (status === "ready" && user && !user.latestAssessmentAt) {
+    if (status !== "ready" || !user || user.latestAssessmentAt || repairAttemptedRef.current) return;
+
+    const stored = window.localStorage.getItem("albi-trust-assessment");
+    if (!stored) return;
+
+    repairAttemptedRef.current = true;
+
+    async function repairAssessmentRecord() {
+      setIsRepairingAssessment(true);
+
+      try {
+        const result = JSON.parse(stored);
+        const response = await fetch("/api/assessment/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ result }),
+        });
+
+        if (response.ok) {
+          await refresh();
+        }
+      } catch {
+        // Ignore malformed local recovery data.
+      } finally {
+        setIsRepairingAssessment(false);
+      }
+    }
+
+    repairAssessmentRecord();
+  }, [status, user, refresh]);
+
+  useEffect(() => {
+    if (status === "ready" && user && !user.latestAssessmentAt && !isRepairingAssessment) {
       setShowReadyPrompt(true);
     }
-  }, [status, user]);
+  }, [isRepairingAssessment, status, user]);
 
   function handleAnswer(value) {
     setAnswers((prev) => ({
@@ -92,22 +126,24 @@ export function AssessmentClient() {
     router.replace("/assessment");
   }
 
-  if (status === "loading" || !user) {
+  if (status === "loading" || isRepairingAssessment || !user) {
     return (
       <div className="assessment-shell">
         <div className="eyebrow">Assessment</div>
-        <h1 className="page-title">Create your account first.</h1>
+        <h1 className="page-title">{isRepairingAssessment ? "Restoring your assessment status." : "Create your account first."}</h1>
         <p className="page-lead">
-          We will send you to signup so your result can be saved and your assessment can continue from your account.
+          {isRepairingAssessment
+            ? "Your saved result is being connected back to your account."
+            : "We will send you to signup so your result can be saved and your assessment can continue from your account."}
         </p>
-        <div className="stack-actions">
+        {!user ? <div className="stack-actions">
           <Link href="/signup?next=%2Fassessment" className="button-primary">
             Create account
           </Link>
           <Link href="/login?next=%2Fassessment" className="button-secondary">
             Sign in
           </Link>
-        </div>
+        </div> : null}
       </div>
     );
   }

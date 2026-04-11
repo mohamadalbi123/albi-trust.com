@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "./useCurrentUser";
 
 function formatDate(value) {
@@ -33,7 +33,41 @@ export function DashboardClient() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isRepairingAssessment, setIsRepairingAssessment] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const repairAttemptedRef = useRef(false);
+
+  useEffect(() => {
+    if (status !== "ready" || !user || user.latestAssessmentAt || repairAttemptedRef.current) return;
+
+    const stored = window.localStorage.getItem("albi-trust-assessment");
+    if (!stored) return;
+
+    repairAttemptedRef.current = true;
+
+    async function repairAssessmentRecord() {
+      setIsRepairingAssessment(true);
+
+      try {
+        const result = JSON.parse(stored);
+        const response = await fetch("/api/assessment/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ result }),
+        });
+
+        if (response.ok) {
+          await refresh();
+        }
+      } catch {
+        // Ignore malformed local recovery data.
+      } finally {
+        setIsRepairingAssessment(false);
+      }
+    }
+
+    repairAssessmentRecord();
+  }, [status, user, refresh]);
 
   if (status === "loading") {
     return (
@@ -110,7 +144,9 @@ export function DashboardClient() {
       <p className="page-lead">
         {searchParams.get("verified") === "1"
           ? "Your email is confirmed and your account is ready."
-          : "Your account keeps your assessment history, retake date, and next best path together."}
+          : isRepairingAssessment
+            ? "Restoring your saved assessment status."
+            : "Your account keeps your assessment history, retake date, and next best path together."}
       </p>
 
       {newOrderId ? (
