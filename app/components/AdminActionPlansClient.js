@@ -87,6 +87,7 @@ export function AdminActionPlansClient() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const isAdmin = String(user?.email || "").toLowerCase() === ADMIN_EMAIL;
+  const generatorOrders = orders.filter((order) => order.actionPlanStatus !== "ready");
 
   async function handleAdminLogin(event) {
     event.preventDefault();
@@ -568,13 +569,13 @@ export function AdminActionPlansClient() {
           </div>
         ) : null}
 
-        {activeView === "generator" && orders.length ? (
+        {activeView === "generator" && generatorOrders.length ? (
           <div className="admin-generator-layout">
             <div className="action-card admin-generator-orders">
-              <strong>Paid orders</strong>
-              <p className="muted">Choose a paid client order and generate a first draft for your review.</p>
+              <strong>Orders needing action plan</strong>
+              <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
               <div className="admin-generator-order-list">
-                {orders.map((order) => (
+                {generatorOrders.map((order) => (
                   <button
                     key={`generator-${order.id}`}
                     type="button"
@@ -628,10 +629,14 @@ export function AdminActionPlansClient() {
 
         {((activeView === "orders" && !orders.length) ||
           (activeView === "users" && !users.length) ||
-          (activeView === "generator" && !orders.length)) ? (
+          (activeView === "generator" && !generatorOrders.length)) ? (
           <div className="action-card">
             <strong>No records yet</strong>
-            <p className="muted">Nothing to show in this admin view yet.</p>
+            <p className="muted">
+              {activeView === "generator"
+                ? "No paid orders need an action plan right now."
+                : "Nothing to show in this admin view yet."}
+            </p>
           </div>
         ) : null}
       </div>
