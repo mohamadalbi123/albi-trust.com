@@ -294,19 +294,24 @@ export function AdminActionPlansClient() {
         >
           {isLoading ? "Loading..." : "Paid orders"}
         </button>
-        <button
-          type="button"
-          className={activeView === "users" ? "button-primary" : "button-secondary"}
-          onClick={() => loadAdminData("users")}
-          disabled={isLoading}
-        >
-          User list
-        </button>
-        {activeView === "users" ? (
-          <button type="button" className="button-secondary" onClick={() => downloadUsersCsv(users)} disabled={!users.length}>
-            Download CSV
+        <div className={activeView === "users" ? "admin-tab-group is-active" : "admin-tab-group"}>
+          <button
+            type="button"
+            className={activeView === "users" ? "button-primary admin-tab-main" : "button-secondary admin-tab-main"}
+            onClick={() => loadAdminData("users")}
+            disabled={isLoading}
+          >
+            User list
           </button>
-        ) : null}
+          <button
+            type="button"
+            className="button-secondary admin-tab-download"
+            onClick={() => downloadUsersCsv(users)}
+            disabled={!users.length}
+          >
+            CSV
+          </button>
+        </div>
         <button type="button" className="button-secondary" onClick={handleAdminLogout} disabled={isSigningOut}>
           {isSigningOut ? "Signing out..." : "Sign out"}
         </button>

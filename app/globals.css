@@ -280,6 +280,32 @@ select {
   margin-top: 28px;
 }
 
+.admin-tab-group {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.admin-tab-group .button-primary,
+.admin-tab-group .button-secondary {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin-tab-main {
+  border-radius: 8px 0 0 8px !important;
+}
+
+.admin-tab-download {
+  border-left: 0;
+  border-radius: 0 8px 8px 0 !important;
+  min-width: 72px;
+  padding: 0 18px;
+}
+
+.admin-tab-group.is-active .admin-tab-download {
+  border-color: #10213f;
+}
+
 .home-page {
   background:
     linear-gradient(180deg, #0d1b38 0%, #10224a 24%, #ffffff 24%, #ffffff 86%, #0d1b38 86%, #0d1b38 100%);
