@@ -165,17 +165,27 @@ export function DashboardClient() {
 
   return (
     <section className="result-shell">
-      <div className="eyebrow">Account dashboard</div>
-      <h1 className="page-title">
-        {searchParams.get("verified") === "1" ? "Your account is ready." : `Welcome back${displayName ? `, ${displayName}.` : "."}`}
-      </h1>
-      <p className="page-lead">
-        {searchParams.get("verified") === "1"
-          ? "Your email is confirmed and your account is ready."
-          : isRepairingAssessment
-            ? "Restoring your saved assessment status."
-            : "Your account keeps your assessment history, retake date, and next best path together."}
-      </p>
+      <div className="dashboard-hero">
+        <div>
+          <div className="eyebrow">Account dashboard</div>
+          <h1 className="page-title">
+            {searchParams.get("verified") === "1" ? "Your account is ready." : `Welcome back${displayName ? `, ${displayName}.` : "."}`}
+          </h1>
+          <p className="page-lead">
+            {searchParams.get("verified") === "1"
+              ? "Your email is confirmed and your account is ready."
+              : isRepairingAssessment
+                ? "Restoring your saved assessment status."
+                : "Your account keeps your assessment history, retake date, and next best path together."}
+          </p>
+        </div>
+
+        <div className="dashboard-hero-panel">
+          <span>Trader level</span>
+          <strong>{traderLevel}</strong>
+          <p>{user.latestAssessmentAt ? `Assessment completed ${formatDate(user.latestAssessmentAt)}` : "Assessment not completed yet"}</p>
+        </div>
+      </div>
 
       {newOrderId ? (
         <p className="auth-notice" style={{ marginTop: 18 }}>
@@ -183,25 +193,25 @@ export function DashboardClient() {
         </p>
       ) : null}
 
-      <div className="action-grid" style={{ marginTop: 28 }}>
-        <div className="action-card">
-          <strong>Assessment completed</strong>
+      <div className="dashboard-status-row" style={{ marginTop: 28 }}>
+        <div className="dashboard-status-item">
+          <span>Assessment completed</span>
           <p className="muted">{formatDate(user.latestAssessmentAt)}</p>
         </div>
 
-        <div className="action-card">
-          <strong>Next eligible retake</strong>
+        <div className="dashboard-status-item">
+          <span>Next eligible retake</span>
           <p className="muted">{user.latestAssessmentAt ? formatDate(user.nextAssessmentAt) : "Complete your first assessment to start the 30-day timer."}</p>
         </div>
 
-        <div className="action-card">
-          <strong>Retake status</strong>
+        <div className="dashboard-status-item">
+          <span>Retake status</span>
           <p className="muted">{formatRetakeStatus(user.nextAssessmentAt)}</p>
         </div>
       </div>
 
-      <div className="action-grid" style={{ marginTop: 18 }}>
-        <div className="action-card">
+      <div className="dashboard-main-grid" style={{ marginTop: 18 }}>
+        <div className="action-card dashboard-assessment-card">
           <strong>Assessment</strong>
           <p className="muted">
             {retakeLocked
@@ -233,11 +243,11 @@ export function DashboardClient() {
                   : "We received your payment and are preparing your personal action plan based on your assessment and intake answers."}
             </p>
             <div className="mini-grid" style={{ marginTop: 16 }}>
-              <div className="metric">
+              <div className="metric action-plan-date-metric">
                 <span>Purchased on</span>
                 <strong>{formatDate(actionPlanOrder.purchasedAt)}</strong>
               </div>
-              <div className="metric">
+              <div className="metric action-plan-date-metric">
                 <span>Estimated ready</span>
                 <strong>{formatDate(actionPlanOrder.estimatedReadyAt)}</strong>
               </div>

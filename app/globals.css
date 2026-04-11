@@ -1148,6 +1148,89 @@ select {
   gap: 12px;
 }
 
+.dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.36fr);
+  gap: 24px;
+  align-items: end;
+}
+
+.dashboard-hero-panel {
+  border: 1px solid rgba(16, 33, 63, 0.1);
+  border-radius: 8px;
+  background: #10213f;
+  color: #ffffff;
+  padding: 24px;
+}
+
+.dashboard-hero-panel span,
+.dashboard-status-item span {
+  display: block;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-hero-panel strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 1.6rem;
+  line-height: 1.18;
+}
+
+.dashboard-hero-panel p {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.55;
+}
+
+.dashboard-status-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.dashboard-status-item {
+  min-height: 116px;
+  padding: 22px 24px;
+  border-right: 1px solid var(--border);
+}
+
+.dashboard-status-item:last-child {
+  border-right: 0;
+}
+
+.dashboard-status-item span {
+  color: var(--muted);
+}
+
+.dashboard-status-item p {
+  margin: 12px 0 0;
+  line-height: 1.55;
+}
+
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.dashboard-main-grid .account-settings-card {
+  grid-column: 1 / -1;
+}
+
+.dashboard-assessment-card,
+.action-plan-status-card {
+  min-height: 268px;
+}
+
 .action-card.account-settings-card {
   grid-column: 1 / -1;
 }
@@ -1155,6 +1238,8 @@ select {
 .action-plan-status-card {
   display: grid;
   align-content: start;
+  border-color: rgba(16, 33, 63, 0.14);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%);
 }
 
 .status-card-heading,
@@ -1243,6 +1328,19 @@ select {
 
 .admin-upload-row .form-field {
   flex: 1;
+}
+
+.action-plan-status-card .mini-grid {
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+}
+
+.action-plan-date-metric {
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.action-plan-date-metric strong {
+  font-size: 1.08rem;
 }
 
 .account-settings-card .mini-grid {
@@ -1872,6 +1970,21 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dashboard-hero,
+  .dashboard-main-grid,
+  .dashboard-status-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-status-item {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dashboard-status-item:last-child {
+    border-bottom: 0;
+  }
+
   .home-section-light .stat-card {
     min-height: auto;
   }
@@ -1903,6 +2016,10 @@ select {
   }
 
   .account-settings-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .action-plan-status-card .mini-grid {
     grid-template-columns: 1fr;
   }
 
