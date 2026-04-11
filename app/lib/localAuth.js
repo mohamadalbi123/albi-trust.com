@@ -419,7 +419,7 @@ function adminOrderSummary(order, db) {
     estimatedReadyAt: getOrderEstimatedReadyAt(order),
     pdfUploadedAt: order.actionPlanPdf?.uploadedAt || null,
     pdfFileName: order.actionPlanPdf?.fileName || null,
-    traderLevel: order.assessmentSnapshot?.level?.title || null,
+    traderLevel: order.assessmentSnapshot?.level?.title || user?.latestAssessment?.level?.title || null,
     intake: order.intake || null,
   };
 }

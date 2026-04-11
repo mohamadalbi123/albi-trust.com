@@ -34,6 +34,13 @@ export async function POST(request) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
     }
 
+    if (!user.latestAssessment) {
+      return NextResponse.json(
+        { error: "Please complete the assessment before buying an action plan." },
+        { status: 400 },
+      );
+    }
+
     const body = await request.json();
 
     const order = await createTailoredPlanDraft({

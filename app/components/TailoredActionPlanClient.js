@@ -33,6 +33,23 @@ export function TailoredActionPlanClient() {
     );
   }
 
+  if (!user.latestAssessment) {
+    return (
+      <section className="result-shell">
+        <div className="eyebrow">Tailored action plan</div>
+        <h1 className="page-title">Complete the assessment first.</h1>
+        <p className="page-lead">
+          Your action plan needs your assessment result so it can match your current trader level and main blockers.
+        </p>
+        <div className="stack-actions">
+          <Link href="/assessment" className="button-primary">
+            Take assessment
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="result-shell">
       <div className="eyebrow">Tailored action plan</div>

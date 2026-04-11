@@ -213,6 +213,23 @@ export function TailoredIntakeClient() {
     );
   }
 
+  if (!isPaidStep && !user.latestAssessment) {
+    return (
+      <section className="result-shell">
+        <div className="eyebrow">Tailored intake</div>
+        <h1 className="page-title">Complete the assessment first.</h1>
+        <p className="page-lead">
+          Your action plan needs your saved assessment result before payment can start.
+        </p>
+        <div className="stack-actions">
+          <Link href="/assessment" className="button-primary">
+            Take assessment
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   if (!isPaidStep) {
     return (
       <section className="result-shell">
