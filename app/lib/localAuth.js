@@ -394,6 +394,7 @@ function publicActionPlanOrder(order) {
 
   return {
     id: order.id,
+    displayId: order.displayId || makeOrderDisplayId(order.id),
     status: getActionPlanStatus(order),
     purchasedAt: order.paidAt || order.createdAt || null,
     estimatedReadyAt: getOrderEstimatedReadyAt(order),
@@ -408,6 +409,7 @@ function adminOrderSummary(order, db) {
 
   return {
     id: order.id,
+    displayId: order.displayId || makeOrderDisplayId(order.id),
     publicUserId: user?.publicId ? String(user.publicId) : order.userId,
     fullName: order.fullName,
     email: order.email,
@@ -440,7 +442,12 @@ function adminUserSummary(user, db) {
     hasPaidTailoredPlan: Boolean(latestPaidOrder),
     latestPaidOrderAt: latestPaidOrder?.paidAt || latestPaidOrder?.createdAt || null,
     latestOrderId: latestPaidOrder?.id || null,
+    latestOrderDisplayId: latestPaidOrder ? latestPaidOrder.displayId || makeOrderDisplayId(latestPaidOrder.id) : null,
   };
+}
+
+function makeOrderDisplayId(orderId) {
+  return `AT-${String(orderId || "").replace(/^order_/, "").slice(0, 8).toUpperCase()}`;
 }
 
 function findUserByAnyId(db, userId) {
@@ -977,9 +984,11 @@ export async function createTailoredPlanDraft({
 
   const now = new Date().toISOString();
   const orderId = makeId("order");
+  const displayId = makeOrderDisplayId(orderId);
 
   const order = {
     id: orderId,
+    displayId,
     userId: user.id,
     fullName: user.fullName,
     email: user.email,

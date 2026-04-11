@@ -54,7 +54,7 @@ function downloadUsersCsv(users) {
     client.latestAssessmentAt || "",
     client.nextAssessmentAt || "",
     client.hasPaidTailoredPlan ? "Yes" : "No",
-    client.latestOrderId || "",
+    client.latestOrderDisplayId || "",
     client.latestPaidOrderAt || "",
   ]);
   const csv = [headers, ...rows].map((row) => row.map(csvValue).join(",")).join("\n");
@@ -311,6 +311,10 @@ export function AdminActionPlansClient() {
                   <strong>{order.publicUserId}</strong>
                 </div>
                 <div className="metric">
+                  <span>Order number</span>
+                  <strong>{order.displayId || order.id}</strong>
+                </div>
+                <div className="metric">
                   <span>Trader level</span>
                   <strong>{order.traderLevel || "Not available"}</strong>
                 </div>
@@ -432,7 +436,7 @@ export function AdminActionPlansClient() {
                     <td>{client.primaryWeakness || "Not available"}</td>
                     <td>{formatDate(client.createdAt)}</td>
                     <td>{formatDate(client.latestAssessmentAt)}</td>
-                    <td>{client.latestOrderId || "No order"}</td>
+                    <td>{client.latestOrderDisplayId || "No order"}</td>
                   </tr>
                 ))}
               </tbody>
