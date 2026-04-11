@@ -630,6 +630,53 @@ export async function updateUserPassword({ userId, currentPassword, newPassword 
   return publicUserFromDb(db, user);
 }
 
+export async function setVerifiedUserPassword({ fullName, email, password }) {
+  const db = await readDb();
+  const normalizedEmail = normalizeEmail(email);
+  const now = new Date().toISOString();
+
+  if (!normalizedEmail || !normalizedEmail.includes("@")) {
+    throw new Error("Valid email is required.");
+  }
+
+  if (!password || String(password).length < 8) {
+    throw new Error("Password must be at least 8 characters.");
+  }
+
+  let user = db.users.find((entry) => entry.email === normalizedEmail);
+
+  if (!user) {
+    user = {
+      id: makeId("user"),
+      publicId: nextPublicUserId(db),
+      fullName: String(fullName || "").trim(),
+      email: normalizedEmail,
+      passwordHash: null,
+      createdAt: now,
+      emailVerifiedAt: now,
+      verificationTokenHash: null,
+      verificationExpiresAt: null,
+      latestAssessmentAt: null,
+      nextAssessmentAt: null,
+      latestAssessment: null,
+      assessments: [],
+    };
+    db.users.push(user);
+  }
+
+  user.fullName = String(fullName || user.fullName || "").trim();
+  user.passwordHash = hashPassword(password);
+  user.emailVerifiedAt = user.emailVerifiedAt || now;
+  user.verificationTokenHash = null;
+  user.verificationExpiresAt = null;
+
+  await writeDb(db);
+  return {
+    user: publicUserFromDb(db, user),
+    internalUserId: user.id,
+  };
+}
+
 export function createPasswordResetToken(email) {
   const normalizedEmail = normalizeEmail(email);
 
