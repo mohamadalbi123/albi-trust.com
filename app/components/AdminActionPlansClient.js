@@ -237,7 +237,6 @@ export function AdminActionPlansClient() {
   if (status === "loading") {
     return (
       <section className="result-shell admin-action-plan-shell">
-        <div className="eyebrow">Admin</div>
         <h1 className="page-title">Loading admin access.</h1>
       </section>
     );
@@ -246,7 +245,6 @@ export function AdminActionPlansClient() {
   if (!isAdmin) {
     return (
       <section className="result-shell admin-action-plan-shell">
-        <div className="eyebrow">Admin</div>
         <h1 className="page-title">Sign in as admin.</h1>
         <p className="page-lead">
           Use the admin email and password to manage action-plan PDFs.
@@ -281,7 +279,6 @@ export function AdminActionPlansClient() {
 
   return (
     <section className="result-shell admin-action-plan-shell">
-      <div className="eyebrow">Admin</div>
       <h1 className="page-title">Admin page.</h1>
       <p className="page-lead">Manage paid orders, client records, and action-plan PDFs.</p>
 
