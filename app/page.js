@@ -20,7 +20,7 @@ export default function HomePage() {
               <div className="home-copy-wrap">
                 <h2 className="section-title">One focused system</h2>
                 <p className="page-lead">
-                  Built for one clear job: help traders understand their level, stop repeating the same mistakes, and improve from structure instead of noise.
+                  Built to help you understand your level, eliminate repeated mistakes, and take practical, actionable steps to trade with structure instead of noise.
                 </p>
               </div>
             </div>
