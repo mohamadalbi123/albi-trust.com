@@ -147,8 +147,8 @@ export function DashboardClient() {
                 : "You can take your first assessment when you are ready."}
           </p>
           <div className="stack-actions">
-            <Link href="/assessment" className="button-primary">
-              {retakeLocked ? "View assessment status" : "Take assessment"}
+            <Link href={retakeLocked ? "/results" : "/assessment"} className="button-primary">
+              {retakeLocked ? "View my results" : "Take assessment"}
             </Link>
           </div>
         </div>
