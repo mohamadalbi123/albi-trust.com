@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -79,6 +80,14 @@ export function AuthClient({ mode = "login" }) {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleGoogleSignIn() {
+    const callbackUrl = safeNextPath
+      ? `/api/google-auth?next=${encodeURIComponent(safeNextPath)}`
+      : "/api/google-auth";
+
+    signIn("google", { callbackUrl });
   }
 
   return (
@@ -181,17 +190,16 @@ export function AuthClient({ mode = "login" }) {
             <span>OR</span>
           </div>
 
-          <a
-            href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(
-              safeNextPath ? `/api/google-auth?next=${encodeURIComponent(safeNextPath)}` : "/api/google-auth",
-            )}`}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
             className="button-secondary auth-submit auth-google-button"
           >
             <span className="auth-google-mark" aria-hidden="true">
               <span className="auth-google-mark-blue">G</span>
             </span>
             <span>Continue with Google</span>
-          </a>
+          </button>
         </form>
 
         <div className="auth-inline-link">
