@@ -77,6 +77,7 @@ export function AdminActionPlansClient() {
   const [uploadingOrderId, setUploadingOrderId] = useState("");
   const [activeUserAction, setActiveUserAction] = useState("");
   const [generatingOrderId, setGeneratingOrderId] = useState("");
+  const [deliveringDraft, setDeliveringDraft] = useState(false);
   const [generatorDraft, setGeneratorDraft] = useState("");
   const [generatorOrder, setGeneratorOrder] = useState(null);
   const [error, setError] = useState("");
@@ -258,6 +259,47 @@ export function AdminActionPlansClient() {
       setError("Unable to generate action plan draft.");
     } finally {
       setGeneratingOrderId("");
+    }
+  }
+
+  async function deliverGeneratedDraft() {
+    if (!generatorOrder?.id || !generatorDraft.trim()) {
+      setError("Generate or paste a draft first.");
+      return;
+    }
+
+    if (!window.confirm("Deliver this draft as the client's PDF action plan?")) {
+      return;
+    }
+
+    setError("");
+    setNotice("");
+    setDeliveringDraft(true);
+
+    try {
+      const response = await fetch("/api/admin/action-plan-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deliver_draft",
+          orderId: generatorOrder.id,
+          draft: generatorDraft,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to deliver draft.");
+        return;
+      }
+
+      await loadAdminData("generator");
+      setGeneratorOrder(data.order || generatorOrder);
+      setNotice("Draft saved as PDF and delivered to the client dashboard.");
+    } catch {
+      setError("Unable to deliver draft.");
+    } finally {
+      setDeliveringDraft(false);
     }
   }
 
@@ -567,8 +609,18 @@ export function AdminActionPlansClient() {
                 onChange={(event) => setGeneratorDraft(event.target.value)}
                 placeholder="Select a paid order and click Generate."
               />
+              <div className="stack-actions" style={{ marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="button-primary"
+                  onClick={deliverGeneratedDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || deliveringDraft}
+                >
+                  {deliveringDraft ? "Delivering..." : "Save as PDF and deliver"}
+                </button>
+              </div>
               <p className="muted" style={{ marginTop: 12 }}>
-                Review this draft, add your final thinking, then create and upload the final PDF from Paid orders.
+                Review this draft and add your final thinking before delivery. You can still replace the PDF later from Paid orders.
               </p>
             </div>
           </div>
