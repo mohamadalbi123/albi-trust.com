@@ -51,6 +51,7 @@ export function DashboardClient() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isRepairingAssessment, setIsRepairingAssessment] = useState(false);
+  const [showDeliveryReason, setShowDeliveryReason] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const repairAttemptedRef = useRef(false);
 
@@ -248,10 +249,25 @@ export function DashboardClient() {
                 <strong>{formatDate(actionPlanOrder.purchasedAt)}</strong>
               </div>
               <div className="metric action-plan-date-metric">
-                <span>Estimated ready</span>
+                <span>
+                  Estimated ready
+                  <button
+                    type="button"
+                    className="delivery-why-button"
+                    onClick={() => setShowDeliveryReason((prev) => !prev)}
+                    aria-expanded={showDeliveryReason}
+                  >
+                    Why?
+                  </button>
+                </span>
                 <strong>{formatDate(actionPlanOrder.estimatedReadyAt)}</strong>
               </div>
             </div>
+            {showDeliveryReason ? (
+              <p className="delivery-reason">
+                We study your case carefully before writing the action plan. This includes your assessment answers, trading profile, strategy notes, screenshots, and the information you shared at checkout. A useful plan needs careful review and clear thinking, not a rushed one-hour template.
+              </p>
+            ) : null}
             <div className="stack-actions" style={{ marginTop: 16 }}>
               {actionPlanOrder.downloadUrl ? (
                 <a href={actionPlanOrder.downloadUrl} className="button-primary">
