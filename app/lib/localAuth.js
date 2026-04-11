@@ -391,6 +391,25 @@ function getActionPlanStatus(order) {
   return new Date(getOrderEstimatedReadyAt(order)) <= new Date() ? "final_review" : "under_preparation";
 }
 
+function actionPlanStatusRank(status) {
+  if (status === "under_preparation") return 0;
+  if (status === "final_review") return 1;
+  if (status === "ready") return 2;
+  return 3;
+}
+
+function sortAdminOrders(orders) {
+  return [...orders].sort((a, b) => {
+    const statusDifference = actionPlanStatusRank(a.actionPlanStatus) - actionPlanStatusRank(b.actionPlanStatus);
+
+    if (statusDifference) {
+      return statusDifference;
+    }
+
+    return new Date(b.paidAt || b.createdAt || 0).getTime() - new Date(a.paidAt || a.createdAt || 0).getTime();
+  });
+}
+
 function publicActionPlanOrder(order) {
   if (!order) return null;
 
@@ -1045,16 +1064,16 @@ export async function createTailoredPlanDraft({
 
 export async function getPaidTailoredPlanOrders() {
   const db = await readDb();
-  return (db.orders || [])
+  return sortAdminOrders((db.orders || [])
     .filter((entry) => entry.status === "paid")
-    .map((entry) => adminOrderSummary(entry, db));
+    .map((entry) => adminOrderSummary(entry, db)));
 }
 
 export async function getAdminClientDashboardData() {
   const db = await readDb();
-  const orders = (db.orders || [])
+  const orders = sortAdminOrders((db.orders || [])
     .filter((entry) => entry.status === "paid")
-    .map((entry) => adminOrderSummary(entry, db));
+    .map((entry) => adminOrderSummary(entry, db)));
   const users = (db.users || []).map((entry) => adminUserSummary(entry, db));
 
   return {
