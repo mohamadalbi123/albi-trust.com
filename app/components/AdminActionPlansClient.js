@@ -260,7 +260,7 @@ export function AdminActionPlansClient() {
           onClick={() => loadAdminData("orders")}
           disabled={isLoading}
         >
-          {isLoading ? "Loading..." : "Refresh paid orders"}
+          {isLoading ? "Loading..." : "Paid orders"}
         </button>
         <button
           type="button"
