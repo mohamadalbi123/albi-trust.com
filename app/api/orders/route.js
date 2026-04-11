@@ -5,6 +5,26 @@ import {
   getUserFromSessionToken,
 } from "../../lib/localAuth";
 
+const MAX_SCREENSHOT_BYTES = 800 * 1024;
+
+function stringArray(value) {
+  return Array.isArray(value) ? value.map((entry) => String(entry || "").trim()).filter(Boolean) : [];
+}
+
+function accountScreenshots(value) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .slice(0, 3)
+    .map((entry) => ({
+      name: String(entry?.name || "account-screenshot").slice(0, 120),
+      type: String(entry?.type || ""),
+      size: Number(entry?.size || 0),
+      dataUrl: String(entry?.dataUrl || ""),
+    }))
+    .filter((entry) => entry.dataUrl.startsWith("data:image/") && entry.size <= MAX_SCREENSHOT_BYTES);
+}
+
 export async function POST(request) {
   try {
     const token = request.cookies.get(getSessionCookieName())?.value;
@@ -23,8 +43,7 @@ export async function POST(request) {
       previousExperience: String(body.previousExperience || ""),
       currentWorkStatus: String(body.currentWorkStatus || ""),
       employmentType: String(body.employmentType || ""),
-      hasChildren: String(body.hasChildren || ""),
-      childrenCount: String(body.childrenCount || ""),
+      familyResponsibilities: String(body.familyResponsibilities || ""),
       country: String(body.country || ""),
       originCountry: String(body.originCountry || ""),
       tradingSession: String(body.tradingSession || ""),
@@ -32,6 +51,14 @@ export async function POST(request) {
       usualTradingTime: String(body.usualTradingTime || ""),
       energyLevel: String(body.energyLevel || ""),
       dependsOnTradingIncome: String(body.dependsOnTradingIncome || ""),
+      chartStyle: String(body.chartStyle || ""),
+      indicators: stringArray(body.indicators),
+      tradedAssets: stringArray(body.tradedAssets),
+      riskPerTrade: String(body.riskPerTrade || ""),
+      averageHoldingTime: String(body.averageHoldingTime || ""),
+      usesTradingSignals: String(body.usesTradingSignals || ""),
+      tradingAccountNotes: String(body.tradingAccountNotes || ""),
+      accountScreenshots: accountScreenshots(body.accountScreenshots),
       personalBackground: String(body.personalBackground || ""),
     });
 

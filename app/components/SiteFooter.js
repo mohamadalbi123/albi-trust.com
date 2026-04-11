@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const links = [
   { href: "/assessment", label: "Assessment" },
+  { href: "https://x.com/albi_trust", label: "X", external: true },
   { href: "/disclaimer", label: "Disclaimer" },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/cookies", label: "Cookie Policy" },
@@ -21,11 +22,17 @@ export function SiteFooter() {
 
         <div className="footer-links-block" aria-label="Footer links">
           <div className="footer-links">
-            {links.map((link) => (
-              <Link key={link.href} href={link.href}>
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) =>
+              link.external ? (
+                <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.href} href={link.href}>
+                  {link.label}
+                </Link>
+              ),
+            )}
           </div>
         </div>
       </div>

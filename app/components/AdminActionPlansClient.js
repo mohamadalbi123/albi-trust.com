@@ -20,6 +20,11 @@ function statusLabel(value) {
   return "Under preparation";
 }
 
+function visibleIntake(intake) {
+  const { accountScreenshots, ...rest } = intake || {};
+  return rest;
+}
+
 export function AdminActionPlansClient() {
   const { status, user } = useCurrentUser();
   const [orders, setOrders] = useState([]);
@@ -174,8 +179,23 @@ export function AdminActionPlansClient() {
 
               <details className="admin-order-details">
                 <summary>View intake answers</summary>
-                <pre>{JSON.stringify(order.intake || {}, null, 2)}</pre>
+                <pre>{JSON.stringify(visibleIntake(order.intake), null, 2)}</pre>
               </details>
+
+              {order.intake?.accountScreenshots?.length ? (
+                <div className="admin-screenshot-list">
+                  {order.intake.accountScreenshots.map((screenshot, index) => (
+                    <a
+                      key={`${order.id}-${screenshot.name}-${index}`}
+                      href={screenshot.dataUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Screenshot {index + 1}: {screenshot.name}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
 
               <div className="admin-upload-row">
                 <label className="form-field">

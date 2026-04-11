@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "./useCurrentUser";
 
+const MAX_SCREENSHOT_BYTES = 800 * 1024;
+
 export function TailoredIntakeClient() {
   const { status, user } = useCurrentUser();
   const searchParams = useSearchParams();
@@ -15,8 +17,7 @@ export function TailoredIntakeClient() {
     previousExperience: "",
     currentWorkStatus: "",
     employmentType: "",
-    hasChildren: "",
-    childrenCount: "",
+    familyResponsibilities: "",
     country: "",
     originCountry: "",
     tradingSession: "",
@@ -24,8 +25,16 @@ export function TailoredIntakeClient() {
     usualTradingTime: "",
     energyLevel: "",
     dependsOnTradingIncome: "",
+    chartStyle: "",
+    indicators: [],
+    tradedAssets: [],
+    riskPerTrade: "",
+    averageHoldingTime: "",
+    usesTradingSignals: "",
+    tradingAccountNotes: "",
     personalBackground: "",
   });
+  const [accountScreenshots, setAccountScreenshots] = useState([]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -39,16 +48,71 @@ export function TailoredIntakeClient() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function updateMultiField(key, value) {
+    setForm((prev) => {
+      const currentValues = Array.isArray(prev[key]) ? prev[key] : [];
+      return {
+        ...prev,
+        [key]: currentValues.includes(value)
+          ? currentValues.filter((entry) => entry !== value)
+          : [...currentValues, value],
+      };
+    });
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Unable to read screenshot."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleScreenshotChange(files) {
+    setError("");
+    const nextFiles = Array.from(files || []).slice(0, 3);
+    const oversized = nextFiles.find((file) => file.size > MAX_SCREENSHOT_BYTES);
+
+    if (oversized) {
+      setError("Each screenshot must be smaller than 800KB.");
+      setAccountScreenshots([]);
+      return;
+    }
+
+    setAccountScreenshots(nextFiles);
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
     setSuccessNotice("");
     setIsSubmitting(true);
 
+    let screenshotPayload = [];
+
+    try {
+      screenshotPayload = await Promise.all(
+        accountScreenshots.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl: await readFileAsDataUrl(file),
+        })),
+      );
+    } catch (readError) {
+      setError(readError.message || "Unable to read screenshots.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        accountScreenshots: screenshotPayload,
+      }),
     });
     const data = await response.json();
 
@@ -237,12 +301,13 @@ export function TailoredIntakeClient() {
             <label className="form-field">
               <select
                 className="form-select"
-                value={form.hasChildren}
-                onChange={(event) => updateField("hasChildren", event.target.value)}
+                value={form.familyResponsibilities}
+                onChange={(event) => updateField("familyResponsibilities", event.target.value)}
               >
-                <option value="">Children</option>
+                <option value="">Family responsibilities</option>
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
+                <option value="Prefer not to say">Prefer not to say</option>
               </select>
             </label>
           </div>
@@ -251,22 +316,11 @@ export function TailoredIntakeClient() {
             <label className="form-field">
               <input
                 type="text"
-                placeholder="Children count (optional)"
-                value={form.childrenCount}
-                onChange={(event) => updateField("childrenCount", event.target.value)}
-              />
-            </label>
-            <label className="form-field">
-              <input
-                type="text"
                 placeholder="Country where you live"
                 value={form.country}
                 onChange={(event) => updateField("country", event.target.value)}
               />
             </label>
-          </div>
-
-          <div className="auth-name-row tailored-intake-row">
             <label className="form-field">
               <input
                 type="text"
@@ -275,6 +329,9 @@ export function TailoredIntakeClient() {
                 onChange={(event) => updateField("originCountry", event.target.value)}
               />
             </label>
+          </div>
+
+          <div className="auth-name-row tailored-intake-row">
             <label className="form-field">
               <select
                 className="form-select"
@@ -286,7 +343,118 @@ export function TailoredIntakeClient() {
                 <option value="No">No</option>
               </select>
             </label>
+            <label className="form-field">
+              <select
+                className="form-select"
+                value={form.chartStyle}
+                onChange={(event) => updateField("chartStyle", event.target.value)}
+              >
+                <option value="">Chart style</option>
+                <option value="Naked chart">Naked chart</option>
+                <option value="Indicators">Indicators</option>
+                <option value="Both">Both</option>
+              </select>
+            </label>
           </div>
+
+          <fieldset className="intake-choice-group">
+            <legend>Indicators you use</legend>
+            <p className="muted">Select any that apply.</p>
+            <div className="intake-choice-grid">
+              {["Moving averages", "RSI", "MACD", "Bollinger Bands", "Volume", "VWAP", "Fibonacci", "Other"].map((indicator) => (
+                <label key={indicator} className="intake-check">
+                  <input
+                    type="checkbox"
+                    checked={form.indicators.includes(indicator)}
+                    onChange={() => updateMultiField("indicators", indicator)}
+                  />
+                  <span>{indicator}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="intake-choice-group">
+            <legend>Assets you trade most</legend>
+            <p className="muted">Choose the markets you trade most often.</p>
+            <div className="intake-choice-grid">
+              {["Gold", "Silver", "Forex", "Indices", "Crypto", "Futures indices"].map((asset) => (
+                <label key={asset} className="intake-check">
+                  <input
+                    type="checkbox"
+                    checked={form.tradedAssets.includes(asset)}
+                    onChange={() => updateMultiField("tradedAssets", asset)}
+                  />
+                  <span>{asset}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="auth-name-row tailored-intake-row">
+            <label className="form-field">
+              <select
+                className="form-select"
+                value={form.riskPerTrade}
+                onChange={(event) => updateField("riskPerTrade", event.target.value)}
+              >
+                <option value="">Risk per trade</option>
+                <option value="Less than 0.5%">Less than 0.5%</option>
+                <option value="0.5% - 1%">0.5% - 1%</option>
+                <option value="1% - 2%">1% - 2%</option>
+                <option value="More than 2%">More than 2%</option>
+                <option value="I do not use fixed risk">I do not use fixed risk</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <select
+                className="form-select"
+                value={form.averageHoldingTime}
+                onChange={(event) => updateField("averageHoldingTime", event.target.value)}
+              >
+                <option value="">Average holding time</option>
+                <option value="Minutes">Minutes</option>
+                <option value="Less than 1 hour">Less than 1 hour</option>
+                <option value="1-4 hours">1-4 hours</option>
+                <option value="Same day">Same day</option>
+                <option value="Several days">Several days</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="auth-name-row tailored-intake-row">
+            <label className="form-field">
+              <select
+                className="form-select"
+                value={form.usesTradingSignals}
+                onChange={(event) => updateField("usesTradingSignals", event.target.value)}
+              >
+                <option value="">Signals or your own trades?</option>
+                <option value="I trade on my own">I trade on my own</option>
+                <option value="I rely on trading signals">I rely on trading signals</option>
+                <option value="Both">Both</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <input
+                type="text"
+                placeholder="Trading account notes (optional)"
+                value={form.tradingAccountNotes}
+                onChange={(event) => updateField("tradingAccountNotes", event.target.value)}
+              />
+            </label>
+          </div>
+
+          <label className="form-field form-field-full intake-file-field">
+            <span>Last 1-3 account screenshots</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+              onChange={(event) => handleScreenshotChange(event.target.files)}
+            />
+            <small>Optional. Upload up to 3 screenshots from recent trading accounts. Each screenshot must be under 800KB.</small>
+          </label>
 
           <div className="auth-name-row tailored-intake-row">
             <label className="form-field">
