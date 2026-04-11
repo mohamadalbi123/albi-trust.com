@@ -74,6 +74,47 @@ function readStatelessSessionToken(token) {
   }
 }
 
+function makeSignedPayloadToken(type, payload, expiresAt) {
+  const encodedPayload = encodeBase64Url(
+    JSON.stringify({
+      ...payload,
+      type,
+      expiresAt,
+    }),
+  );
+  const signature = signValue(encodedPayload);
+  return `${STATELESS_SESSION_PREFIX}.${encodedPayload}.${signature}`;
+}
+
+function readSignedPayloadToken(token, expectedType) {
+  const [prefix, payload, signature] = String(token || "").split(".");
+
+  if (prefix !== STATELESS_SESSION_PREFIX || !payload || !signature) {
+    return null;
+  }
+
+  const expectedSignature = signValue(payload);
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (
+    actualBuffer.length !== expectedBuffer.length ||
+    !crypto.timingSafeEqual(actualBuffer, expectedBuffer)
+  ) {
+    return null;
+  }
+
+  try {
+    const data = JSON.parse(decodeBase64Url(payload));
+    if (data.type !== expectedType || !data.expiresAt || new Date(data.expiresAt) <= new Date()) {
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 function inferBaseUrl() {
   if (process.env.NEXTAUTH_URL) {
     return process.env.NEXTAUTH_URL;
@@ -464,6 +505,56 @@ export function updateUserPassword({ userId, currentPassword, newPassword }) {
   writeDb(db);
 
   return publicUser(user);
+}
+
+export function createPasswordResetToken(email) {
+  const db = readDb();
+  const normalizedEmail = normalizeEmail(email);
+  const user = db.users.find((entry) => entry.email === normalizedEmail);
+
+  if (!user) {
+    return null;
+  }
+
+  return makeSignedPayloadToken(
+    "password_reset",
+    {
+      email: normalizedEmail,
+      userId: user.id,
+      purpose: "password_reset",
+    },
+    new Date(Date.now() + 1000 * 60 * 30).toISOString(),
+  );
+}
+
+export function resetPasswordWithToken({ token, newPassword }) {
+  const resetPayload = readSignedPayloadToken(token, "password_reset");
+
+  if (!resetPayload?.email || !resetPayload?.userId) {
+    throw new Error("This password reset link is invalid or expired.");
+  }
+
+  if (!newPassword || String(newPassword).length < 8) {
+    throw new Error("New password must be at least 8 characters.");
+  }
+
+  const db = readDb();
+  const user = db.users.find(
+    (entry) => entry.id === resetPayload.userId && entry.email === resetPayload.email,
+  );
+
+  if (!user) {
+    throw new Error("This password reset link is invalid or expired.");
+  }
+
+  user.passwordHash = hashPassword(newPassword);
+  user.emailVerifiedAt = user.emailVerifiedAt || new Date().toISOString();
+  writeDb(db);
+
+  return {
+    user: publicUser(user),
+    internalUserId: user.id,
+  };
 }
 
 export function upsertGoogleUser({ fullName, email }) {
