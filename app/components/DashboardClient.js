@@ -36,7 +36,7 @@ function displayNameForUser(user) {
 }
 
 function actionPlanStatusText(status) {
-  if (status === "ready") return "Ready";
+  if (status === "ready") return "Delivered";
   if (status === "final_review") return "Final review in progress";
   return "Under preparation";
 }
@@ -238,7 +238,7 @@ export function DashboardClient() {
             </div>
             <p className="muted">
               {actionPlanOrder.status === "ready"
-                ? "Your personal action plan is ready."
+                ? "Your personal action plan has been delivered."
                 : actionPlanOrder.status === "final_review"
                   ? "Your personal action plan is in final review. It will appear here as soon as the PDF is uploaded."
                   : "We received your payment and are preparing your personal action plan based on your assessment and intake answers."}

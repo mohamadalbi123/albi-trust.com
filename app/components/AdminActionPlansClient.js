@@ -14,7 +14,7 @@ function formatDate(value) {
 }
 
 function statusLabel(value) {
-  if (value === "ready") return "Ready";
+  if (value === "ready") return "Delivered";
   if (value === "final_review") return "Final review";
   return "Under preparation";
 }
