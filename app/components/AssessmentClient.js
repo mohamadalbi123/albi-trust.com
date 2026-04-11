@@ -28,6 +28,22 @@ export function AssessmentClient() {
 
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
 
+  function readStoredAssessmentForUser() {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem("albi-trust-assessment") || "null");
+      const storedEmail = String(stored?.userEmail || "").toLowerCase();
+      const userEmail = String(user?.email || "").toLowerCase();
+
+      if (!storedEmail || storedEmail !== userEmail || !stored?.result) {
+        return null;
+      }
+
+      return stored.result;
+    } catch {
+      return null;
+    }
+  }
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (status === "ready" && !user) {
@@ -47,8 +63,8 @@ export function AssessmentClient() {
   useEffect(() => {
     if (status !== "ready" || !user || user.latestAssessmentAt || repairAttemptedRef.current) return;
 
-    const stored = window.localStorage.getItem("albi-trust-assessment");
-    if (!stored) return;
+    const storedResult = readStoredAssessmentForUser();
+    if (!storedResult) return;
 
     repairAttemptedRef.current = true;
 
@@ -56,11 +72,10 @@ export function AssessmentClient() {
       setIsRepairingAssessment(true);
 
       try {
-        const result = JSON.parse(stored);
         const response = await fetch("/api/assessment/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ result }),
+          body: JSON.stringify({ result: storedResult }),
         });
 
         if (response.ok) {
@@ -95,7 +110,10 @@ export function AssessmentClient() {
     if (isLastQuestion) {
       const result = evaluateAnswers(answers);
       setIsSubmitting(true);
-      window.localStorage.setItem("albi-trust-assessment", JSON.stringify(result));
+      window.localStorage.setItem(
+        "albi-trust-assessment",
+        JSON.stringify({ userEmail: user.email, result }),
+      );
       const response = await fetch("/api/assessment/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

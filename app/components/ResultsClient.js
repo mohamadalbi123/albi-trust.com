@@ -12,19 +12,23 @@ export function ResultsClient() {
   const { status, isAuthenticated, user, refresh } = useCurrentUser();
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("albi-trust-assessment");
-    if (stored) {
+    if (!result && user?.latestAssessment) {
+      setResult(user.latestAssessment);
+      return;
+    }
+
+    if (!result && user?.email) {
       try {
-        setResult(JSON.parse(stored));
+        const stored = JSON.parse(window.localStorage.getItem("albi-trust-assessment") || "null");
+        const storedEmail = String(stored?.userEmail || "").toLowerCase();
+        const userEmail = String(user.email || "").toLowerCase();
+
+        if (storedEmail && storedEmail === userEmail && stored?.result) {
+          setResult(stored.result);
+        }
       } catch {
         setResult(null);
       }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!result && user?.latestAssessment) {
-      setResult(user.latestAssessment);
     }
   }, [result, user]);
 

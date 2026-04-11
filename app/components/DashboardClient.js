@@ -57,8 +57,18 @@ export function DashboardClient() {
   useEffect(() => {
     if (status !== "ready" || !user || user.latestAssessmentAt || repairAttemptedRef.current) return;
 
-    const stored = window.localStorage.getItem("albi-trust-assessment");
-    if (!stored) return;
+    let storedResult = null;
+
+    try {
+      const stored = JSON.parse(window.localStorage.getItem("albi-trust-assessment") || "null");
+      const storedEmail = String(stored?.userEmail || "").toLowerCase();
+      const userEmail = String(user.email || "").toLowerCase();
+      storedResult = storedEmail && storedEmail === userEmail ? stored?.result : null;
+    } catch {
+      storedResult = null;
+    }
+
+    if (!storedResult) return;
 
     repairAttemptedRef.current = true;
 
@@ -66,11 +76,10 @@ export function DashboardClient() {
       setIsRepairingAssessment(true);
 
       try {
-        const result = JSON.parse(stored);
         const response = await fetch("/api/assessment/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ result }),
+          body: JSON.stringify({ result: storedResult }),
         });
 
         if (response.ok) {
