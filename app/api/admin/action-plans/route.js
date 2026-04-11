@@ -1,16 +1,32 @@
 import { NextResponse } from "next/server";
-import { getPaidTailoredPlanOrders, uploadTailoredPlanPdf } from "../../../lib/localAuth";
+import {
+  getPaidTailoredPlanOrders,
+  getSessionCookieName,
+  getUserFromSessionToken,
+  uploadTailoredPlanPdf,
+} from "../../../lib/localAuth";
 
 const MAX_PDF_BYTES = 4 * 1024 * 1024;
+const DEFAULT_ADMIN_EMAIL = "mohalbi123@hotmail.com";
 
-function isAuthorized(request) {
+function adminEmail() {
+  return String(process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
+}
+
+async function isAuthorized(request) {
   const resetToken = process.env.ADMIN_RESET_TOKEN;
   const requestToken = request.headers.get("x-admin-reset-token");
-  return Boolean(resetToken && requestToken && requestToken === resetToken);
+
+  if (resetToken && requestToken && requestToken === resetToken) {
+    return true;
+  }
+
+  const user = await getUserFromSessionToken(request.cookies.get(getSessionCookieName())?.value);
+  return String(user?.email || "").toLowerCase() === adminEmail();
 }
 
 export async function GET(request) {
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -19,7 +35,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

@@ -1,6 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useCurrentUser } from "./useCurrentUser";
+
+const ADMIN_EMAIL = "mohalbi123@hotmail.com";
 
 function formatDate(value) {
   if (!value) return "Not set";
@@ -17,25 +21,22 @@ function statusLabel(value) {
 }
 
 export function AdminActionPlansClient() {
-  const [token, setToken] = useState("");
+  const { status, user } = useCurrentUser();
   const [orders, setOrders] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingOrderId, setUploadingOrderId] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const isAdmin = String(user?.email || "").toLowerCase() === ADMIN_EMAIL;
 
-  async function loadOrders(nextToken = token) {
+  async function loadOrders() {
     setError("");
     setNotice("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/admin/action-plans", {
-        headers: {
-          "x-admin-reset-token": nextToken,
-        },
-      });
+      const response = await fetch("/api/admin/action-plans");
       const data = await response.json();
 
       if (!response.ok) {
@@ -44,7 +45,6 @@ export function AdminActionPlansClient() {
         return;
       }
 
-      window.localStorage.setItem("albi-admin-token", nextToken);
       setOrders(data.orders || []);
     } catch {
       setError("Unable to load orders.");
@@ -72,9 +72,6 @@ export function AdminActionPlansClient() {
     try {
       const response = await fetch("/api/admin/action-plans", {
         method: "POST",
-        headers: {
-          "x-admin-reset-token": token,
-        },
         body: formData,
       });
       const data = await response.json();
@@ -87,7 +84,7 @@ export function AdminActionPlansClient() {
 
       setNotice("PDF uploaded. The client can download it from the dashboard now.");
       setSelectedFiles((prev) => ({ ...prev, [orderId]: null }));
-      await loadOrders(token);
+      await loadOrders();
     } catch {
       setError("Unable to upload PDF.");
     } finally {
@@ -96,12 +93,36 @@ export function AdminActionPlansClient() {
   }
 
   useEffect(() => {
-    const storedToken = window.localStorage.getItem("albi-admin-token") || "";
-    if (storedToken) {
-      setToken(storedToken);
-      loadOrders(storedToken);
+    if (isAdmin) {
+      loadOrders();
     }
-  }, []);
+  }, [isAdmin]);
+
+  if (status === "loading") {
+    return (
+      <section className="result-shell admin-action-plan-shell">
+        <div className="eyebrow">Admin</div>
+        <h1 className="page-title">Loading admin access.</h1>
+      </section>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <section className="result-shell admin-action-plan-shell">
+        <div className="eyebrow">Admin</div>
+        <h1 className="page-title">Sign in as admin.</h1>
+        <p className="page-lead">
+          Use the admin account email to manage action-plan PDFs.
+        </p>
+        <div className="stack-actions" style={{ marginTop: 24 }}>
+          <Link href="/login?next=%2Fadmin%2Faction-plans" className="button-primary">
+            Sign in
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="result-shell admin-action-plan-shell">
@@ -109,17 +130,9 @@ export function AdminActionPlansClient() {
       <h1 className="page-title">Action plan orders.</h1>
       <p className="page-lead">Upload the finished PDF after the client payment is confirmed.</p>
 
-      <div className="admin-token-row" style={{ marginTop: 24 }}>
-        <label className="form-field">
-          <input
-            type="password"
-            placeholder="Admin token"
-            value={token}
-            onChange={(event) => setToken(event.target.value)}
-          />
-        </label>
-        <button type="button" className="button-primary" onClick={() => loadOrders()} disabled={isLoading || !token}>
-          {isLoading ? "Loading..." : "Load paid orders"}
+      <div className="stack-actions" style={{ marginTop: 24 }}>
+        <button type="button" className="button-primary" onClick={() => loadOrders()} disabled={isLoading}>
+          {isLoading ? "Loading..." : "Refresh paid orders"}
         </button>
       </div>
 
