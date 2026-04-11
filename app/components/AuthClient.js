@@ -52,7 +52,9 @@ export function AuthClient({ mode = "login" }) {
         setEmailSent(Boolean(data.emailSent));
         setNotice(
           data.emailSent
-            ? "Confirm your email in your inbox or spam folder. The link will bring you back to start the assessment."
+            ? safeNextPath === "/assessment"
+              ? "Confirm your email in your inbox or spam folder. The link will bring you back to start the assessment."
+              : "Confirm your email in your inbox or spam folder. The link will bring you back to your account."
             : data.emailError
               ? `Account created, but the confirmation email was not sent: ${data.emailError}`
               : "Account created, but the confirmation email was not sent.",
@@ -94,7 +96,9 @@ export function AuthClient({ mode = "login" }) {
         <h1 className="auth-title auth-title-centered">{isSignup ? "Create your account" : "Sign in to your account"}</h1>
         <p className="auth-subtitle auth-subtitle-centered">
           {isSignup
-            ? "Create your account to save your result and continue to the assessment."
+            ? safeNextPath === "/assessment"
+              ? "Create your account to save your result and continue to the assessment."
+              : "Create your account to save your progress and member area."
             : "Sign in to view your saved assessment, retake date, and member area."}
         </p>
 

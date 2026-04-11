@@ -12,7 +12,7 @@ export async function GET(request) {
   const nextPath =
     nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
       ? nextParam
-      : "/assessment";
+      : "/dashboard";
 
   if (!token) {
     return NextResponse.redirect(new URL("/login?verified=missing", request.url));

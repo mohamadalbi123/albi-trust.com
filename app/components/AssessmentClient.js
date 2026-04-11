@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { answerOptions, evaluateAnswers, questions } from "../lib/assessmentData";
 import { useCurrentUser } from "./useCurrentUser";
 
@@ -11,8 +11,10 @@ export function AssessmentClient() {
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [showReadyPrompt, setShowReadyPrompt] = useState(false);
   const [startError, setStartError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { status, user, refresh } = useCurrentUser();
 
   const currentQuestion = questions[currentIndex];
@@ -39,6 +41,12 @@ export function AssessmentClient() {
       setIsLocked(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (status === "ready" && user && searchParams.get("verified") === "1" && !user.latestAssessmentAt) {
+      setShowReadyPrompt(true);
+    }
+  }, [searchParams, status, user]);
 
   function handleAnswer(value) {
     setAnswers((prev) => ({
@@ -77,6 +85,11 @@ export function AssessmentClient() {
 
   function handleBack() {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
+  }
+
+  function handleStartAssessment() {
+    setShowReadyPrompt(false);
+    router.replace("/assessment");
   }
 
   if (status === "loading" || !user) {
@@ -141,6 +154,25 @@ export function AssessmentClient() {
 
   return (
     <>
+      {showReadyPrompt ? (
+        <div className="assessment-start-overlay">
+          <div className="assessment-start-modal">
+            <div className="eyebrow">Email confirmed</div>
+            <h1 className="page-title assessment-start-title">Ready to take the assessment?</h1>
+            <p className="page-lead">
+              Your account is ready. Start when you can answer honestly from your real trading behavior.
+            </p>
+            <div className="stack-actions">
+              <button type="button" className="button-primary" onClick={handleStartAssessment}>
+                Start assessment
+              </button>
+              <Link href="/dashboard" className="button-secondary">
+                Go to dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="assessment-shell">
         <div className="panel-label">
           <span>{questions.length}-question trading assessment</span>
