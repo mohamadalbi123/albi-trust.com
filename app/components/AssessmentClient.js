@@ -144,24 +144,36 @@ export function AssessmentClient() {
     router.replace("/assessment");
   }
 
-  if (status === "loading" || isRepairingAssessment || !user) {
+  if (status === "loading" || isRepairingAssessment) {
     return (
       <div className="assessment-shell">
         <div className="eyebrow">Assessment</div>
-        <h1 className="page-title">{isRepairingAssessment ? "Restoring your assessment status." : "Create your account first."}</h1>
+        <h1 className="page-title">{isRepairingAssessment ? "Restoring your assessment status." : "Preparing your assessment."}</h1>
         <p className="page-lead">
           {isRepairingAssessment
             ? "Your saved result is being connected back to your account."
-            : "We will send you to signup so your result can be saved and your assessment can continue from your account."}
+            : "One moment while we check your account access."}
         </p>
-        {!user ? <div className="stack-actions">
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="assessment-shell">
+        <div className="eyebrow">Assessment</div>
+        <h1 className="page-title">Create your account first.</h1>
+        <p className="page-lead">
+          We will send you to signup so your result can be saved and your assessment can continue from your account.
+        </p>
+        <div className="stack-actions">
           <Link href="/signup?next=%2Fassessment" className="button-primary">
             Create account
           </Link>
           <Link href="/login?next=%2Fassessment" className="button-secondary">
             Sign in
           </Link>
-        </div> : null}
+        </div>
       </div>
     );
   }
