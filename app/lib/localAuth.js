@@ -8,6 +8,68 @@ const DATA_DIR =
     : path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "app-db.json");
 const SESSION_COOKIE = "albi_trust_session";
+const STATELESS_SESSION_PREFIX = "v2";
+
+function authSecret() {
+  return process.env.NEXTAUTH_SECRET || "albi-trust-auth-secret-2026-local";
+}
+
+function encodeBase64Url(value) {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+
+function decodeBase64Url(value) {
+  return Buffer.from(value, "base64url").toString("utf8");
+}
+
+function signValue(value) {
+  return crypto.createHmac("sha256", authSecret()).update(value).digest("base64url");
+}
+
+function makeStatelessSessionToken(user, expiresAt) {
+  const payload = encodeBase64Url(
+    JSON.stringify({
+      sub: user.id,
+      publicId: user.publicId || null,
+      fullName: user.fullName || "",
+      email: user.email || "",
+      emailVerifiedAt: user.emailVerifiedAt || null,
+      createdAt: user.createdAt || new Date().toISOString(),
+      expiresAt,
+    }),
+  );
+  const signature = signValue(payload);
+  return `${STATELESS_SESSION_PREFIX}.${payload}.${signature}`;
+}
+
+function readStatelessSessionToken(token) {
+  const [prefix, payload, signature] = String(token || "").split(".");
+
+  if (prefix !== STATELESS_SESSION_PREFIX || !payload || !signature) {
+    return null;
+  }
+
+  const expectedSignature = signValue(payload);
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (
+    actualBuffer.length !== expectedBuffer.length ||
+    !crypto.timingSafeEqual(actualBuffer, expectedBuffer)
+  ) {
+    return null;
+  }
+
+  try {
+    const session = JSON.parse(decodeBase64Url(payload));
+    if (!session.expiresAt || new Date(session.expiresAt) <= new Date()) {
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+}
 
 function inferBaseUrl() {
   if (process.env.NEXTAUTH_URL) {
@@ -157,7 +219,7 @@ export function getAppBaseUrl() {
 }
 
 export function shouldUseSecureCookies() {
-  return inferBaseUrl().startsWith("https://");
+  return process.env.NODE_ENV === "production" && inferBaseUrl().startsWith("https://");
 }
 
 function getLatestPaidOrderForUser(db, internalUserId) {
@@ -171,6 +233,53 @@ function findUserByAnyId(db, userId) {
       (entry) => entry.id === normalized || String(entry.publicId || "") === normalized,
     ) || null
   );
+}
+
+function ensureSessionUser(db, session) {
+  if (!session?.sub || !session?.email) {
+    return null;
+  }
+
+  let user = findUserByAnyId(db, session.sub) || db.users.find((entry) => entry.email === session.email);
+
+  if (!user) {
+    user = {
+      id: session.sub,
+      publicId: session.publicId || nextPublicUserId(db),
+      fullName: session.fullName || session.email.split("@")[0],
+      email: session.email,
+      passwordHash: null,
+      createdAt: session.createdAt || new Date().toISOString(),
+      emailVerifiedAt: session.emailVerifiedAt || new Date().toISOString(),
+      verificationTokenHash: null,
+      verificationExpiresAt: null,
+      latestAssessmentAt: null,
+      nextAssessmentAt: null,
+      latestAssessment: null,
+      assessments: [],
+    };
+    db.users.push(user);
+    writeDb(db);
+    return user;
+  }
+
+  let changed = false;
+
+  if (!user.publicId && session.publicId) {
+    user.publicId = session.publicId;
+    changed = true;
+  }
+
+  if (!user.emailVerifiedAt && session.emailVerifiedAt) {
+    user.emailVerifiedAt = session.emailVerifiedAt;
+    changed = true;
+  }
+
+  if (changed) {
+    writeDb(db);
+  }
+
+  return user;
 }
 
 function summarizeAssessment(result) {
@@ -393,9 +502,15 @@ export function upsertGoogleUser({ fullName, email }) {
 
 export function createSession(userId) {
   const db = readDb();
-  const token = makeToken();
-  const tokenHash = makeTokenHash(token);
+  const user = findUserByAnyId(db, userId);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
+  const token = makeStatelessSessionToken(user, expiresAt);
+  const tokenHash = makeTokenHash(token);
 
   db.sessions = db.sessions.filter((session) => new Date(session.expiresAt) > new Date());
   db.sessions.push({
@@ -418,6 +533,12 @@ export function getUserFromSessionToken(token) {
   if (!token) return null;
 
   const db = readDb();
+  const statelessSession = readStatelessSessionToken(token);
+
+  if (statelessSession) {
+    return publicUser(ensureSessionUser(db, statelessSession));
+  }
+
   const tokenHash = makeTokenHash(token);
   const session = db.sessions.find(
     (entry) => entry.tokenHash === tokenHash && new Date(entry.expiresAt) > new Date(),

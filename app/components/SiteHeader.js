@@ -6,7 +6,7 @@ import { useCurrentUser } from "./useCurrentUser";
 
 export function SiteHeader() {
   const router = useRouter();
-  const { isAuthenticated } = useCurrentUser();
+  const { status, isAuthenticated } = useCurrentUser();
 
   async function handleLogout() {
     await fetch("/api/logout", { method: "POST" });
@@ -25,9 +25,9 @@ export function SiteHeader() {
 
       <nav className="nav-links">
         <Link href="/assessment">Assessment</Link>
-        {isAuthenticated ? <Link href="/results">Results</Link> : null}
-        {isAuthenticated ? <Link href="/dashboard">Dashboard</Link> : null}
-        {isAuthenticated ? (
+        {status === "loading" ? null : isAuthenticated ? <Link href="/results">Results</Link> : null}
+        {status === "loading" ? null : isAuthenticated ? <Link href="/dashboard">Dashboard</Link> : null}
+        {status === "loading" ? null : isAuthenticated ? (
           <button type="button" className="nav-link-button" onClick={handleLogout}>
             Sign out
           </button>

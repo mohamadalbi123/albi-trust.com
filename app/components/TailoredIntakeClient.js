@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "./useCurrentUser";
 
 export function TailoredIntakeClient() {
@@ -30,8 +30,10 @@ export function TailoredIntakeClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [successNotice, setSuccessNotice] = useState("");
+  const finalizeStartedRef = useRef(false);
   const isPaidStep = searchParams.get("paid") === "1";
   const orderId = searchParams.get("order");
+  const stripeSessionId = searchParams.get("session_id");
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -75,6 +77,50 @@ export function TailoredIntakeClient() {
     window.location.href = checkoutData.url;
   }
 
+  const handleFinalize = useCallback(async () => {
+    if (!orderId) {
+      setError("Missing order reference after payment.");
+      return;
+    }
+
+    if (!stripeSessionId) {
+      setError("Missing Stripe payment reference.");
+      return;
+    }
+
+    setError("");
+    setSuccessNotice("");
+    setIsFinalizing(true);
+
+    const response = await fetch("/api/orders/finalize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, sessionId: stripeSessionId }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.error || "Unable to finalize your order.");
+      setIsFinalizing(false);
+      return;
+    }
+
+    setSuccessNotice("Thank you for your purchase. You will receive your tailored action plan within 48 hours by email.");
+    setIsFinalizing(false);
+
+    window.setTimeout(() => {
+      router.push(`/dashboard?order=${data.order.id}`);
+      router.refresh();
+    }, 2600);
+  }, [orderId, router, stripeSessionId]);
+
+  useEffect(() => {
+    if (status !== "ready" || !isPaidStep || !orderId || !stripeSessionId || isFinalizing || successNotice) return;
+    if (finalizeStartedRef.current) return;
+    finalizeStartedRef.current = true;
+    handleFinalize();
+  }, [status, isPaidStep, orderId, stripeSessionId, isFinalizing, successNotice, handleFinalize]);
+
   if (status === "loading") {
     return (
       <section className="result-shell">
@@ -89,6 +135,15 @@ export function TailoredIntakeClient() {
       <section className="result-shell">
         <div className="eyebrow">Tailored intake</div>
         <h1 className="page-title">Sign in to continue.</h1>
+        <p className="page-lead">Your intake and payment need to stay connected to your account.</p>
+        <div className="stack-actions">
+          <Link href="/login?next=%2Ftailored-intake" className="button-primary">
+            Sign in
+          </Link>
+          <Link href="/signup?next=%2Ftailored-intake" className="button-secondary">
+            Create account
+          </Link>
+        </div>
       </section>
     );
   }
@@ -314,43 +369,6 @@ export function TailoredIntakeClient() {
       </section>
     );
   }
-
-  async function handleFinalize() {
-    if (!orderId) {
-      setError("Missing order reference after payment.");
-      return;
-    }
-
-    setError("");
-    setSuccessNotice("");
-    setIsFinalizing(true);
-
-    const response = await fetch("/api/orders/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
-    });
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.error || "Unable to finalize your order.");
-      setIsFinalizing(false);
-      return;
-    }
-
-    setSuccessNotice("Thank you for your purchase. You will receive your tailored action plan within 48 hours by email.");
-    setIsFinalizing(false);
-
-    window.setTimeout(() => {
-      router.push(`/dashboard?order=${data.order.id}`);
-      router.refresh();
-    }, 2600);
-  }
-
-  useEffect(() => {
-    if (!isPaidStep || !orderId || isFinalizing || successNotice) return;
-    handleFinalize();
-  }, [isPaidStep, orderId, isFinalizing, successNotice]);
 
   return (
     <section className="result-shell">

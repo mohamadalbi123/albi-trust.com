@@ -53,10 +53,10 @@ export function DashboardClient() {
           Your saved assessment, retake date, and account path live here once you are signed in.
         </p>
         <div className="stack-actions">
-          <Link href="/login" className="button-primary">
+          <Link href="/login?next=%2Fdashboard" className="button-primary">
             Sign in
           </Link>
-          <Link href="/signup" className="button-secondary">
+          <Link href="/signup?next=%2Fdashboard" className="button-secondary">
             Create account
           </Link>
         </div>

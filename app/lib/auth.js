@@ -1,19 +1,25 @@
 import GoogleProvider from "next-auth/providers/google";
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET || "albi-trust-auth-secret-2026-local",
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: "openid email profile",
-          prompt: "select_account",
-        },
-      },
-    }),
-  ],
+  providers:
+    googleClientId && googleClientSecret
+      ? [
+          GoogleProvider({
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            authorization: {
+              params: {
+                scope: "openid email profile",
+                prompt: "select_account",
+              },
+            },
+          }),
+        ]
+      : [],
   session: {
     strategy: "jwt",
   },

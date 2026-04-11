@@ -7,35 +7,7 @@ import { useCurrentUser } from "./useCurrentUser";
 
 export function ResultsClient() {
   const [result, setResult] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [checkoutError, setCheckoutError] = useState("");
   const { status, isAuthenticated, user } = useCurrentUser();
-
-  async function handleBuyNow() {
-    setCheckoutError("");
-
-    try {
-      setIsSubmitting(true);
-      const response = await fetch("/api/stripe/checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ method: "card" }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.url) {
-        throw new Error(data?.error || "Unable to start payment.");
-      }
-
-      window.location.href = data.url;
-    } catch (error) {
-      setCheckoutError(error.message || "Unable to start payment.");
-      setIsSubmitting(false);
-    }
-  }
 
   useEffect(() => {
     const stored = window.localStorage.getItem("albi-trust-assessment");
@@ -72,10 +44,10 @@ export function ResultsClient() {
           Your assessment result is tied to your account so it stays private, saved, and available when you come back.
         </p>
         <div className="stack-actions">
-          <Link href="/login" className="button-primary">
+          <Link href="/login?next=%2Fresults" className="button-primary">
             Sign in
           </Link>
-          <Link href="/signup" className="button-secondary">
+          <Link href="/signup?next=%2Fresults" className="button-secondary">
             Create account
           </Link>
         </div>
@@ -156,8 +128,6 @@ export function ResultsClient() {
           })}
         </div>
       </section>
-
-      {checkoutError ? <p className="form-error">{checkoutError}</p> : null}
 
       <div className="stack-actions" style={{ marginTop: 34 }}>
         {user?.hasPaidTailoredPlan ? (

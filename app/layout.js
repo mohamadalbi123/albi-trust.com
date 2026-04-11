@@ -1,5 +1,6 @@
 import "./globals.css";
 import { CookieConsentBanner } from "./components/CookieConsentBanner";
+import Providers from "./providers";
 
 export const metadata = {
   title: "Albi Trust | Trader Assessment & Growth",
@@ -11,8 +12,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        {children}
-        <CookieConsentBanner />
+        <Providers>
+          {children}
+          <CookieConsentBanner />
+        </Providers>
       </body>
     </html>
   );

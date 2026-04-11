@@ -1607,6 +1607,7 @@ select {
 }
 
 .auth-google-button {
+  width: 100%;
   margin-top: 0;
   background: #ffffff;
   color: #1f2937;
@@ -1616,6 +1617,10 @@ select {
   justify-content: center;
   gap: 10px;
   font-weight: 600;
+}
+
+.auth-google-form {
+  margin-top: 12px;
 }
 
 .auth-google-button:hover {

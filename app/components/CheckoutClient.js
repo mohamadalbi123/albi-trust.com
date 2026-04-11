@@ -9,6 +9,7 @@ export function CheckoutClient() {
   const { status, user } = useCurrentUser();
   const searchParams = useSearchParams();
   const method = searchParams.get("method") === "crypto" ? "crypto" : "card";
+  const draftOrderId = String(searchParams.get("order") || "").trim();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,7 +28,7 @@ export function CheckoutClient() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ method }),
+        body: JSON.stringify({ method, draftOrderId }),
       });
 
       const data = await response.json();
@@ -58,7 +59,7 @@ export function CheckoutClient() {
         <div className="eyebrow">Checkout</div>
         <h1 className="page-title">Sign in to continue.</h1>
         <div className="stack-actions">
-          <Link href="/login" className="button-primary">
+          <Link href="/login?next=%2Ftailored-intake" className="button-primary">
             Sign in
           </Link>
         </div>
@@ -69,47 +70,64 @@ export function CheckoutClient() {
   return (
     <section className="result-shell">
       <div className="eyebrow">Checkout</div>
-      <h1 className="page-title">Complete your payment.</h1>
+      <h1 className="page-title">{draftOrderId ? "Complete your payment." : "Add your details before payment."}</h1>
       <p className="page-lead">
-        You selected {method === "crypto" ? "crypto" : "card"} as your payment method.
+        {draftOrderId
+          ? `You selected ${method === "crypto" ? "crypto" : "card"} as your payment method.`
+          : "Your action plan needs an intake form before checkout can start."}
       </p>
 
-      <div className="action-grid" style={{ marginTop: 28 }}>
-        <div className="action-card">
-          <strong>Account</strong>
-          <p className="muted">{user.fullName}</p>
-          <p className="muted">{user.email}</p>
+      {!draftOrderId ? (
+        <div className="stack-actions">
+          <Link href="/tailored-intake" className="button-primary">
+            Continue to intake
+          </Link>
+          <Link href="/results" className="button-secondary">
+            Back to result
+          </Link>
         </div>
-        <div className="action-card">
-          <strong>User ID</strong>
-          <p className="muted">{user.id}</p>
-        </div>
-        <div className="action-card">
-          <strong>Payment method</strong>
-          <p className="muted">{method === "crypto" ? "Crypto" : "Card"}</p>
-        </div>
-      </div>
+      ) : null}
 
-      {method === "card" ? (
+      {draftOrderId ? (
+        <div className="action-grid" style={{ marginTop: 28 }}>
+          <div className="action-card">
+            <strong>Account</strong>
+            <p className="muted">{user.fullName}</p>
+            <p className="muted">{user.email}</p>
+          </div>
+          <div className="action-card">
+            <strong>User ID</strong>
+            <p className="muted">{user.id}</p>
+          </div>
+          <div className="action-card">
+            <strong>Payment method</strong>
+            <p className="muted">{method === "crypto" ? "Crypto" : "Card"}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {draftOrderId && method === "card" ? (
         <p className="page-lead" style={{ marginTop: 18 }}>
           Card checkout is handled by Stripe. Apple Pay and Google Pay can appear there automatically on supported devices and browsers.
         </p>
-      ) : (
+      ) : draftOrderId ? (
         <p className="page-lead" style={{ marginTop: 18 }}>
           Crypto checkout is not connected yet. Please return and choose card for now.
         </p>
-      )}
+      ) : null}
 
       {error ? <p className="form-error">{error}</p> : null}
 
-      <div className="stack-actions">
-        <button type="button" className="button-primary" onClick={handleProceed} disabled={isSubmitting}>
-          {isSubmitting ? "Redirecting to Stripe..." : "Proceed to payment gateway"}
-        </button>
-        <Link href="/tailored-action-plan" className="button-secondary">
-          Back
-        </Link>
-      </div>
+      {draftOrderId ? (
+        <div className="stack-actions">
+          <button type="button" className="button-primary" onClick={handleProceed} disabled={isSubmitting}>
+            {isSubmitting ? "Redirecting to Stripe..." : "Proceed to payment gateway"}
+          </button>
+          <Link href="/tailored-action-plan" className="button-secondary">
+            Back
+          </Link>
+        </div>
+      ) : null}
     </section>
   );
 }
