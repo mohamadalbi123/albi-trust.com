@@ -27,7 +27,7 @@ export function AssessmentClient() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (status === "ready" && !user) {
-      router.replace("/signup");
+      router.replace("/signup?next=%2Fassessment");
     }
   }, [router, status, user]);
 
@@ -88,10 +88,10 @@ export function AssessmentClient() {
           We will send you to signup so your result can be saved and your assessment can continue from your account.
         </p>
         <div className="stack-actions">
-          <Link href="/signup" className="button-primary">
+          <Link href="/signup?next=%2Fassessment" className="button-primary">
             Create account
           </Link>
-          <Link href="/login" className="button-secondary">
+          <Link href="/login?next=%2Fassessment" className="button-secondary">
             Sign in
           </Link>
         </div>

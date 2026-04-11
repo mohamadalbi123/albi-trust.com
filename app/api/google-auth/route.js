@@ -9,6 +9,12 @@ import {
 } from "../../lib/localAuth";
 
 export async function GET(request) {
+  const nextParam = request.nextUrl.searchParams.get("next");
+  const nextPath =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : "/dashboard";
+
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
@@ -26,7 +32,7 @@ export async function GET(request) {
   });
 
   const appSession = createSession(internalUserId);
-  const response = NextResponse.redirect(new URL("/dashboard", request.url));
+  const response = NextResponse.redirect(new URL(nextPath, request.url));
 
   response.cookies.set(getSessionCookieName(), appSession.token, {
     httpOnly: true,

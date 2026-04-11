@@ -20,6 +20,9 @@ export function AuthClient({ mode = "login" }) {
 
   const verifiedStatus = searchParams.get("verified");
   const googleStatus = searchParams.get("google");
+  const nextPath = searchParams.get("next") || "";
+  const safeNextPath = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
+  const authSwitchQuery = safeNextPath ? `?next=${encodeURIComponent(safeNextPath)}` : "";
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -38,7 +41,7 @@ export function AuthClient({ mode = "login" }) {
         const response = await fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fullName, email, password }),
+          body: JSON.stringify({ fullName, email, password, returnTo: safeNextPath }),
         });
         const data = await response.json();
 
@@ -49,7 +52,7 @@ export function AuthClient({ mode = "login" }) {
         setEmailSent(Boolean(data.emailSent));
         setNotice(
           data.emailSent
-            ? "Confirm your email in your inbox or spam folder, then come back to start the assessment."
+            ? "Confirm your email in your inbox or spam folder. The link will bring you back to start the assessment."
             : data.emailError
               ? `Account created, but the confirmation email was not sent: ${data.emailError}`
               : "Account created, but the confirmation email was not sent.",
@@ -68,7 +71,7 @@ export function AuthClient({ mode = "login" }) {
           throw new Error(data.error || "Unable to sign in.");
         }
 
-        router.push("/dashboard");
+        router.push(safeNextPath || "/dashboard");
         router.refresh();
       }
     } catch (submitError) {
@@ -91,7 +94,7 @@ export function AuthClient({ mode = "login" }) {
         <h1 className="auth-title auth-title-centered">{isSignup ? "Create your account" : "Sign in to your account"}</h1>
         <p className="auth-subtitle auth-subtitle-centered">
           {isSignup
-            ? "Create your account to save your result and continue with your next step."
+            ? "Create your account to save your result and continue to the assessment."
             : "Sign in to view your saved assessment, retake date, and member area."}
         </p>
 
@@ -179,7 +182,9 @@ export function AuthClient({ mode = "login" }) {
           </div>
 
           <a
-            href="/api/auth/signin/google?callbackUrl=/api/google-auth"
+            href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(
+              safeNextPath ? `/api/google-auth?next=${encodeURIComponent(safeNextPath)}` : "/api/google-auth",
+            )}`}
             className="button-secondary auth-submit auth-google-button"
           >
             <span className="auth-google-mark" aria-hidden="true">
@@ -192,11 +197,11 @@ export function AuthClient({ mode = "login" }) {
         <div className="auth-inline-link">
           {isSignup ? (
             <>
-              <span className="muted">Already have an account?</span> <Link href="/login">Sign in</Link>
+              <span className="muted">Already have an account?</span> <Link href={`/login${authSwitchQuery}`}>Sign in</Link>
             </>
           ) : (
             <>
-              <span className="muted">No account yet?</span> <Link href="/signup">Create one</Link>
+              <span className="muted">No account yet?</span> <Link href={`/signup${authSwitchQuery}`}>Create one</Link>
             </>
           )}
         </div>

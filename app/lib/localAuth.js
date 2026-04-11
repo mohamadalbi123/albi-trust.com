@@ -136,6 +136,16 @@ function appBaseUrl() {
   return inferBaseUrl();
 }
 
+function safeReturnPath(value) {
+  const pathValue = String(value || "").trim();
+
+  if (!pathValue || !pathValue.startsWith("/") || pathValue.startsWith("//")) {
+    return "";
+  }
+
+  return pathValue;
+}
+
 export function getAppBaseUrl() {
   return inferBaseUrl();
 }
@@ -196,7 +206,7 @@ export function publicUser(user) {
   };
 }
 
-export function signupUser({ fullName, email, password }) {
+export function signupUser({ fullName, email, password, returnTo }) {
   const db = readDb();
   const normalizedEmail = normalizeEmail(email);
   const now = new Date().toISOString();
@@ -234,7 +244,10 @@ export function signupUser({ fullName, email, password }) {
     user.verificationExpiresAt = verificationExpiresAt;
   }
 
-  const verifyUrl = `${appBaseUrl()}/api/verify-email?token=${verificationToken}`;
+  const nextPath = safeReturnPath(returnTo);
+  const verifyUrl = `${appBaseUrl()}/api/verify-email?token=${verificationToken}${
+    nextPath ? `&next=${encodeURIComponent(nextPath)}` : ""
+  }`;
 
   db.outbox.unshift({
     id: makeId("mail"),

@@ -8,19 +8,26 @@ import {
 
 export async function GET(request) {
   const token = request.nextUrl.searchParams.get("token");
+  const nextParam = request.nextUrl.searchParams.get("next");
+  const nextPath =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : "/assessment";
 
   if (!token) {
-    return NextResponse.redirect(new URL("/assessment?verified=missing", request.url));
+    return NextResponse.redirect(new URL("/login?verified=missing", request.url));
   }
 
   const verified = verifyEmailToken(token);
 
   if (!verified) {
-    return NextResponse.redirect(new URL("/assessment?verified=invalid", request.url));
+    return NextResponse.redirect(new URL("/login?verified=invalid", request.url));
   }
 
   const session = createSession(verified.internalUserId);
-  const response = NextResponse.redirect(new URL("/assessment?verified=1", request.url));
+  const redirectUrl = new URL(nextPath, request.url);
+  redirectUrl.searchParams.set("verified", "1");
+  const response = NextResponse.redirect(redirectUrl);
 
   response.cookies.set(getSessionCookieName(), session.token, {
     httpOnly: true,

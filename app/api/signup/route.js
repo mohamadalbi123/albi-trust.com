@@ -8,6 +8,7 @@ export async function POST(request) {
     const fullName = String(body.fullName || "").trim();
     const email = String(body.email || "").trim();
     const password = String(body.password || "");
+    const returnTo = String(body.returnTo || "").trim();
 
     if (!fullName || !email || !password) {
       return NextResponse.json({ error: "Full name, email, and password are required." }, { status: 400 });
@@ -17,7 +18,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Password should be at least 8 characters." }, { status: 400 });
     }
 
-    const { user, verifyUrl } = signupUser({ fullName, email, password });
+    const { user, verifyUrl } = signupUser({ fullName, email, password, returnTo });
 
     let emailSent = false;
     let emailError = "";
