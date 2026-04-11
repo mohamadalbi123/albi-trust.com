@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendActionPlanDeliveredEmail } from "../../../lib/email";
 import {
   getAdminClientDashboardData,
   getSessionCookieName,
@@ -68,6 +69,16 @@ export async function POST(request) {
       dataBase64: buffer.toString("base64"),
       size: buffer.length,
     });
+
+    try {
+      const result = await sendActionPlanDeliveredEmail({ order });
+
+      if (!result.sent) {
+        console.error("Action plan delivery email was not sent:", result.reason);
+      }
+    } catch (emailError) {
+      console.error("Action plan delivery email failed:", emailError);
+    }
 
     return NextResponse.json({ ok: true, order });
   } catch (error) {
