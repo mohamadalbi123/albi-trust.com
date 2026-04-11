@@ -27,20 +27,20 @@ export default function HomePage() {
 
             <div className="stats-grid stats-grid-compact">
               <div className="stat-card">
-                <strong>Assess first</strong>
-                <span className="muted">Start with the diagnosis before trying to fix the wrong problem.</span>
+                <strong>1. Take the Assessment</strong>
+                <span className="muted">Answer honestly. This is where real clarity starts.</span>
               </div>
               <div className="stat-card">
-                <strong>See the real weakness</strong>
-                <span className="muted">Overtrading, poor risk, inconsistency, loss avoidance, and emotional leaks.</span>
+                <strong>2. Know Your Level</strong>
+                <span className="muted">Understand exactly where you stand as a trader based on your behavior and habits.</span>
               </div>
               <div className="stat-card">
-                <strong>Track the pattern</strong>
-                <span className="muted">Use honest review and structured feedback to see what is really improving over time.</span>
+                <strong>3. Get Your Tailored Plan</strong>
+                <span className="muted">We analyze your weaknesses and build a personalized action plan with clear, practical steps to help you improve and reach the next level.</span>
               </div>
               <div className="stat-card">
-                <strong>Get a tailored action plan</strong>
-                <span className="muted">Move into a next step built around your level, behavior, and personal situation.</span>
+                <strong>4. Measure Your Progress</strong>
+                <span className="muted">Return after 30 days, retake the assessment, and see how you have improved.</span>
               </div>
             </div>
           </section>
