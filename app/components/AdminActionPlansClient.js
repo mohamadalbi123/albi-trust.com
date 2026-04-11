@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "./useCurrentUser";
 
@@ -26,14 +25,65 @@ function visibleIntake(intake) {
 }
 
 export function AdminActionPlansClient() {
-  const { status, user } = useCurrentUser();
+  const { status, user, refresh } = useCurrentUser();
   const [orders, setOrders] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingOrderId, setUploadingOrderId] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const isAdmin = String(user?.email || "").toLowerCase() === ADMIN_EMAIL;
+
+  async function handleAdminLogin(event) {
+    event.preventDefault();
+    setError("");
+    setNotice("");
+    setIsSigningIn(true);
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: adminEmail,
+          password: adminPassword,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to sign in.");
+        return;
+      }
+
+      setAdminPassword("");
+      await refresh();
+    } catch {
+      setError("Unable to sign in.");
+    } finally {
+      setIsSigningIn(false);
+    }
+  }
+
+  async function handleAdminLogout() {
+    setError("");
+    setNotice("");
+    setIsSigningOut(true);
+
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      setOrders([]);
+      await refresh();
+    } catch {
+      setError("Unable to sign out.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
 
   async function loadOrders() {
     setError("");
@@ -118,13 +168,32 @@ export function AdminActionPlansClient() {
         <div className="eyebrow">Admin</div>
         <h1 className="page-title">Sign in as admin.</h1>
         <p className="page-lead">
-          Use the admin account email to manage action-plan PDFs.
+          Use the admin email and password to manage action-plan PDFs.
         </p>
-        <div className="stack-actions" style={{ marginTop: 24 }}>
-          <Link href="/login?next=%2Fadmin%2Faction-plans" className="button-primary">
-            Sign in
-          </Link>
-        </div>
+        <form className="auth-fields admin-login-form" style={{ marginTop: 24 }} onSubmit={handleAdminLogin}>
+          <label className="form-field">
+            <input
+              type="email"
+              placeholder="Admin email"
+              value={adminEmail}
+              onChange={(event) => setAdminEmail(event.target.value)}
+            />
+          </label>
+          <label className="form-field">
+            <input
+              type="password"
+              placeholder="Admin password"
+              value={adminPassword}
+              onChange={(event) => setAdminPassword(event.target.value)}
+            />
+          </label>
+          {error ? <p className="auth-error">{error}</p> : null}
+          <div className="stack-actions">
+            <button type="submit" className="button-primary" disabled={isSigningIn}>
+              {isSigningIn ? "Signing in..." : "Sign in"}
+            </button>
+          </div>
+        </form>
       </section>
     );
   }
@@ -138,6 +207,9 @@ export function AdminActionPlansClient() {
       <div className="stack-actions" style={{ marginTop: 24 }}>
         <button type="button" className="button-primary" onClick={() => loadOrders()} disabled={isLoading}>
           {isLoading ? "Loading..." : "Refresh paid orders"}
+        </button>
+        <button type="button" className="button-secondary" onClick={handleAdminLogout} disabled={isSigningOut}>
+          {isSigningOut ? "Signing out..." : "Sign out"}
         </button>
       </div>
 
