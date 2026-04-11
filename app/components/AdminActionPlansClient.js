@@ -254,13 +254,28 @@ export function AdminActionPlansClient() {
       <p className="page-lead">Upload the finished PDF after the client payment is confirmed.</p>
 
       <div className="stack-actions" style={{ marginTop: 24 }}>
-        <button type="button" className="button-primary" onClick={() => loadAdminData("orders")} disabled={isLoading}>
+        <button
+          type="button"
+          className={activeView === "orders" ? "button-primary" : "button-secondary"}
+          onClick={() => loadAdminData("orders")}
+          disabled={isLoading}
+        >
           {isLoading ? "Loading..." : "Refresh paid orders"}
         </button>
-        <button type="button" className="button-secondary" onClick={() => loadAdminData("assessments")} disabled={isLoading}>
+        <button
+          type="button"
+          className={activeView === "assessments" ? "button-primary" : "button-secondary"}
+          onClick={() => loadAdminData("assessments")}
+          disabled={isLoading}
+        >
           Assessment taken, no order
         </button>
-        <button type="button" className="button-secondary" onClick={() => loadAdminData("users")} disabled={isLoading}>
+        <button
+          type="button"
+          className={activeView === "users" ? "button-primary" : "button-secondary"}
+          onClick={() => loadAdminData("users")}
+          disabled={isLoading}
+        >
           User list
         </button>
         {activeView === "users" ? (
