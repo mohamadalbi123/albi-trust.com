@@ -342,6 +342,52 @@ function getLatestPaidOrderForUser(db, internalUserId) {
   return (db.orders || []).find((entry) => entry.userId === internalUserId && entry.status === "paid") || null;
 }
 
+function getOrderEstimatedReadyAt(order) {
+  const baseDate = new Date(order?.paidAt || order?.createdAt || Date.now());
+  return new Date(baseDate.getTime() + 1000 * 60 * 60 * 48).toISOString();
+}
+
+function getActionPlanStatus(order) {
+  if (!order) return null;
+  if (order.actionPlanPdf?.dataBase64) return "ready";
+  return new Date(getOrderEstimatedReadyAt(order)) <= new Date() ? "final_review" : "under_preparation";
+}
+
+function publicActionPlanOrder(order) {
+  if (!order) return null;
+
+  return {
+    id: order.id,
+    status: getActionPlanStatus(order),
+    purchasedAt: order.paidAt || order.createdAt || null,
+    estimatedReadyAt: getOrderEstimatedReadyAt(order),
+    uploadedAt: order.actionPlanPdf?.uploadedAt || null,
+    fileName: order.actionPlanPdf?.fileName || null,
+    downloadUrl: order.actionPlanPdf?.dataBase64 ? `/api/action-plans/${order.id}/download` : null,
+  };
+}
+
+function adminOrderSummary(order, db) {
+  const user = findUserByAnyId(db, order.userId);
+
+  return {
+    id: order.id,
+    publicUserId: user?.publicId ? String(user.publicId) : order.userId,
+    fullName: order.fullName,
+    email: order.email,
+    priceUsd: order.priceUsd,
+    status: order.status,
+    actionPlanStatus: getActionPlanStatus(order),
+    createdAt: order.createdAt || null,
+    paidAt: order.paidAt || null,
+    estimatedReadyAt: getOrderEstimatedReadyAt(order),
+    pdfUploadedAt: order.actionPlanPdf?.uploadedAt || null,
+    pdfFileName: order.actionPlanPdf?.fileName || null,
+    traderLevel: order.assessmentSnapshot?.level?.title || null,
+    intake: order.intake || null,
+  };
+}
+
 function findUserByAnyId(db, userId) {
   const normalized = String(userId || "");
   return (
@@ -442,7 +488,8 @@ function publicUserFromDb(db, user) {
     nextAssessmentAt: user.nextAssessmentAt || null,
     latestAssessment: user.latestAssessment || null,
     hasPaidTailoredPlan: Boolean(latestPaidOrder),
-    latestPaidOrderAt: latestPaidOrder?.createdAt || null,
+    latestPaidOrderAt: latestPaidOrder?.paidAt || latestPaidOrder?.createdAt || null,
+    latestActionPlanOrder: publicActionPlanOrder(latestPaidOrder),
   };
 }
 
@@ -830,6 +877,7 @@ export async function createTailoredPlanDraft({
     status: "pending",
     createdAt: now,
     paidAt: null,
+    actionPlanPdf: null,
     assessmentSnapshot: user.latestAssessment || null,
     intake: {
       tradingYears,
@@ -855,6 +903,58 @@ export async function createTailoredPlanDraft({
 
   await writeDb(db);
   return order;
+}
+
+export async function getPaidTailoredPlanOrders() {
+  const db = await readDb();
+  return (db.orders || [])
+    .filter((entry) => entry.status === "paid")
+    .map((entry) => adminOrderSummary(entry, db));
+}
+
+export async function uploadTailoredPlanPdf({ orderId, fileName, mimeType, dataBase64, size }) {
+  const db = await readDb();
+  const order = (db.orders || []).find((entry) => entry.id === orderId && entry.status === "paid");
+
+  if (!order) {
+    throw new Error("Paid order not found.");
+  }
+
+  order.actionPlanPdf = {
+    fileName: String(fileName || "albi-trust-action-plan.pdf"),
+    mimeType: mimeType === "application/pdf" ? mimeType : "application/pdf",
+    dataBase64,
+    size: Number(size || 0),
+    uploadedAt: new Date().toISOString(),
+  };
+
+  await writeDb(db);
+  return adminOrderSummary(order, db);
+}
+
+export async function getTailoredPlanPdfForUser({ orderId, userId }) {
+  const db = await readDb();
+  const currentUser = findUserByAnyId(db, userId);
+
+  if (!currentUser) {
+    throw new Error("User not found.");
+  }
+
+  const order = (db.orders || []).find((entry) => entry.id === orderId && entry.status === "paid");
+
+  if (!order || order.userId !== currentUser.id) {
+    throw new Error("Action plan not found.");
+  }
+
+  if (!order.actionPlanPdf?.dataBase64) {
+    throw new Error("Action plan PDF is not ready yet.");
+  }
+
+  return {
+    fileName: order.actionPlanPdf.fileName || "albi-trust-action-plan.pdf",
+    mimeType: order.actionPlanPdf.mimeType || "application/pdf",
+    dataBase64: order.actionPlanPdf.dataBase64,
+  };
 }
 
 export async function finalizeTailoredPlanOrder({ orderId, currentUserId }) {

@@ -176,6 +176,11 @@ select {
   transform: translateY(-1px);
 }
 
+.disabled-button {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 .hero {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -1147,6 +1152,99 @@ select {
   grid-column: 1 / -1;
 }
 
+.action-plan-status-card {
+  display: grid;
+  align-content: start;
+}
+
+.status-card-heading,
+.admin-order-heading,
+.admin-upload-row,
+.admin-token-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #10213f;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pill-ready {
+  background: #176b4d;
+}
+
+.status-pill-final_review {
+  background: #5a4b17;
+}
+
+.status-pill-under_preparation {
+  background: #10213f;
+}
+
+.admin-action-plan-shell {
+  max-width: 1180px;
+}
+
+.admin-token-row {
+  align-items: end;
+}
+
+.admin-token-row .form-field {
+  flex: 1;
+}
+
+.admin-order-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.admin-order-card {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-order-card .metric strong {
+  overflow-wrap: break-word;
+  font-size: 1rem;
+}
+
+.admin-order-details {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #f9fbff;
+}
+
+.admin-order-details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-order-details pre {
+  margin: 14px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.admin-upload-row .form-field {
+  flex: 1;
+}
+
 .account-settings-card .mini-grid {
   gap: 12px;
 }
@@ -1806,6 +1904,21 @@ select {
 
   .account-settings-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .status-card-heading,
+  .admin-order-heading,
+  .admin-upload-row,
+  .admin-token-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-token-row .form-field,
+  .admin-upload-row .form-field,
+  .admin-token-row .button-primary,
+  .admin-upload-row .button-primary {
+    width: 100%;
   }
 
   .feature-item,

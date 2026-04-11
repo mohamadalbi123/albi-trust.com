@@ -105,13 +105,13 @@ export function TailoredIntakeClient() {
       return;
     }
 
-    setSuccessNotice("Thank you for your purchase. You will receive your tailored action plan within 48 hours by email.");
+    setSuccessNotice("Thank you. Your payment is confirmed and your action plan is under preparation.");
     setIsFinalizing(false);
 
     window.setTimeout(() => {
-      router.push(`/dashboard?order=${data.order.id}`);
+      router.push(`/dashboard?order=${data.order.id}&paid=1`);
       router.refresh();
-    }, 2600);
+    }, 1800);
   }, [orderId, router, stripeSessionId]);
 
   useEffect(() => {
@@ -385,7 +385,7 @@ export function TailoredIntakeClient() {
       <div className="eyebrow">Payment confirmed</div>
       <h1 className="page-title">Finalizing your tailored action-plan order.</h1>
       <p className="page-lead">
-        Your payment was successful. We are now creating the final admin order with your intake details and assessment result.
+        Your payment was successful. We are confirming the order and taking you back to your dashboard.
       </p>
 
       {error ? <p className="auth-error">{error}</p> : null}

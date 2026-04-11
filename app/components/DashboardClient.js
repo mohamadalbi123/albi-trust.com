@@ -35,6 +35,12 @@ function displayNameForUser(user) {
   return fullName;
 }
 
+function actionPlanStatusText(status) {
+  if (status === "ready") return "Ready";
+  if (status === "final_review") return "Final review in progress";
+  return "Under preparation";
+}
+
 export function DashboardClient() {
   const searchParams = useSearchParams();
   const { status, user, refresh } = useCurrentUser();
@@ -112,6 +118,7 @@ export function DashboardClient() {
   const retakeLocked = user.nextAssessmentAt && new Date(user.nextAssessmentAt) > new Date();
   const traderLevel = user.latestAssessment?.level?.title || "Not available yet";
   const displayName = displayNameForUser(user);
+  const actionPlanOrder = user.latestActionPlanOrder || null;
 
   async function handlePasswordChange(event) {
     event.preventDefault();
@@ -163,7 +170,7 @@ export function DashboardClient() {
 
       {newOrderId ? (
         <p className="auth-notice" style={{ marginTop: 18 }}>
-          Your tailored action-plan order was submitted successfully. Order ID: {newOrderId}
+          Your payment is confirmed. Your action plan is now under preparation.
         </p>
       ) : null}
 
@@ -201,25 +208,54 @@ export function DashboardClient() {
           </div>
         </div>
 
-        <div className="action-card">
-          <strong>Tailored action plan</strong>
-          <p className="muted">
-            {user.hasPaidTailoredPlan
-              ? `Paid access confirmed${user.latestPaidOrderAt ? ` on ${formatDate(user.latestPaidOrderAt)}` : ""}.`
-              : "Buy your personalized tailored action plan and complete the extra intake after payment."}
-          </p>
-          <div className="stack-actions">
-            {user.hasPaidTailoredPlan ? (
-              <span className="button-secondary" aria-disabled="true">
-                Unlocked
+        {actionPlanOrder ? (
+          <div className="action-card action-plan-status-card">
+            <div className="status-card-heading">
+              <strong>Your Action Plan</strong>
+              <span className={`status-pill status-pill-${actionPlanOrder.status}`}>
+                {actionPlanStatusText(actionPlanOrder.status)}
               </span>
-            ) : (
+            </div>
+            <p className="muted">
+              {actionPlanOrder.status === "ready"
+                ? "Your personal action plan is ready."
+                : actionPlanOrder.status === "final_review"
+                  ? "Your personal action plan is in final review. It will appear here as soon as the PDF is uploaded."
+                  : "We received your payment and are preparing your personal action plan based on your assessment and intake answers."}
+            </p>
+            <div className="mini-grid" style={{ marginTop: 16 }}>
+              <div className="metric">
+                <span>Purchased on</span>
+                <strong>{formatDate(actionPlanOrder.purchasedAt)}</strong>
+              </div>
+              <div className="metric">
+                <span>Estimated ready</span>
+                <strong>{formatDate(actionPlanOrder.estimatedReadyAt)}</strong>
+              </div>
+            </div>
+            <div className="stack-actions" style={{ marginTop: 16 }}>
+              {actionPlanOrder.downloadUrl ? (
+                <a href={actionPlanOrder.downloadUrl} className="button-primary">
+                  Download PDF
+                </a>
+              ) : (
+                <span className="button-secondary disabled-button" aria-disabled="true">
+                  PDF ready soon
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="action-card">
+            <strong>Tailored action plan</strong>
+            <p className="muted">Buy your personalized tailored action plan and complete the extra intake after payment.</p>
+            <div className="stack-actions">
               <Link href="/tailored-intake" className="button-primary">
                 Buy now for $99
               </Link>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="action-card account-settings-card">
           <strong>Account settings</strong>
