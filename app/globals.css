@@ -490,12 +490,11 @@ select {
 
 .stats-grid-compact {
   grid-template-columns: 1fr;
-  max-width: 780px;
+  max-width: 860px;
   margin-left: auto;
   margin-right: auto;
   align-items: stretch;
-  gap: 0;
-  border-top: 1px solid rgba(18, 53, 107, 0.1);
+  gap: 14px;
 }
 
 .home-page .progress-bar {
@@ -530,18 +529,17 @@ select {
 }
 
 .home-section-light .stat-card {
-  border: 0;
-  border-bottom: 1px solid rgba(18, 53, 107, 0.1);
-  background: transparent;
-  box-shadow: none;
-  min-height: 0;
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 14px 30px rgba(54, 103, 164, 0.07);
+  min-height: 108px;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   text-align: left;
-  column-gap: 20px;
+  column-gap: 18px;
   row-gap: 4px;
-  padding: 22px 0;
+  padding: 22px 24px;
 }
 
 .home-page .home-main-board .section-title,
@@ -746,12 +744,12 @@ select {
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  border: 1px solid rgba(18, 53, 107, 0.16);
-  background: #ffffff;
-  color: #10213f;
+  border: 1px solid rgba(16, 33, 63, 0.12);
+  background: #10213f;
+  color: #ffffff;
   font-weight: 700;
   font-size: 0.92rem;
-  box-shadow: 0 10px 24px rgba(54, 103, 164, 0.08);
+  box-shadow: 0 10px 22px rgba(16, 33, 63, 0.12);
 }
 
 .stat-card .muted {
