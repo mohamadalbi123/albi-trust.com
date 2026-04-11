@@ -447,6 +447,28 @@ function adminOrderSummary(order, db) {
   };
 }
 
+export async function getAdminActionPlanGeneratorContext(orderId) {
+  const db = await readDb();
+  const order = (db.orders || []).find((entry) => entry.id === orderId && entry.status === "paid");
+
+  if (!order) {
+    throw new Error("Paid order not found.");
+  }
+
+  const user = findUserByAnyId(db, order.userId);
+  const { accountScreenshots, ...intake } = order.intake || {};
+
+  return {
+    order: {
+      ...adminOrderSummary(order, db),
+      intake,
+      screenshotCount: Array.isArray(accountScreenshots) ? accountScreenshots.length : 0,
+      assessmentSnapshot: order.assessmentSnapshot || user?.latestAssessment || null,
+    },
+    user: user ? adminUserSummary(user, db) : null,
+  };
+}
+
 function adminUserSummary(user, db) {
   const latestPaidOrder = getLatestPaidOrderForUser(db, user.id);
 

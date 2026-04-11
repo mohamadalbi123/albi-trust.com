@@ -76,6 +76,9 @@ export function AdminActionPlansClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingOrderId, setUploadingOrderId] = useState("");
   const [activeUserAction, setActiveUserAction] = useState("");
+  const [generatingOrderId, setGeneratingOrderId] = useState("");
+  const [generatorDraft, setGeneratorDraft] = useState("");
+  const [generatorOrder, setGeneratorOrder] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
@@ -228,6 +231,36 @@ export function AdminActionPlansClient() {
     }
   }
 
+  async function generateActionPlanDraft(orderId) {
+    setError("");
+    setNotice("");
+    setGeneratorDraft("");
+    setGeneratorOrder(null);
+    setGeneratingOrderId(orderId);
+
+    try {
+      const response = await fetch("/api/admin/action-plan-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to generate action plan draft.");
+        return;
+      }
+
+      setGeneratorDraft(data.draft || "");
+      setGeneratorOrder(data.order || null);
+      setNotice("Draft generated. Review and edit it before creating the PDF.");
+    } catch {
+      setError("Unable to generate action plan draft.");
+    } finally {
+      setGeneratingOrderId("");
+    }
+  }
+
   useEffect(() => {
     if (isAdmin) {
       loadAdminData("orders");
@@ -309,6 +342,14 @@ export function AdminActionPlansClient() {
             CSV
           </button>
         </div>
+        <button
+          type="button"
+          className={activeView === "generator" ? "button-primary" : "button-secondary"}
+          onClick={() => loadAdminData("generator")}
+          disabled={isLoading}
+        >
+          Action Plan Generator
+        </button>
         <button type="button" className="button-secondary" onClick={handleAdminLogout} disabled={isSigningOut}>
           {isSigningOut ? "Signing out..." : "Sign out"}
         </button>
@@ -485,8 +526,57 @@ export function AdminActionPlansClient() {
           </div>
         ) : null}
 
+        {activeView === "generator" && orders.length ? (
+          <div className="admin-generator-layout">
+            <div className="action-card admin-generator-orders">
+              <strong>Paid orders</strong>
+              <p className="muted">Choose a paid client order and generate a first draft for your review.</p>
+              <div className="admin-generator-order-list">
+                {orders.map((order) => (
+                  <button
+                    key={`generator-${order.id}`}
+                    type="button"
+                    className="admin-generator-order-button"
+                    onClick={() => generateActionPlanDraft(order.id)}
+                    disabled={Boolean(generatingOrderId)}
+                  >
+                    <span>
+                      <strong>{order.fullName || order.email}</strong>
+                      <small>{order.displayId || order.id} - {order.traderLevel || "Trader level not available"}</small>
+                    </span>
+                    <span>{generatingOrderId === order.id ? "Generating..." : "Generate"}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="action-card admin-generator-draft-card">
+              <div className="admin-order-heading">
+                <div>
+                  <strong>Draft action plan</strong>
+                  <p className="muted">
+                    {generatorOrder
+                      ? `${generatorOrder.fullName || generatorOrder.email} - ${generatorOrder.displayId || generatorOrder.id}`
+                      : "Generated text will appear here."}
+                  </p>
+                </div>
+              </div>
+              <textarea
+                className="admin-generator-draft"
+                value={generatorDraft}
+                onChange={(event) => setGeneratorDraft(event.target.value)}
+                placeholder="Select a paid order and click Generate."
+              />
+              <p className="muted" style={{ marginTop: 12 }}>
+                Review this draft, add your final thinking, then create and upload the final PDF from Paid orders.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         {((activeView === "orders" && !orders.length) ||
-          (activeView === "users" && !users.length)) ? (
+          (activeView === "users" && !users.length) ||
+          (activeView === "generator" && !orders.length)) ? (
           <div className="action-card">
             <strong>No records yet</strong>
             <p className="muted">Nothing to show in this admin view yet.</p>

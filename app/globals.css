@@ -1426,6 +1426,56 @@ select {
   color: #8c2c2c;
 }
 
+.admin-generator-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.2fr);
+  gap: 18px;
+}
+
+.admin-generator-order-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-generator-order-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-generator-order-button span {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-generator-order-button small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.admin-generator-draft {
+  width: 100%;
+  min-height: 560px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  background: #ffffff;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.65;
+  resize: vertical;
+}
+
 .action-plan-status-card .mini-grid {
   grid-template-columns: repeat(2, minmax(150px, 1fr));
 }
@@ -2156,7 +2206,8 @@ select {
 
   .dashboard-hero,
   .dashboard-main-grid,
-  .dashboard-status-row {
+  .dashboard-status-row,
+  .admin-generator-layout {
     grid-template-columns: 1fr;
   }
 
@@ -2224,6 +2275,15 @@ select {
   .admin-token-row .button-primary,
   .admin-upload-row .button-primary {
     width: 100%;
+  }
+
+  .admin-generator-order-button {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-generator-draft {
+    min-height: 420px;
   }
 
   .feature-item,
