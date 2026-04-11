@@ -1026,6 +1026,7 @@ export async function createTailoredPlanDraft({
     status: "pending",
     createdAt: now,
     paidAt: null,
+    adminNotificationEmailSentAt: null,
     actionPlanPdf: null,
     assessmentSnapshot: user.latestAssessment || null,
     intake: {
@@ -1232,6 +1233,19 @@ export async function finalizeTailoredPlanOrder({ orderId, currentUserId }) {
     userName: order.fullName,
   });
 
+  await writeDb(db);
+  return order;
+}
+
+export async function markAdminOrderNotificationEmailSent(orderId) {
+  const db = await readDb();
+  const order = (db.orders || []).find((entry) => entry.id === orderId);
+
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  order.adminNotificationEmailSentAt = new Date().toISOString();
   await writeDb(db);
   return order;
 }

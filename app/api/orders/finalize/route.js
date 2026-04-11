@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { sendAdminOrderNotificationEmail } from "../../../lib/email";
 import {
   finalizeTailoredPlanOrder,
   getSessionCookieName,
   getUserFromSessionToken,
+  markAdminOrderNotificationEmailSent,
 } from "../../../lib/localAuth";
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -49,6 +51,21 @@ export async function POST(request) {
     }
 
     const order = await finalizeTailoredPlanOrder({ orderId, currentUserId: user.id });
+
+    if (!order.adminNotificationEmailSentAt) {
+      try {
+        const result = await sendAdminOrderNotificationEmail({ order });
+
+        if (result.sent) {
+          await markAdminOrderNotificationEmailSent(order.id);
+        } else {
+          console.error("Admin order notification was not sent:", result.reason);
+        }
+      } catch (emailError) {
+        console.error("Admin order notification failed:", emailError);
+      }
+    }
+
     return NextResponse.json({ ok: true, order });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Unable to finalize order." }, { status: 400 });
