@@ -24,6 +24,17 @@ function formatRetakeStatus(value) {
   return `Locked for 30 days. Available again on ${formatDate(value)}.`;
 }
 
+function displayNameForUser(user) {
+  const fullName = String(user?.fullName || "").trim();
+  const emailPrefix = String(user?.email || "").split("@")[0];
+
+  if (!fullName || fullName === emailPrefix) {
+    return "";
+  }
+
+  return fullName;
+}
+
 export function DashboardClient() {
   const searchParams = useSearchParams();
   const { status, user, refresh } = useCurrentUser();
@@ -100,6 +111,7 @@ export function DashboardClient() {
 
   const retakeLocked = user.nextAssessmentAt && new Date(user.nextAssessmentAt) > new Date();
   const traderLevel = user.latestAssessment?.level?.title || "Not available yet";
+  const displayName = displayNameForUser(user);
 
   async function handlePasswordChange(event) {
     event.preventDefault();
@@ -139,7 +151,7 @@ export function DashboardClient() {
     <section className="result-shell">
       <div className="eyebrow">Account dashboard</div>
       <h1 className="page-title">
-        {searchParams.get("verified") === "1" ? "Your account is ready." : `Welcome back${user.fullName ? `, ${user.fullName}.` : "."}`}
+        {searchParams.get("verified") === "1" ? "Your account is ready." : `Welcome back${displayName ? `, ${displayName}.` : "."}`}
       </h1>
       <p className="page-lead">
         {searchParams.get("verified") === "1"
@@ -223,7 +235,7 @@ export function DashboardClient() {
             </div>
             <div className="metric">
               <span>Name</span>
-              <strong>{user.fullName || "Not set"}</strong>
+              <strong>{displayName || "Not set"}</strong>
             </div>
             <div className="metric">
               <span>Email</span>

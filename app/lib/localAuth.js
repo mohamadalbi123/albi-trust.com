@@ -543,7 +543,7 @@ export function resetPasswordWithToken({ token, newPassword }) {
     user = {
       id: makeId("user"),
       publicId: nextPublicUserId(db),
-      fullName: resetPayload.email.split("@")[0],
+      fullName: "",
       email: resetPayload.email,
       passwordHash: null,
       createdAt: now,
