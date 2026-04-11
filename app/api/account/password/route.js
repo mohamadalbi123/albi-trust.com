@@ -6,7 +6,7 @@ export async function POST(request) {
   try {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get(getSessionCookieName())?.value;
-    const user = getUserFromSessionToken(sessionToken);
+    const user = await getUserFromSessionToken(sessionToken);
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -16,7 +16,7 @@ export async function POST(request) {
     const currentPassword = String(body.currentPassword || "");
     const newPassword = String(body.newPassword || "");
 
-    const updatedUser = updateUserPassword({
+    const updatedUser = await updateUserPassword({
       userId: user.id,
       currentPassword,
       newPassword,

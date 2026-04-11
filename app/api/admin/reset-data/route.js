@@ -13,7 +13,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  resetAppData();
+  await resetAppData();
 
   return NextResponse.json({
     ok: true,

@@ -10,7 +10,7 @@ import {
 export async function POST(request) {
   try {
     const token = request.cookies.get(getSessionCookieName())?.value;
-    const user = getUserFromSessionToken(token);
+    const user = await getUserFromSessionToken(token);
 
     if (!user) {
       return NextResponse.json({ error: "Please sign in before saving an assessment." }, { status: 401 });
@@ -23,11 +23,11 @@ export async function POST(request) {
       return NextResponse.json({ error: "Assessment result is required." }, { status: 400 });
     }
 
-    const saved = saveAssessmentForUser({
+    const saved = await saveAssessmentForUser({
       email: user.email,
       result,
     });
-    const session = createSession(saved.internalUserId);
+    const session = await createSession(saved.internalUserId);
 
     const response = NextResponse.json({
       ok: true,

@@ -25,7 +25,7 @@ export async function POST(request) {
   const headerStore = await headers();
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(getSessionCookieName())?.value || null;
-  const user = getUserFromSessionToken(sessionToken);
+  const user = await getUserFromSessionToken(sessionToken);
 
   if (!user) {
     return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });

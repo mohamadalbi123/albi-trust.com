@@ -18,7 +18,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Password should be at least 8 characters." }, { status: 400 });
     }
 
-    const { user, verifyUrl } = signupUser({ fullName, email, password, returnTo });
+    const { user, verifyUrl } = await signupUser({ fullName, email, password, returnTo });
 
     let emailSent = false;
     let emailError = "";

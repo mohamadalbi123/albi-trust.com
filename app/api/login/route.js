@@ -16,8 +16,8 @@ export async function POST(request) {
       return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
     }
 
-    const { user, internalUserId } = loginUser({ email, password });
-    const session = createSession(internalUserId);
+    const { user, internalUserId } = await loginUser({ email, password });
+    const session = await createSession(internalUserId);
 
     const response = NextResponse.json({ ok: true, user });
     response.cookies.set(getSessionCookieName(), session.token, {

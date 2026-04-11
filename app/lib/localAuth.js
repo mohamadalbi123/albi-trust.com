@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import fs from "fs";
+import { neon } from "@neondatabase/serverless";
 import path from "path";
 
 const DATA_DIR =
@@ -9,6 +10,39 @@ const DATA_DIR =
 const DB_PATH = path.join(DATA_DIR, "app-db.json");
 const SESSION_COOKIE = "albi_trust_session";
 const STATELESS_SESSION_PREFIX = "v2";
+let sqlClient = null;
+let databaseReady = false;
+
+function shouldUsePostgres() {
+  return Boolean(process.env.DATABASE_URL);
+}
+
+function getSqlClient() {
+  if (!sqlClient) {
+    sqlClient = neon(process.env.DATABASE_URL);
+  }
+
+  return sqlClient;
+}
+
+async function ensurePostgresDb() {
+  if (databaseReady) return;
+
+  const sql = getSqlClient();
+  await sql`
+    CREATE TABLE IF NOT EXISTS app_state (
+      id TEXT PRIMARY KEY,
+      data JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    INSERT INTO app_state (id, data)
+    VALUES ('main', ${JSON.stringify(makeEmptyDb())}::jsonb)
+    ON CONFLICT (id) DO NOTHING
+  `;
+  databaseReady = true;
+}
 
 function authSecret() {
   return process.env.NEXTAUTH_SECRET || "albi-trust-auth-secret-2026-local";
@@ -159,6 +193,18 @@ function normalizeDbShape(db) {
   };
 }
 
+function parseStoredDb(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 function nextPublicUserId(db) {
   const maxId = (db.users || []).reduce((highest, user) => {
     const value = Number(user?.publicId || 0);
@@ -184,13 +230,26 @@ function ensureUserPublicIds(db) {
   return changed;
 }
 
-function readDb() {
+async function readDb() {
+  if (shouldUsePostgres()) {
+    await ensurePostgresDb();
+    const sql = getSqlClient();
+    const rows = await sql`SELECT data FROM app_state WHERE id = 'main'`;
+    const db = normalizeDbShape(parseStoredDb(rows[0]?.data));
+
+    if (ensureUserPublicIds(db)) {
+      await writeDb(db);
+    }
+
+    return db;
+  }
+
   ensureDb();
   try {
     const raw = fs.readFileSync(DB_PATH, "utf8").trim();
     if (!raw) {
       const emptyDb = makeEmptyDb();
-      writeDb(emptyDb);
+      await writeDb(emptyDb);
       return emptyDb;
     }
 
@@ -201,19 +260,32 @@ function readDb() {
     return db;
   } catch {
     const emptyDb = makeEmptyDb();
-    writeDb(emptyDb);
+    await writeDb(emptyDb);
     return emptyDb;
   }
 }
 
-function writeDb(db) {
+async function writeDb(db) {
+  const normalizedDb = normalizeDbShape(db);
+
+  if (shouldUsePostgres()) {
+    await ensurePostgresDb();
+    const sql = getSqlClient();
+    await sql`
+      INSERT INTO app_state (id, data, updated_at)
+      VALUES ('main', ${JSON.stringify(normalizedDb)}::jsonb, NOW())
+      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+    `;
+    return;
+  }
+
   ensureDb();
-  fs.writeFileSync(DB_PATH, JSON.stringify(normalizeDbShape(db), null, 2));
+  fs.writeFileSync(DB_PATH, JSON.stringify(normalizedDb, null, 2));
 }
 
-export function resetAppData() {
+export async function resetAppData() {
   const emptyDb = makeEmptyDb();
-  writeDb(emptyDb);
+  await writeDb(emptyDb);
   return emptyDb;
 }
 
@@ -279,7 +351,7 @@ function findUserByAnyId(db, userId) {
   );
 }
 
-function ensureSessionUser(db, session) {
+async function ensureSessionUser(db, session) {
   if (!session?.sub || !session?.email) {
     return null;
   }
@@ -303,7 +375,7 @@ function ensureSessionUser(db, session) {
       assessments: [],
     };
     db.users.push(user);
-    writeDb(db);
+    await writeDb(db);
     return user;
   }
 
@@ -330,7 +402,7 @@ function ensureSessionUser(db, session) {
   }
 
   if (changed) {
-    writeDb(db);
+    await writeDb(db);
   }
 
   return user;
@@ -355,10 +427,9 @@ function summarizeAssessment(result) {
     .join("\n");
 }
 
-export function publicUser(user) {
+function publicUserFromDb(db, user) {
   if (!user) return null;
 
-  const db = readDb();
   const latestPaidOrder = getLatestPaidOrderForUser(db, user.id);
 
   return {
@@ -375,8 +446,13 @@ export function publicUser(user) {
   };
 }
 
-export function signupUser({ fullName, email, password, returnTo }) {
-  const db = readDb();
+export async function publicUser(user) {
+  const db = await readDb();
+  return publicUserFromDb(db, user);
+}
+
+export async function signupUser({ fullName, email, password, returnTo }) {
+  const db = await readDb();
   const normalizedEmail = normalizeEmail(email);
   const now = new Date().toISOString();
   const verificationToken = makeToken();
@@ -427,16 +503,16 @@ export function signupUser({ fullName, email, password, returnTo }) {
     verifyUrl,
   });
 
-  writeDb(db);
+  await writeDb(db);
 
   return {
-    user: publicUser(user),
+    user: publicUserFromDb(db, user),
     verifyUrl,
   };
 }
 
-export function verifyEmailToken(token) {
-  const db = readDb();
+export async function verifyEmailToken(token) {
+  const db = await readDb();
   const tokenHash = makeTokenHash(token);
   const user = db.users.find((entry) => entry.verificationTokenHash === tokenHash);
 
@@ -452,15 +528,15 @@ export function verifyEmailToken(token) {
   user.verificationTokenHash = null;
   user.verificationExpiresAt = null;
 
-  writeDb(db);
+  await writeDb(db);
   return {
-    user: publicUser(user),
+    user: publicUserFromDb(db, user),
     internalUserId: user.id,
   };
 }
 
-export function loginUser({ email, password }) {
-  const db = readDb();
+export async function loginUser({ email, password }) {
+  const db = await readDb();
   const normalizedEmail = normalizeEmail(email);
   const user = db.users.find((entry) => entry.email === normalizedEmail);
 
@@ -478,13 +554,13 @@ export function loginUser({ email, password }) {
   }
 
   return {
-    user: publicUser(user),
+    user: publicUserFromDb(db, user),
     internalUserId: user.id,
   };
 }
 
-export function updateUserPassword({ userId, currentPassword, newPassword }) {
-  const db = readDb();
+export async function updateUserPassword({ userId, currentPassword, newPassword }) {
+  const db = await readDb();
   const user = findUserByAnyId(db, userId);
 
   if (!user) {
@@ -502,9 +578,9 @@ export function updateUserPassword({ userId, currentPassword, newPassword }) {
   }
 
   user.passwordHash = hashPassword(newPassword);
-  writeDb(db);
+  await writeDb(db);
 
-  return publicUser(user);
+  return publicUserFromDb(db, user);
 }
 
 export function createPasswordResetToken(email) {
@@ -524,7 +600,7 @@ export function createPasswordResetToken(email) {
   );
 }
 
-export function resetPasswordWithToken({ token, newPassword }) {
+export async function resetPasswordWithToken({ token, newPassword }) {
   const resetPayload = readSignedPayloadToken(token, "password_reset");
 
   if (!resetPayload?.email) {
@@ -535,7 +611,7 @@ export function resetPasswordWithToken({ token, newPassword }) {
     throw new Error("New password must be at least 8 characters.");
   }
 
-  const db = readDb();
+  const db = await readDb();
   let user = db.users.find((entry) => entry.email === resetPayload.email);
 
   if (!user) {
@@ -560,16 +636,16 @@ export function resetPasswordWithToken({ token, newPassword }) {
 
   user.passwordHash = hashPassword(newPassword);
   user.emailVerifiedAt = user.emailVerifiedAt || new Date().toISOString();
-  writeDb(db);
+  await writeDb(db);
 
   return {
-    user: publicUser(user),
+    user: publicUserFromDb(db, user),
     internalUserId: user.id,
   };
 }
 
-export function upsertGoogleUser({ fullName, email }) {
-  const db = readDb();
+export async function upsertGoogleUser({ fullName, email }) {
+  const db = await readDb();
   const normalizedEmail = normalizeEmail(email);
   const now = new Date().toISOString();
 
@@ -607,16 +683,16 @@ export function upsertGoogleUser({ fullName, email }) {
     user.verificationExpiresAt = null;
   }
 
-  writeDb(db);
+  await writeDb(db);
 
   return {
-    user: publicUser(user),
+    user: publicUserFromDb(db, user),
     internalUserId: user.id,
   };
 }
 
-export function createSession(userId) {
-  const db = readDb();
+export async function createSession(userId) {
+  const db = await readDb();
   const user = findUserByAnyId(db, userId);
 
   if (!user) {
@@ -636,7 +712,7 @@ export function createSession(userId) {
     expiresAt,
   });
 
-  writeDb(db);
+  await writeDb(db);
 
   return {
     token,
@@ -644,14 +720,14 @@ export function createSession(userId) {
   };
 }
 
-export function getUserFromSessionToken(token) {
+export async function getUserFromSessionToken(token) {
   if (!token) return null;
 
-  const db = readDb();
+  const db = await readDb();
   const statelessSession = readStatelessSessionToken(token);
 
   if (statelessSession) {
-    return publicUser(ensureSessionUser(db, statelessSession));
+    return publicUserFromDb(db, await ensureSessionUser(db, statelessSession));
   }
 
   const tokenHash = makeTokenHash(token);
@@ -662,19 +738,19 @@ export function getUserFromSessionToken(token) {
   if (!session) return null;
 
   const user = db.users.find((entry) => entry.id === session.userId);
-  return publicUser(user);
+  return publicUserFromDb(db, user);
 }
 
-export function destroySession(token) {
+export async function destroySession(token) {
   if (!token) return;
-  const db = readDb();
+  const db = await readDb();
   const tokenHash = makeTokenHash(token);
   db.sessions = db.sessions.filter((entry) => entry.tokenHash !== tokenHash);
-  writeDb(db);
+  await writeDb(db);
 }
 
-export function saveAssessmentForUser({ email, result }) {
-  const db = readDb();
+export async function saveAssessmentForUser({ email, result }) {
+  const db = await readDb();
   const normalizedEmail = normalizeEmail(email);
   const user = db.users.find((entry) => entry.email === normalizedEmail);
 
@@ -705,11 +781,11 @@ export function saveAssessmentForUser({ email, result }) {
   user.assessments = user.assessments || [];
   user.assessments.unshift(assessmentRecord);
 
-  writeDb(db);
+  await writeDb(db);
   return {
     assessment: assessmentRecord,
     internalUserId: user.id,
-    user: publicUser(user),
+    user: publicUserFromDb(db, user),
   };
 }
 
@@ -717,7 +793,7 @@ export function getSessionCookieName() {
   return SESSION_COOKIE;
 }
 
-export function createTailoredPlanDraft({
+export async function createTailoredPlanDraft({
   userId,
   tradingYears,
   profitableBefore,
@@ -735,7 +811,7 @@ export function createTailoredPlanDraft({
   dependsOnTradingIncome,
   personalBackground,
 }) {
-  const db = readDb();
+  const db = await readDb();
   const user = findUserByAnyId(db, userId);
 
   if (!user) {
@@ -777,12 +853,12 @@ export function createTailoredPlanDraft({
   db.orders = db.orders || [];
   db.orders.unshift(order);
 
-  writeDb(db);
+  await writeDb(db);
   return order;
 }
 
-export function finalizeTailoredPlanOrder({ orderId, currentUserId }) {
-  const db = readDb();
+export async function finalizeTailoredPlanOrder({ orderId, currentUserId }) {
+  const db = await readDb();
   const order = (db.orders || []).find((entry) => entry.id === orderId);
 
   if (!order) {
@@ -831,6 +907,6 @@ export function finalizeTailoredPlanOrder({ orderId, currentUserId }) {
     userName: order.fullName,
   });
 
-  writeDb(db);
+  await writeDb(db);
   return order;
 }

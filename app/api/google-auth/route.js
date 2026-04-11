@@ -26,12 +26,12 @@ export async function GET(request) {
     [session.user.given_name, session.user.family_name].filter(Boolean).join(" ").trim() ||
     session.user.email;
 
-  const { internalUserId } = upsertGoogleUser({
+  const { internalUserId } = await upsertGoogleUser({
     fullName,
     email: session.user.email,
   });
 
-  const appSession = createSession(internalUserId);
+  const appSession = await createSession(internalUserId);
   const response = NextResponse.redirect(new URL(nextPath, request.url));
 
   response.cookies.set(getSessionCookieName(), appSession.token, {

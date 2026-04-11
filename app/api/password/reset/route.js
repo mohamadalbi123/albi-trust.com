@@ -12,8 +12,8 @@ export async function POST(request) {
     const token = String(body.token || "").trim();
     const newPassword = String(body.newPassword || "");
 
-    const reset = resetPasswordWithToken({ token, newPassword });
-    const session = createSession(reset.internalUserId);
+    const reset = await resetPasswordWithToken({ token, newPassword });
+    const session = await createSession(reset.internalUserId);
     const response = NextResponse.json({ ok: true, user: reset.user });
 
     response.cookies.set(getSessionCookieName(), session.token, {

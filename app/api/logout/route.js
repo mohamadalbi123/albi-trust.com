@@ -3,7 +3,7 @@ import { destroySession, getSessionCookieName, shouldUseSecureCookies } from "..
 
 export async function POST(request) {
   const token = request.cookies.get(getSessionCookieName())?.value;
-  destroySession(token);
+  await destroySession(token);
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set(getSessionCookieName(), "", {

@@ -68,11 +68,11 @@ export async function GET(request) {
       throw new Error("Google account email is missing.");
     }
 
-    const { internalUserId } = upsertGoogleUser({
+    const { internalUserId } = await upsertGoogleUser({
       fullName: profile.name || profile.email,
       email: profile.email,
     });
-    const appSession = createSession(internalUserId);
+    const appSession = await createSession(internalUserId);
     const response = NextResponse.redirect(new URL(safeGoogleReturnPath(storedState.nextPath) || "/dashboard", request.url));
 
     response.cookies.set(getSessionCookieName(), appSession.token, {

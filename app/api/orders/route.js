@@ -8,7 +8,7 @@ import {
 export async function POST(request) {
   try {
     const token = request.cookies.get(getSessionCookieName())?.value;
-    const user = getUserFromSessionToken(token);
+    const user = await getUserFromSessionToken(token);
 
     if (!user) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
@@ -16,7 +16,7 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    const order = createTailoredPlanDraft({
+    const order = await createTailoredPlanDraft({
       userId: user.id,
       tradingYears: String(body.tradingYears || ""),
       profitableBefore: String(body.profitableBefore || ""),

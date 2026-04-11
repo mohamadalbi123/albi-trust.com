@@ -3,7 +3,7 @@ import { getSessionCookieName, getUserFromSessionToken } from "../../lib/localAu
 
 export async function GET(request) {
   const token = request.cookies.get(getSessionCookieName())?.value;
-  const user = getUserFromSessionToken(token);
+  const user = await getUserFromSessionToken(token);
 
   return NextResponse.json({
     authenticated: Boolean(user),

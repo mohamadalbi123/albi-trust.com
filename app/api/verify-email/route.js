@@ -18,13 +18,13 @@ export async function GET(request) {
     return NextResponse.redirect(new URL("/login?verified=missing", request.url));
   }
 
-  const verified = verifyEmailToken(token);
+  const verified = await verifyEmailToken(token);
 
   if (!verified) {
     return NextResponse.redirect(new URL("/login?verified=invalid", request.url));
   }
 
-  const session = createSession(verified.internalUserId);
+  const session = await createSession(verified.internalUserId);
   const redirectUrl = new URL(nextPath, request.url);
   redirectUrl.searchParams.set("verified", "1");
   const response = NextResponse.redirect(redirectUrl);
