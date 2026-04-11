@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { categories } from "../lib/assessmentData";
 import { useCurrentUser } from "./useCurrentUser";
 
 export function ResultsClient() {
   const [result, setResult] = useState(null);
-  const { status, isAuthenticated, user } = useCurrentUser();
+  const [isRepairingAssessment, setIsRepairingAssessment] = useState(false);
+  const repairAttemptedRef = useRef(false);
+  const { status, isAuthenticated, user, refresh } = useCurrentUser();
 
   useEffect(() => {
     const stored = window.localStorage.getItem("albi-trust-assessment");
@@ -25,6 +27,32 @@ export function ResultsClient() {
       setResult(user.latestAssessment);
     }
   }, [result, user]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !result || user?.latestAssessmentAt || isRepairingAssessment) return;
+    if (repairAttemptedRef.current) return;
+    repairAttemptedRef.current = true;
+
+    async function repairAssessmentRecord() {
+      setIsRepairingAssessment(true);
+
+      try {
+        const response = await fetch("/api/assessment/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ result }),
+        });
+
+        if (response.ok) {
+          await refresh();
+        }
+      } finally {
+        setIsRepairingAssessment(false);
+      }
+    }
+
+    repairAssessmentRecord();
+  }, [isAuthenticated, result, user?.latestAssessmentAt, isRepairingAssessment, refresh]);
 
   if (status === "loading") {
     return (

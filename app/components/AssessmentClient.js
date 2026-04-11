@@ -105,7 +105,7 @@ export function AssessmentClient() {
         <div className="eyebrow">Assessment locked</div>
         <h1 className="page-title">This assessment is locked for now.</h1>
         <p className="page-lead">
-          Your account already has a completed assessment. Retakes are available every 1 month so the result stays meaningful.
+          Your account already has a completed assessment. You can retake it once every 30 days so the result stays meaningful.
         </p>
 
         <div className="action-grid" style={{ marginTop: 28 }}>
@@ -131,8 +131,8 @@ export function AssessmentClient() {
           <Link href="/results" className="button-primary">
             View my saved result
           </Link>
-          <Link href="/login" className="button-secondary">
-            Go to login
+          <Link href="/dashboard" className="button-secondary">
+            Go to dashboard
           </Link>
         </div>
       </div>

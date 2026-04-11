@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import {
+  createSession,
   getSessionCookieName,
   getUserFromSessionToken,
   saveAssessmentForUser,
+  shouldUseSecureCookies,
 } from "../../../lib/localAuth";
 
 export async function POST(request) {
@@ -21,15 +23,27 @@ export async function POST(request) {
       return NextResponse.json({ error: "Assessment result is required." }, { status: 400 });
     }
 
-    const assessment = saveAssessmentForUser({
+    const saved = saveAssessmentForUser({
       email: user.email,
       result,
     });
+    const session = createSession(saved.internalUserId);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ok: true,
-      assessment,
+      assessment: saved.assessment,
+      user: saved.user,
     });
+
+    response.cookies.set(getSessionCookieName(), session.token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: shouldUseSecureCookies(),
+      path: "/",
+      expires: new Date(session.expiresAt),
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       {

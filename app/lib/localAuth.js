@@ -35,6 +35,9 @@ function makeStatelessSessionToken(user, expiresAt) {
       email: user.email || "",
       emailVerifiedAt: user.emailVerifiedAt || null,
       createdAt: user.createdAt || new Date().toISOString(),
+      latestAssessmentAt: user.latestAssessmentAt || null,
+      nextAssessmentAt: user.nextAssessmentAt || null,
+      latestAssessment: user.latestAssessment || null,
       expiresAt,
     }),
   );
@@ -253,9 +256,9 @@ function ensureSessionUser(db, session) {
       emailVerifiedAt: session.emailVerifiedAt || new Date().toISOString(),
       verificationTokenHash: null,
       verificationExpiresAt: null,
-      latestAssessmentAt: null,
-      nextAssessmentAt: null,
-      latestAssessment: null,
+      latestAssessmentAt: session.latestAssessmentAt || null,
+      nextAssessmentAt: session.nextAssessmentAt || null,
+      latestAssessment: session.latestAssessment || null,
       assessments: [],
     };
     db.users.push(user);
@@ -272,6 +275,16 @@ function ensureSessionUser(db, session) {
 
   if (!user.emailVerifiedAt && session.emailVerifiedAt) {
     user.emailVerifiedAt = session.emailVerifiedAt;
+    changed = true;
+  }
+
+  if (
+    session.latestAssessmentAt &&
+    (!user.latestAssessmentAt || new Date(session.latestAssessmentAt) > new Date(user.latestAssessmentAt))
+  ) {
+    user.latestAssessmentAt = session.latestAssessmentAt;
+    user.nextAssessmentAt = session.nextAssessmentAt || user.nextAssessmentAt || null;
+    user.latestAssessment = session.latestAssessment || user.latestAssessment || null;
     changed = true;
   }
 
@@ -575,8 +588,7 @@ export function saveAssessmentForUser({ email, result }) {
     throw error;
   }
 
-  const nextAssessmentDate = new Date(now);
-  nextAssessmentDate.setMonth(nextAssessmentDate.getMonth() + 1);
+  const nextAssessmentDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 30);
 
   const assessmentRecord = {
     id: makeId("assessment"),
@@ -592,7 +604,11 @@ export function saveAssessmentForUser({ email, result }) {
   user.assessments.unshift(assessmentRecord);
 
   writeDb(db);
-  return assessmentRecord;
+  return {
+    assessment: assessmentRecord,
+    internalUserId: user.id,
+    user: publicUser(user),
+  };
 }
 
 export function getSessionCookieName() {

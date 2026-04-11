@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useCurrentUser } from "./useCurrentUser";
 
 function formatDate(value) {
-  if (!value) return "Not yet";
+  if (!value) return "Not completed yet";
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -14,14 +14,14 @@ function formatDate(value) {
 }
 
 function formatRetakeStatus(value) {
-  if (!value) return "Available now.";
+  if (!value) return "Available after your first completed assessment.";
 
   const nextDate = new Date(value);
   if (nextDate <= new Date()) {
     return "Available now.";
   }
 
-  return `Locked until ${formatDate(value)}.`;
+  return `Locked for 30 days. Available again on ${formatDate(value)}.`;
 }
 
 export function DashboardClient() {
@@ -125,7 +125,7 @@ export function DashboardClient() {
 
         <div className="action-card">
           <strong>Next eligible retake</strong>
-          <p className="muted">{formatDate(user.nextAssessmentAt)}</p>
+          <p className="muted">{user.latestAssessmentAt ? formatDate(user.nextAssessmentAt) : "Complete your first assessment to start the 30-day timer."}</p>
         </div>
 
         <div className="action-card">
@@ -139,8 +139,10 @@ export function DashboardClient() {
           <strong>Assessment</strong>
           <p className="muted">
             {retakeLocked
-              ? `Your current result remains saved. You can retake the assessment again from ${formatDate(user.nextAssessmentAt)}.`
-              : "You can continue into the assessment when you are ready."}
+              ? `Your current result remains saved. A new assessment is locked until ${formatDate(user.nextAssessmentAt)}.`
+              : user.latestAssessmentAt
+                ? "Your 30-day lock has ended. You can retake the assessment when you are ready."
+                : "You can take your first assessment when you are ready."}
           </p>
           <div className="stack-actions">
             <Link href="/assessment" className="button-primary">
