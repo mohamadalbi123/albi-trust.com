@@ -12,17 +12,22 @@ export async function POST(request) {
 
   const token = createPasswordResetToken(email);
 
-  if (token) {
-    try {
-      const resetUrl = `${getAppBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
-      await sendPasswordResetEmail({ to: email, resetUrl });
-    } catch (error) {
-      console.error("Password reset email failed:", error.message || error);
-    }
+  if (!token) {
+    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+  }
+
+  const resetUrl = `${getAppBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+  const result = await sendPasswordResetEmail({ to: email, resetUrl });
+
+  if (!result.sent) {
+    return NextResponse.json(
+      { error: result.reason || "Unable to send reset email." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({
     ok: true,
-    message: "If an account exists for this email, a reset link has been sent.",
+    message: "A password reset link has been sent to your email.",
   });
 }

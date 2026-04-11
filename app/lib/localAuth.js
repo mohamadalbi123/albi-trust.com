@@ -508,11 +508,9 @@ export function updateUserPassword({ userId, currentPassword, newPassword }) {
 }
 
 export function createPasswordResetToken(email) {
-  const db = readDb();
   const normalizedEmail = normalizeEmail(email);
-  const user = db.users.find((entry) => entry.email === normalizedEmail);
 
-  if (!user) {
+  if (!normalizedEmail || !normalizedEmail.includes("@")) {
     return null;
   }
 
@@ -520,7 +518,6 @@ export function createPasswordResetToken(email) {
     "password_reset",
     {
       email: normalizedEmail,
-      userId: user.id,
       purpose: "password_reset",
     },
     new Date(Date.now() + 1000 * 60 * 30).toISOString(),
@@ -530,7 +527,7 @@ export function createPasswordResetToken(email) {
 export function resetPasswordWithToken({ token, newPassword }) {
   const resetPayload = readSignedPayloadToken(token, "password_reset");
 
-  if (!resetPayload?.email || !resetPayload?.userId) {
+  if (!resetPayload?.email) {
     throw new Error("This password reset link is invalid or expired.");
   }
 
@@ -539,12 +536,26 @@ export function resetPasswordWithToken({ token, newPassword }) {
   }
 
   const db = readDb();
-  const user = db.users.find(
-    (entry) => entry.id === resetPayload.userId && entry.email === resetPayload.email,
-  );
+  let user = db.users.find((entry) => entry.email === resetPayload.email);
 
   if (!user) {
-    throw new Error("This password reset link is invalid or expired.");
+    const now = new Date().toISOString();
+    user = {
+      id: makeId("user"),
+      publicId: nextPublicUserId(db),
+      fullName: resetPayload.email.split("@")[0],
+      email: resetPayload.email,
+      passwordHash: null,
+      createdAt: now,
+      emailVerifiedAt: now,
+      verificationTokenHash: null,
+      verificationExpiresAt: null,
+      latestAssessmentAt: null,
+      nextAssessmentAt: null,
+      latestAssessment: null,
+      assessments: [],
+    };
+    db.users.push(user);
   }
 
   user.passwordHash = hashPassword(newPassword);
