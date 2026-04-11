@@ -1792,6 +1792,10 @@ select {
   color: rgba(16, 33, 63, 0.42);
 }
 
+.tailored-textarea-compact {
+  min-height: 150px;
+}
+
 .form-field input::placeholder {
   color: rgba(16, 33, 63, 0.42);
 }

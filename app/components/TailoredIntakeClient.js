@@ -32,6 +32,7 @@ export function TailoredIntakeClient() {
     averageHoldingTime: "",
     usesTradingSignals: "",
     tradingAccountNotes: "",
+    strategyDescription: "",
     personalBackground: "",
   });
   const [accountScreenshots, setAccountScreenshots] = useState([]);
@@ -454,6 +455,16 @@ export function TailoredIntakeClient() {
               onChange={(event) => handleScreenshotChange(event.target.files)}
             />
             <small>Optional. Upload up to 3 screenshots from recent trading accounts. Each screenshot must be under 800KB.</small>
+          </label>
+
+          <label className="form-field form-field-full">
+            <textarea
+              className="tailored-textarea tailored-textarea-compact"
+              placeholder="Describe your trading strategy in brief. Example: I trade London session gold breakouts, wait for pullbacks, risk 1%, and usually hold 30-90 minutes."
+              value={form.strategyDescription}
+              maxLength={2000}
+              onChange={(event) => updateField("strategyDescription", event.target.value)}
+            />
           </label>
 
           <div className="auth-name-row tailored-intake-row">

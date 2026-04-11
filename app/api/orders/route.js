@@ -58,6 +58,7 @@ export async function POST(request) {
       averageHoldingTime: String(body.averageHoldingTime || ""),
       usesTradingSignals: String(body.usesTradingSignals || ""),
       tradingAccountNotes: String(body.tradingAccountNotes || ""),
+      strategyDescription: String(body.strategyDescription || ""),
       accountScreenshots: accountScreenshots(body.accountScreenshots),
       personalBackground: String(body.personalBackground || ""),
     });

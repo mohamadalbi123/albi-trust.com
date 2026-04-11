@@ -945,6 +945,7 @@ export async function createTailoredPlanDraft({
   averageHoldingTime,
   usesTradingSignals,
   tradingAccountNotes,
+  strategyDescription,
   accountScreenshots,
   personalBackground,
 }) {
@@ -990,6 +991,7 @@ export async function createTailoredPlanDraft({
       averageHoldingTime,
       usesTradingSignals,
       tradingAccountNotes,
+      strategyDescription,
       accountScreenshots,
       personalBackground,
     },
