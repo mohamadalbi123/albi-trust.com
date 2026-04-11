@@ -28,6 +28,7 @@ export async function POST(request) {
         to: user.email,
         fullName: user.fullName,
         verifyUrl,
+        returnTo,
       });
       emailSent = Boolean(result.sent);
       emailError = result.reason || "";

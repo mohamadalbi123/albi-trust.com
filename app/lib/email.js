@@ -9,7 +9,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-export async function sendVerificationEmail({ to, fullName, verifyUrl }) {
+export async function sendVerificationEmail({ to, fullName, verifyUrl, returnTo }) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
@@ -31,6 +31,10 @@ export async function sendVerificationEmail({ to, fullName, verifyUrl }) {
   const appUrl = getAppBaseUrl();
   const safeName = escapeHtml(fullName || "there");
   const safeUrl = escapeHtml(verifyUrl);
+  const isAssessmentSignup = returnTo === "/assessment";
+  const emailIntro = isAssessmentSignup
+    ? "click the button below to confirm your Albi Trust account and continue to your assessment."
+    : "click the button below to confirm your Albi Trust account.";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -45,7 +49,7 @@ export async function sendVerificationEmail({ to, fullName, verifyUrl }) {
       html: `
         <div style="font-family:Arial,sans-serif;line-height:1.6;color:#10213f;padding:24px;">
           <h2 style="margin:0 0 12px;">Confirm your email</h2>
-          <p style="margin:0 0 18px;">Hi ${safeName}, click the button below to confirm your Albi Trust account and continue to your assessment.</p>
+          <p style="margin:0 0 18px;">Hi ${safeName}, ${emailIntro}</p>
           <p style="margin:0 0 20px;">
             <a href="${safeUrl}" style="display:inline-block;padding:12px 18px;background:#10213f;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;">
               Confirm email
