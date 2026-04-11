@@ -43,10 +43,10 @@ export function AssessmentClient() {
   }, [user]);
 
   useEffect(() => {
-    if (status === "ready" && user && searchParams.get("verified") === "1" && !user.latestAssessmentAt) {
+    if (status === "ready" && user && !user.latestAssessmentAt) {
       setShowReadyPrompt(true);
     }
-  }, [searchParams, status, user]);
+  }, [status, user]);
 
   function handleAnswer(value) {
     setAnswers((prev) => ({
@@ -157,10 +157,10 @@ export function AssessmentClient() {
       {showReadyPrompt ? (
         <div className="assessment-start-overlay">
           <div className="assessment-start-modal">
-            <div className="eyebrow">Email confirmed</div>
+            <div className="eyebrow">{searchParams.get("verified") === "1" ? "Email confirmed" : "Before you start"}</div>
             <h1 className="page-title assessment-start-title">Ready to take the assessment?</h1>
             <p className="page-lead">
-              Your account is ready. Start when you can answer honestly from your real trading behavior.
+              Answer honestly from your real trading behavior so your level can be evaluated correctly.
             </p>
             <div className="stack-actions">
               <button type="button" className="button-primary" onClick={handleStartAssessment}>

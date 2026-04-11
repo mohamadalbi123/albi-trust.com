@@ -104,7 +104,9 @@ export function DashboardClient() {
   return (
     <section className="result-shell">
       <div className="eyebrow">Account dashboard</div>
-      <h1 className="page-title">Welcome back{user.fullName ? `, ${user.fullName}.` : "."}</h1>
+      <h1 className="page-title">
+        {searchParams.get("verified") === "1" ? "Your account is ready." : `Welcome back${user.fullName ? `, ${user.fullName}.` : "."}`}
+      </h1>
       <p className="page-lead">
         {searchParams.get("verified") === "1"
           ? "Your email is confirmed and your account is ready."
