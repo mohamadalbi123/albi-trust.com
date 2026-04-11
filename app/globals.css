@@ -260,8 +260,12 @@ select {
 }
 
 .home-page .brand-mark {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.home-page .brand-mark-glyph {
+  color: #ffffff;
 }
 
 .home-page .brand-mark::after {
