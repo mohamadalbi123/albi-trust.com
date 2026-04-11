@@ -50,7 +50,7 @@ export function HomeHeroCard() {
       <div className="eyebrow">Built from real trading experience</div>
       <h1>Find Out Exactly Why You're Not Profitable and Fix It in 30 Days.</h1>
       <p>
-        A serious assessment system for traders who want more structure, clearer self-awareness, and better execution.
+        A serious assessment system that identifies your level as a trader and delivers a tailored action plan based on your behavior and real-life situation, not a generic trading course.
       </p>
 
       <div className="hero-actions">
