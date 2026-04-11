@@ -70,7 +70,6 @@ function downloadUsersCsv(users) {
 export function AdminActionPlansClient() {
   const { status, user, refresh } = useCurrentUser();
   const [orders, setOrders] = useState([]);
-  const [assessmentOnlyUsers, setAssessmentOnlyUsers] = useState([]);
   const [users, setUsers] = useState([]);
   const [activeView, setActiveView] = useState("orders");
   const [selectedFiles, setSelectedFiles] = useState({});
@@ -147,7 +146,6 @@ export function AdminActionPlansClient() {
       }
 
       setOrders(data.orders || []);
-      setAssessmentOnlyUsers(data.assessmentOnlyUsers || []);
       setUsers(data.users || []);
       setActiveView(nextView);
     } catch {
@@ -264,14 +262,6 @@ export function AdminActionPlansClient() {
         </button>
         <button
           type="button"
-          className={activeView === "assessments" ? "button-primary" : "button-secondary"}
-          onClick={() => loadAdminData("assessments")}
-          disabled={isLoading}
-        >
-          Assessment taken, no order
-        </button>
-        <button
-          type="button"
           className={activeView === "users" ? "button-primary" : "button-secondary"}
           onClick={() => loadAdminData("users")}
           disabled={isLoading}
@@ -377,38 +367,6 @@ export function AdminActionPlansClient() {
           ))
         ) : null}
 
-        {activeView === "assessments" && assessmentOnlyUsers.length ? (
-          assessmentOnlyUsers.map((client) => (
-            <article className="action-card admin-order-card" key={client.id}>
-              <div className="admin-order-heading">
-                <div>
-                  <strong>{client.fullName || "No name"}</strong>
-                  <p className="muted">{client.email}</p>
-                </div>
-                <span className="status-pill status-pill-final_review">Assessment only</span>
-              </div>
-              <div className="mini-grid" style={{ marginTop: 16 }}>
-                <div className="metric">
-                  <span>User ID</span>
-                  <strong>{client.id}</strong>
-                </div>
-                <div className="metric">
-                  <span>Trader level</span>
-                  <strong>{client.traderLevel || "Not available"}</strong>
-                </div>
-                <div className="metric">
-                  <span>Assessment taken</span>
-                  <strong>{formatDate(client.latestAssessmentAt)}</strong>
-                </div>
-                <div className="metric">
-                  <span>Main blocker</span>
-                  <strong>{client.primaryWeakness || "Not available"}</strong>
-                </div>
-              </div>
-            </article>
-          ))
-        ) : null}
-
         {activeView === "users" && users.length ? (
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -445,7 +403,6 @@ export function AdminActionPlansClient() {
         ) : null}
 
         {((activeView === "orders" && !orders.length) ||
-          (activeView === "assessments" && !assessmentOnlyUsers.length) ||
           (activeView === "users" && !users.length)) ? (
           <div className="action-card">
             <strong>No records yet</strong>

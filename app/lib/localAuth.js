@@ -1045,11 +1045,9 @@ export async function getAdminClientDashboardData() {
     .filter((entry) => entry.status === "paid")
     .map((entry) => adminOrderSummary(entry, db));
   const users = (db.users || []).map((entry) => adminUserSummary(entry, db));
-  const assessmentOnlyUsers = users.filter((entry) => entry.latestAssessmentAt && !entry.hasPaidTailoredPlan);
 
   return {
     orders,
-    assessmentOnlyUsers,
     users,
   };
 }
