@@ -53,6 +53,10 @@ function systemPrompt() {
     .join("\n\n");
 }
 
+function clippedText(value, maxLength = 60000) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
 function pdfEscape(value) {
   return String(value || "")
     .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "")
@@ -292,6 +296,8 @@ export async function POST(request) {
     const body = await request.json();
     const orderId = String(body.orderId || "").trim();
     const action = String(body.action || "generate").trim();
+    const adminInstructions = clippedText(body.instructions, 12000);
+    const knowledgeNotes = clippedText(body.knowledge, 60000);
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required." }, { status: 400 });
@@ -332,6 +338,64 @@ export async function POST(request) {
       return NextResponse.json({ ok: true, order });
     }
 
+    if (action === "revise_draft") {
+      const draft = clippedText(body.draft, 60000);
+
+      if (!draft) {
+        return NextResponse.json({ error: "Draft text is required." }, { status: 400 });
+      }
+
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: process.env.OPENAI_MODEL || "gpt-4.1",
+          input: [
+            {
+              role: "system",
+              content: systemPrompt(),
+            },
+            {
+              role: "user",
+              content: [
+                "Revise the existing action plan draft for this paid order.",
+                "Keep the same client context and keep it practical.",
+                "Return the full revised draft, not only the changed parts.",
+                adminInstructions ? `Mohamad's revision instruction:\n${adminInstructions}` : "",
+                knowledgeNotes ? `Mohamad's method notes / uploaded text:\n${knowledgeNotes}` : "",
+                "",
+                "Paid order data:",
+                JSON.stringify(context, null, 2),
+                "",
+                "Existing draft:",
+                draft,
+              ]
+                .filter(Boolean)
+                .join("\n\n"),
+            },
+          ],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return NextResponse.json(
+          { error: data?.error?.message || "Unable to revise action plan draft." },
+          { status: response.status },
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        draft: extractResponseText(data) || draft,
+        order: context.order,
+      });
+    }
+
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -357,10 +421,14 @@ export async function POST(request) {
               "5. Trading rules",
               "6. Daily routine",
               "7. What Mohamad should review before sending",
+              adminInstructions ? `Mohamad's instruction for this draft:\n${adminInstructions}` : "",
+              knowledgeNotes ? `Mohamad's method notes / uploaded text:\n${knowledgeNotes}` : "",
               "",
               "Paid order data:",
               JSON.stringify(context, null, 2),
-            ].join("\n"),
+            ]
+              .filter(Boolean)
+              .join("\n\n"),
           },
         ],
       }),

@@ -77,9 +77,12 @@ export function AdminActionPlansClient() {
   const [uploadingOrderId, setUploadingOrderId] = useState("");
   const [activeUserAction, setActiveUserAction] = useState("");
   const [generatingOrderId, setGeneratingOrderId] = useState("");
+  const [revisingDraft, setRevisingDraft] = useState(false);
   const [deliveringDraft, setDeliveringDraft] = useState(false);
   const [generatorDraft, setGeneratorDraft] = useState("");
   const [generatorOrder, setGeneratorOrder] = useState(null);
+  const [generatorInstructions, setGeneratorInstructions] = useState("");
+  const [generatorKnowledge, setGeneratorKnowledge] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
@@ -244,7 +247,11 @@ export function AdminActionPlansClient() {
       const response = await fetch("/api/admin/action-plan-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({
+          orderId,
+          instructions: generatorInstructions,
+          knowledge: generatorKnowledge,
+        }),
       });
       const data = await response.json();
 
@@ -260,6 +267,74 @@ export function AdminActionPlansClient() {
       setError("Unable to generate action plan draft.");
     } finally {
       setGeneratingOrderId("");
+    }
+  }
+
+  async function reviseActionPlanDraft() {
+    if (!generatorOrder?.id || !generatorDraft.trim()) {
+      setError("Generate a draft first.");
+      return;
+    }
+
+    if (!generatorInstructions.trim() && !generatorKnowledge.trim()) {
+      setError("Add an instruction or method notes before asking the AI to revise.");
+      return;
+    }
+
+    setError("");
+    setNotice("");
+    setRevisingDraft(true);
+
+    try {
+      const response = await fetch("/api/admin/action-plan-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "revise_draft",
+          orderId: generatorOrder.id,
+          draft: generatorDraft,
+          instructions: generatorInstructions,
+          knowledge: generatorKnowledge,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to revise action plan draft.");
+        return;
+      }
+
+      setGeneratorDraft(data.draft || generatorDraft);
+      setGeneratorOrder(data.order || generatorOrder);
+      setNotice("Draft revised. Review it before delivery.");
+    } catch {
+      setError("Unable to revise action plan draft.");
+    } finally {
+      setRevisingDraft(false);
+    }
+  }
+
+  async function uploadGeneratorKnowledge(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!/\.(txt|md|markdown|csv)$/i.test(file.name) && !file.type.startsWith("text/")) {
+      setError("For now, upload a text, Markdown, or CSV file. For PDF/book upload we will add a proper knowledge base next.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      setGeneratorKnowledge((prev) => [prev, `Notes from ${file.name}:\n${text}`].filter(Boolean).join("\n\n"));
+      setNotice("Notes uploaded into the generator context.");
+    } catch {
+      setError("Unable to read this file.");
+    } finally {
+      event.target.value = "";
     }
   }
 
@@ -574,6 +649,30 @@ export function AdminActionPlansClient() {
             <div className="action-card admin-generator-orders">
               <strong>Orders needing action plan</strong>
               <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
+              <div className="admin-generator-control-block">
+                <label className="form-field">
+                  <span>Instruction to AI</span>
+                  <textarea
+                    className="admin-generator-small-textarea"
+                    value={generatorInstructions}
+                    onChange={(event) => setGeneratorInstructions(event.target.value)}
+                    placeholder="Example: Make this action plan stricter, focus on risk control, and use my tone."
+                  />
+                </label>
+                <label className="form-field">
+                  <span>Your method notes</span>
+                  <textarea
+                    className="admin-generator-small-textarea"
+                    value={generatorKnowledge}
+                    onChange={(event) => setGeneratorKnowledge(event.target.value)}
+                    placeholder="Paste your book/course notes, rules, or framework here."
+                  />
+                </label>
+                <label className="button-secondary admin-generator-upload">
+                  Upload text notes
+                  <input type="file" accept=".txt,.md,.markdown,.csv,text/*" onChange={uploadGeneratorKnowledge} />
+                </label>
+              </div>
               <div className="admin-generator-order-list">
                 {generatorOrders.map((order) => (
                   <button
@@ -611,6 +710,14 @@ export function AdminActionPlansClient() {
                 placeholder="Select a paid order and click Generate."
               />
               <div className="stack-actions" style={{ marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={reviseActionPlanDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || deliveringDraft}
+                >
+                  {revisingDraft ? "Revising..." : "Revise with my instructions"}
+                </button>
                 <button
                   type="button"
                   className="button-primary"

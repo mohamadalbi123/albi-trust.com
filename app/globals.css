@@ -1438,6 +1438,30 @@ select {
   margin-top: 16px;
 }
 
+.admin-generator-control-block {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-generator-small-textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.admin-generator-upload {
+  position: relative;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.admin-generator-upload input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
 .admin-generator-order-button {
   display: flex;
   align-items: center;
