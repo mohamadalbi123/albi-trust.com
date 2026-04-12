@@ -12,6 +12,38 @@ import {
 const DEFAULT_ADMIN_EMAIL = "mohalbi123@hotmail.com";
 let cachedCourseKnowledge = null;
 
+const FIXED_PLAN_JSON_SCHEMA = {
+  traderLevel: "string",
+  score: "string",
+  mainBlocker: "string",
+  albiTrustApproach: "string",
+  actualTradingBehavior: "string",
+  coreDiagnosis: "string",
+  whyThisIsHappening: "string",
+  fourPillars: {
+    technicalAnalysis: "string",
+    riskManagement: "string",
+    tradingPlan: "string",
+    psychology: "string",
+  },
+  realityCheck: "string",
+  whatWillChangeIn30Days: ["string", "string", "string"],
+  thirtyDayActionPlan: {
+    week1: ["string", "string"],
+    week2: ["string", "string"],
+    week3: ["string", "string"],
+    week4: ["string", "string"],
+  },
+  nonNegotiableRules: ["string", "string", "string"],
+  dailyRoutine: {
+    beforeTrading: ["string", "string"],
+    duringTrading: ["string", "string"],
+    afterTrading: ["string", "string"],
+  },
+  yourOnlyJob: "string",
+  fromMohamad: "string",
+};
+
 function adminEmail() {
   return String(process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
 }
@@ -84,35 +116,212 @@ function builtInCourseKnowledgePrompt() {
 
 function actionPlanStructurePrompt() {
   return [
-    "Every action plan must follow this exact structure:",
-    "Write it like a professional client-facing financial coaching document: clear section titles, concise paragraphs, practical tables/lists, and no messy free-form essay style.",
-    "1. Cover summary.",
-    "2. Trader profile based on the paid intake answers and the 30-question assessment.",
-    "3. Main weakness.",
-    "4. Main strength.",
-    "5. Four-pillar trading analysis:",
-    "- Technical analysis: what the trader is doing well and what needs improvement.",
-    "- Risk management: what the trader is doing well and what needs improvement.",
-    "- Trading plan: what the trader is doing well and what needs improvement.",
-    "- Psychology: what the trader is doing well and what needs improvement.",
-    "6. Root cause.",
-    "7. Daily routine to follow in order to see improvement. This must be one standalone section that is clearly doable, with weekly routine first, then daily routine, then phone reminders/check-ins.",
+    "Every action plan must follow one fixed Albi Trust report template.",
+    "The section titles, section order, and hierarchy must always stay the same.",
+    "Do not rename sections. Do not remove sections. Do not merge sections. Do not add extra main sections.",
+    "Think of this like a medical report template: the headings stay fixed, but the diagnosis and treatment change depending on the client.",
+    "The PDF must look professional and consistent every time, so structure discipline matters as much as the analysis itself.",
+    "Write it like a professional client-facing financial coaching document: clear, direct, serious, and practical.",
+    "Use this exact main structure every time:",
+    "1. Trader Level / Score / Main Blocker",
+    "2. Albi Trust Approach",
+    "3. This Is How You Actually Trade",
+    "4. Core Diagnosis",
+    "5. Why This Is Happening",
+    "6. Your 4 Pillars Breakdown",
+    "7. Reality Check",
+    "8. What Will Change in 30 Days",
+    "9. 30-Day Action Plan",
+    "10. Non-Negotiable Rules",
+    "11. Daily Routine",
+    "12. Your Only Job",
+    "13. From Mohamad",
+    "Within 'Your 4 Pillars Breakdown', always include exactly these four subsections:",
+    "- Technical Analysis",
+    "- Risk Management",
+    "- Trading Plan",
+    "- Psychology",
+    "Within '30-Day Action Plan', always include exactly these four subsections:",
+    "- Week 1: Stop the Damage",
+    "- Week 2: Build Structure",
+    "- Week 3: Control Behavior",
+    "- Week 4: Consistency",
+    "Within 'Daily Routine', always include exactly these three subsections:",
+    "- Before Trading",
+    "- During Trading",
+    "- After Trading",
+    "Only the content inside each section should change based on the trader's data, assessment answers, scores, strengths, weaknesses, and life situation.",
+    "Before writing, first reason internally about:",
+    "- main blocker",
+    "- secondary blocker",
+    "- strongest pillar",
+    "- weakest pillar",
+    "- behavior pattern",
+    "- emotional pattern",
+    "- execution problem",
+    "Then write using the fixed structure.",
+    "The daily routine must be clearly doable, with weekly routine logic reflected inside the before-trading section where relevant.",
     "The daily routine must include a weekly routine: set 1-2 hours during the weekend while markets are closed, review weekly charts for the traded assets, read COT where relevant, check the economic calendar, keep a saved seasonality file by month and asset, review that seasonality each weekend, then draw levels from monthly, weekly, and 4H charts and set alerts without going smaller. Explain that this focused weekend session builds the bias for the week.",
     "The daily routine must adapt to the client's life, country, session, work status, and whether trading is main income. If the client is in Europe, mention how London, US, and Asia session timing can shape the routine. Use examples only when they fit the client.",
     "Tell the trader to use the iPhone Reminders app, or a similar reminders/tasks app on Android or other phone brands, to schedule the weekly routine, daily trading rules review, economic calendar check, journaling reminder, and any planned candle-close check-ins. Make reminders practical and tied to the client's routine.",
     "When discussing execution, explain that many openings can involve manipulation or opposite-direction movement before distribution. Mention accumulation, manipulation, and distribution conceptually.",
     "If the client is a scalper, suggest monitor discipline and strict session rules. If the client is a day trader, suggest executing according to plan, then stepping away from the screen to avoid moving stops or closing emotionally, checking only at planned candle closes that fit their strategy.",
-    "8. Trading rules the trader must write into their daily routine. Include examples such as reading rules, checking news, seasonality, and the economic calendar, but do not pretend to know exact rules the client did not give.",
-    "9. What to stop doing.",
-    "10. What to track.",
-    "11. Course-based actionable advice. This must be one clear section using the Albi Trust course/book ideas. Give specific actions the client can do, for example to avoid overtrading, accept losses, strengthen discipline, improve risk management, or stop emotional decisions. Match the actions to the client's weakness instead of listing generic tips.",
-    "12. Final notes.",
     "Use Mohamad's coaching voice: clear, serious, practical, and focused on behavior change.",
+    "Do not sound generic. Do not write like a course. Do not repeat the same sentence pattern in every section.",
+    "Return the analysis as JSON only, using the exact schema requested by the user message.",
   ].join("\n");
 }
 
 function clippedText(value, maxLength = 60000) {
   return String(value || "").trim().slice(0, maxLength);
+}
+
+function extractJsonObject(value) {
+  const text = String(value || "").trim();
+
+  if (!text) return null;
+
+  const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fencedMatch ? fencedMatch[1].trim() : text;
+
+  try {
+    return JSON.parse(candidate);
+  } catch {}
+
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+
+  if (start === -1 || end === -1 || end <= start) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(candidate.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
+
+function textList(value, minimum = 0) {
+  const items = Array.isArray(value)
+    ? value.map((entry) => normalizeInlineText(entry)).filter(Boolean)
+    : [];
+
+  while (items.length < minimum) {
+    items.push("To be refined during final review.");
+  }
+
+  return items;
+}
+
+function textValue(value, fallback = "To be refined during final review.") {
+  return normalizeInlineText(value) || fallback;
+}
+
+function heading(title) {
+  return `## ${title}`;
+}
+
+function subheading(title) {
+  return `### ${title}`;
+}
+
+function bulletList(items) {
+  return textList(items).map((item) => `- ${item}`).join("\n");
+}
+
+function formatStructuredDraft(plan, context) {
+  const assessment = context?.order?.assessmentSnapshot || {};
+  const traderLevel = textValue(plan?.traderLevel, assessment?.level?.title || "Trader level to be confirmed");
+  const score =
+    textValue(
+      plan?.score,
+      typeof assessment?.overallScore === "number" ? `${assessment.overallScore}/100` : "Score to be confirmed",
+    );
+  const mainBlocker = textValue(
+    plan?.mainBlocker,
+    assessment?.primaryWeakness?.label || "Main blocker to be confirmed",
+  );
+
+  return [
+    "# Trader Level / Score / Main Blocker",
+    `- Trader Level: ${traderLevel}`,
+    `- Score: ${score}`,
+    `- Main Blocker: ${mainBlocker}`,
+    "",
+    heading("Albi Trust Approach"),
+    textValue(plan?.albiTrustApproach),
+    "",
+    heading("This Is How You Actually Trade"),
+    textValue(plan?.actualTradingBehavior),
+    "",
+    heading("Core Diagnosis"),
+    textValue(plan?.coreDiagnosis),
+    "",
+    heading("Why This Is Happening"),
+    textValue(plan?.whyThisIsHappening),
+    "",
+    heading("Your 4 Pillars Breakdown"),
+    subheading("Technical Analysis"),
+    textValue(plan?.fourPillars?.technicalAnalysis),
+    "",
+    subheading("Risk Management"),
+    textValue(plan?.fourPillars?.riskManagement),
+    "",
+    subheading("Trading Plan"),
+    textValue(plan?.fourPillars?.tradingPlan),
+    "",
+    subheading("Psychology"),
+    textValue(plan?.fourPillars?.psychology),
+    "",
+    heading("Reality Check"),
+    textValue(plan?.realityCheck),
+    "",
+    heading("What Will Change in 30 Days"),
+    bulletList(plan?.whatWillChangeIn30Days),
+    "",
+    heading("30-Day Action Plan"),
+    subheading("Week 1: Stop the Damage"),
+    bulletList(plan?.thirtyDayActionPlan?.week1),
+    "",
+    subheading("Week 2: Build Structure"),
+    bulletList(plan?.thirtyDayActionPlan?.week2),
+    "",
+    subheading("Week 3: Control Behavior"),
+    bulletList(plan?.thirtyDayActionPlan?.week3),
+    "",
+    subheading("Week 4: Consistency"),
+    bulletList(plan?.thirtyDayActionPlan?.week4),
+    "",
+    heading("Non-Negotiable Rules"),
+    bulletList(plan?.nonNegotiableRules),
+    "",
+    heading("Daily Routine"),
+    subheading("Before Trading"),
+    bulletList(plan?.dailyRoutine?.beforeTrading),
+    "",
+    subheading("During Trading"),
+    bulletList(plan?.dailyRoutine?.duringTrading),
+    "",
+    subheading("After Trading"),
+    bulletList(plan?.dailyRoutine?.afterTrading),
+    "",
+    heading("Your Only Job"),
+    textValue(plan?.yourOnlyJob),
+    "",
+    heading("From Mohamad"),
+    textValue(plan?.fromMohamad),
+  ].join("\n");
+}
+
+function normalizePlanDraftFromResponse(responseText, context, fallbackDraft = "") {
+  const parsed = extractJsonObject(responseText);
+
+  if (!parsed) {
+    return clippedText(responseText || fallbackDraft, 60000);
+  }
+
+  return formatStructuredDraft(parsed, context);
 }
 
 function pdfEscape(value) {
@@ -672,7 +881,10 @@ export async function POST(request) {
               content: [
                 "Revise the existing action plan draft for this paid order.",
                 "Keep the same client context and keep it practical.",
-                "Return the full revised draft, not only the changed parts.",
+                "Keep the Albi Trust structure fixed.",
+                "Do not rename, remove, merge, or reorder sections.",
+                "Return valid JSON only. Do not return prose outside the JSON object.",
+                `Use this exact JSON schema:\n${JSON.stringify(FIXED_PLAN_JSON_SCHEMA, null, 2)}`,
                 adminInstructions ? `Mohamad's revision instruction:\n${adminInstructions}` : "",
                 knowledgeNotes ? `Mohamad's method notes / uploaded text:\n${knowledgeNotes}` : "",
                 "",
@@ -700,7 +912,7 @@ export async function POST(request) {
 
       return NextResponse.json({
         ok: true,
-        draft: extractResponseText(data) || draft,
+        draft: normalizePlanDraftFromResponse(extractResponseText(data), context, draft) || draft,
         order: context.order,
       });
     }
@@ -722,14 +934,10 @@ export async function POST(request) {
             role: "user",
             content: [
               "Create a tailored action plan draft from this paid order.",
-              "Use these sections:",
-              "1. Client snapshot",
-              "2. Main behavioral diagnosis",
-              "3. Why this trader is stuck",
-              "4. 30-day correction plan",
-              "5. Trading rules",
-              "6. Daily routine",
-              "7. What Mohamad should review before sending",
+              "Use the fixed Albi Trust structure only.",
+              "Do not rename, remove, merge, or reorder sections.",
+              "Return valid JSON only. Do not wrap it in markdown.",
+              `Use this exact JSON schema:\n${JSON.stringify(FIXED_PLAN_JSON_SCHEMA, null, 2)}`,
               adminInstructions ? `Mohamad's instruction for this draft:\n${adminInstructions}` : "",
               knowledgeNotes ? `Mohamad's method notes / uploaded text:\n${knowledgeNotes}` : "",
               "",
@@ -752,7 +960,7 @@ export async function POST(request) {
       );
     }
 
-    const draft = extractResponseText(data);
+    const draft = normalizePlanDraftFromResponse(extractResponseText(data), context);
 
     return NextResponse.json({
       ok: true,
