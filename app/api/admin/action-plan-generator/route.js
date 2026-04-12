@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { sendActionPlanDeliveredEmail } from "../../../lib/email";
 import {
   getAdminActionPlanGeneratorContext,
@@ -8,6 +10,7 @@ import {
 } from "../../../lib/localAuth";
 
 const DEFAULT_ADMIN_EMAIL = "mohalbi123@hotmail.com";
+let cachedCourseKnowledge = null;
 
 function adminEmail() {
   return String(process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
@@ -46,12 +49,37 @@ function systemPrompt() {
     "Be direct, structured, and behavioral. Avoid generic motivation.",
     "The final client PDF will be reviewed and edited by Mohamad before delivery.",
     actionPlanStructurePrompt(),
+    builtInCourseKnowledgePrompt(),
     process.env.ACTION_PLAN_GENERATOR_GUIDANCE
       ? `Mohamad's private guidance:\n${process.env.ACTION_PLAN_GENERATOR_GUIDANCE}`
       : "",
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+function builtInCourseKnowledgePrompt() {
+  if (cachedCourseKnowledge === null) {
+    try {
+      cachedCourseKnowledge = readFileSync(
+        join(process.cwd(), "app/lib/knowledge/albi-trust-trading-course.txt"),
+        "utf8",
+      );
+    } catch {
+      cachedCourseKnowledge = "";
+    }
+  }
+
+  if (!cachedCourseKnowledge) {
+    return "";
+  }
+
+  return [
+    "Internal Albi Trust course reference:",
+    "Use the following course material to understand Mohamad's teaching style, trading concepts, and 4-pillar framework.",
+    "Do not copy long passages. Do not turn the action plan into a generic course. Convert relevant ideas into specific advice for the paid client's data.",
+    clippedText(cachedCourseKnowledge, 50000),
+  ].join("\n\n");
 }
 
 function actionPlanStructurePrompt() {
