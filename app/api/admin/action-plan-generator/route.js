@@ -85,6 +85,7 @@ function builtInCourseKnowledgePrompt() {
 function actionPlanStructurePrompt() {
   return [
     "Every action plan must follow this exact structure:",
+    "Write it like a professional client-facing financial coaching document: clear section titles, concise paragraphs, practical tables/lists, and no messy free-form essay style.",
     "1. Cover summary.",
     "2. Trader profile based on the paid intake answers and the 30-question assessment.",
     "3. Main weakness.",
@@ -95,7 +96,7 @@ function actionPlanStructurePrompt() {
     "- Trading plan: what the trader is doing well and what needs improvement.",
     "- Psychology: what the trader is doing well and what needs improvement.",
     "6. Root cause.",
-    "7. Daily routine to follow in order to see improvement.",
+    "7. Daily routine to follow in order to see improvement. This must be one standalone section that is clearly doable, with weekly routine first, then daily routine, then phone reminders/check-ins.",
     "The daily routine must include a weekly routine: set 1-2 hours during the weekend while markets are closed, review weekly charts for the traded assets, read COT where relevant, check the economic calendar, keep a saved seasonality file by month and asset, review that seasonality each weekend, then draw levels from monthly, weekly, and 4H charts and set alerts without going smaller. Explain that this focused weekend session builds the bias for the week.",
     "The daily routine must adapt to the client's life, country, session, work status, and whether trading is main income. If the client is in Europe, mention how London, US, and Asia session timing can shape the routine. Use examples only when they fit the client.",
     "Tell the trader to use the iPhone Reminders app, or a similar reminders/tasks app on Android or other phone brands, to schedule the weekly routine, daily trading rules review, economic calendar check, journaling reminder, and any planned candle-close check-ins. Make reminders practical and tied to the client's routine.",
@@ -104,7 +105,8 @@ function actionPlanStructurePrompt() {
     "8. Trading rules the trader must write into their daily routine. Include examples such as reading rules, checking news, seasonality, and the economic calendar, but do not pretend to know exact rules the client did not give.",
     "9. What to stop doing.",
     "10. What to track.",
-    "11. Final notes.",
+    "11. Course-based actionable advice. This must be one clear section using the Albi Trust course/book ideas. Give specific actions the client can do, for example to avoid overtrading, accept losses, strengthen discipline, improve risk management, or stop emotional decisions. Match the actions to the client's weakness instead of listing generic tips.",
+    "12. Final notes.",
     "Use Mohamad's coaching voice: clear, serious, practical, and focused on behavior change.",
   ].join("\n");
 }
@@ -172,6 +174,14 @@ function cleanHeading(value) {
     .trim();
 }
 
+function contentPageBase() {
+  return [
+    rect({ x: 0, y: 0, width: 612, height: 842, fill: [1, 1, 1] }),
+    rect({ x: 0, y: 800, width: 612, height: 42, fill: [0.06, 0.13, 0.25] }),
+    text({ value: "ALBI TRUST ACTION PLAN", x: 50, y: 815, size: 10, bold: true, fill: [1, 1, 1] }),
+  ];
+}
+
 function createDraftPdfBuffer({ draft, context }) {
   const assessment = context?.order?.assessmentSnapshot || {};
   const clientName = context?.order?.fullName || context?.order?.email || "Client";
@@ -234,12 +244,56 @@ function createDraftPdfBuffer({ draft, context }) {
   );
   pageStreams.push(cover.join("\n"));
 
-  const draftLines = String(draft || "").split(/\r?\n/);
-  let page = [
-    rect({ x: 0, y: 0, width: 612, height: 842, fill: [1, 1, 1] }),
+  const dashboard = [
+    rect({ x: 0, y: 0, width: 612, height: 842, fill: [0.98, 0.99, 1] }),
     rect({ x: 0, y: 800, width: 612, height: 42, fill: [0.06, 0.13, 0.25] }),
-    text({ value: "ALBI TRUST ACTION PLAN", x: 50, y: 815, size: 10, bold: true, fill: [1, 1, 1] }),
+    text({ value: "ACTION DASHBOARD", x: 50, y: 815, size: 10, bold: true, fill: [1, 1, 1] }),
+    text({ value: "The four pillars we use to coach the trader", x: 50, y: 758, size: 20, bold: true }),
   ];
+  [
+    ["Technical analysis", "Clarity of levels, context, timing, and chart behavior."],
+    ["Risk management", "Position size, drawdown limits, stop discipline, and capital protection."],
+    ["Trading plan", "Rules, routine, review process, session plan, and repeatable execution."],
+    ["Psychology", "Loss acceptance, overtrading control, patience, and emotional discipline."],
+  ].forEach(([heading, body], index) => {
+    const x = index % 2 === 0 ? 50 : 316;
+    const yCard = index < 2 ? 640 : 515;
+    dashboard.push(
+      rect({ x, y: yCard, width: 246, height: 92, fill: [1, 1, 1] }),
+      rect({ x, y: yCard + 86, width: 246, height: 6, fill: index % 2 === 0 ? [0.09, 0.42, 0.3] : [0.06, 0.13, 0.25] }),
+      text({ value: heading, x: x + 18, y: yCard + 58, size: 13, bold: true }),
+      ...drawWrappedText({ value: body, x: x + 18, y: yCard + 36, size: 9.5, maxLength: 32, lineHeight: 12, fill: [0.38, 0.44, 0.56] }).commands,
+    );
+  });
+  dashboard.push(
+    text({ value: "Routine map", x: 50, y: 445, size: 17, bold: true }),
+    rect({ x: 50, y: 365, width: 150, height: 54, fill: [1, 1, 1] }),
+    text({ value: "Weekend", x: 68, y: 397, size: 12, bold: true }),
+    text({ value: "1-2h weekly review", x: 68, y: 378, size: 9, fill: [0.38, 0.44, 0.56] }),
+    rect({ x: 231, y: 365, width: 150, height: 54, fill: [1, 1, 1] }),
+    text({ value: "Daily", x: 249, y: 397, size: 12, bold: true }),
+    text({ value: "Rules and calendar", x: 249, y: 378, size: 9, fill: [0.38, 0.44, 0.56] }),
+    rect({ x: 412, y: 365, width: 150, height: 54, fill: [1, 1, 1] }),
+    text({ value: "Reminders", x: 430, y: 397, size: 12, bold: true }),
+    text({ value: "Phone check-ins", x: 430, y: 378, size: 9, fill: [0.38, 0.44, 0.56] }),
+    rect({ x: 200, y: 389, width: 31, height: 4, fill: [0.09, 0.42, 0.3] }),
+    rect({ x: 381, y: 389, width: 31, height: 4, fill: [0.09, 0.42, 0.3] }),
+    text({ value: "Course-based action focus", x: 50, y: 300, size: 17, bold: true }),
+    rect({ x: 50, y: 205, width: 512, height: 70, fill: [1, 1, 1] }),
+    ...drawWrappedText({
+      value: "The final plan must translate the Albi Trust course into specific actions for this trader: avoid overtrading, accept controlled losses, protect capital, follow one plan, and track repeated mistakes.",
+      x: 70,
+      y: 248,
+      size: 11,
+      maxLength: 78,
+      lineHeight: 15,
+      fill: [0.18, 0.24, 0.35],
+    }).commands,
+  );
+  pageStreams.push(dashboard.join("\n"));
+
+  const draftLines = String(draft || "").split(/\r?\n/);
+  let page = contentPageBase();
   let y = 760;
 
   for (const rawLine of draftLines) {
@@ -258,11 +312,7 @@ function createDraftPdfBuffer({ draft, context }) {
 
     if (y < 88 || wrapped.y < 76) {
       pageStreams.push(page.join("\n"));
-      page = [
-        rect({ x: 0, y: 0, width: 612, height: 842, fill: [1, 1, 1] }),
-        rect({ x: 0, y: 800, width: 612, height: 42, fill: [0.06, 0.13, 0.25] }),
-        text({ value: "ALBI TRUST ACTION PLAN", x: 50, y: 815, size: 10, bold: true, fill: [1, 1, 1] }),
-      ];
+      page = contentPageBase();
       y = 760;
       const nextWrapped = drawWrappedText({
         value: cleanLine,
@@ -274,9 +324,21 @@ function createDraftPdfBuffer({ draft, context }) {
         lineHeight: isHeading ? 18 : 14,
         fill: isHeading ? [0.06, 0.13, 0.25] : [0.18, 0.24, 0.35],
       });
+      if (isHeading) {
+        page.push(
+          rect({ x: 44, y: y - 8, width: 524, height: 28, fill: [0.95, 0.97, 1] }),
+          rect({ x: 44, y: y - 8, width: 5, height: 28, fill: [0.09, 0.42, 0.3] }),
+        );
+      }
       page.push(...nextWrapped.commands);
       y = nextWrapped.y - (isHeading ? 8 : 3);
     } else {
+      if (isHeading) {
+        page.push(
+          rect({ x: 44, y: y - 8, width: 524, height: 28, fill: [0.95, 0.97, 1] }),
+          rect({ x: 44, y: y - 8, width: 5, height: 28, fill: [0.09, 0.42, 0.3] }),
+        );
+      }
       page.push(...wrapped.commands);
       y = wrapped.y - (isHeading ? 8 : 3);
     }
