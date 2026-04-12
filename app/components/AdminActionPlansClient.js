@@ -78,6 +78,7 @@ export function AdminActionPlansClient() {
   const [activeUserAction, setActiveUserAction] = useState("");
   const [generatingOrderId, setGeneratingOrderId] = useState("");
   const [revisingDraft, setRevisingDraft] = useState(false);
+  const [previewingPdf, setPreviewingPdf] = useState(false);
   const [deliveringDraft, setDeliveringDraft] = useState(false);
   const [generatorDraft, setGeneratorDraft] = useState("");
   const [generatorOrder, setGeneratorOrder] = useState(null);
@@ -311,6 +312,61 @@ export function AdminActionPlansClient() {
       setError("Unable to revise action plan draft.");
     } finally {
       setRevisingDraft(false);
+    }
+  }
+
+  function openBase64Pdf({ dataBase64, fileName }) {
+    const binary = window.atob(dataBase64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.title = fileName || "albi-trust-action-plan-preview.pdf";
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function previewGeneratedPdf() {
+    if (!generatorOrder?.id || !generatorDraft.trim()) {
+      setError("Generate or paste a draft first.");
+      return;
+    }
+
+    setError("");
+    setNotice("");
+    setPreviewingPdf(true);
+
+    try {
+      const response = await fetch("/api/admin/action-plan-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "preview_pdf",
+          orderId: generatorOrder.id,
+          draft: generatorDraft,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to preview PDF.");
+        return;
+      }
+
+      openBase64Pdf(data);
+      setNotice("PDF preview opened. Review it before delivery.");
+    } catch {
+      setError("Unable to preview PDF.");
+    } finally {
+      setPreviewingPdf(false);
     }
   }
 
@@ -714,15 +770,23 @@ export function AdminActionPlansClient() {
                   type="button"
                   className="button-secondary"
                   onClick={reviseActionPlanDraft}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || deliveringDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || previewingPdf || deliveringDraft}
                 >
                   {revisingDraft ? "Revising..." : "Revise with my instructions"}
                 </button>
                 <button
                   type="button"
+                  className="button-secondary"
+                  onClick={previewGeneratedPdf}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || previewingPdf || deliveringDraft}
+                >
+                  {previewingPdf ? "Opening preview..." : "Preview PDF"}
+                </button>
+                <button
+                  type="button"
                   className="button-primary"
                   onClick={deliverGeneratedDraft}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || deliveringDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || previewingPdf || deliveringDraft}
                 >
                   {deliveringDraft ? "Delivering..." : "Save as PDF and deliver"}
                 </button>

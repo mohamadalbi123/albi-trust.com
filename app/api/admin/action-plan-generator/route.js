@@ -45,12 +45,39 @@ function systemPrompt() {
     "Do not claim certainty beyond the data. Use the client's assessment and intake answers only.",
     "Be direct, structured, and behavioral. Avoid generic motivation.",
     "The final client PDF will be reviewed and edited by Mohamad before delivery.",
+    actionPlanStructurePrompt(),
     process.env.ACTION_PLAN_GENERATOR_GUIDANCE
       ? `Mohamad's private guidance:\n${process.env.ACTION_PLAN_GENERATOR_GUIDANCE}`
       : "",
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+function actionPlanStructurePrompt() {
+  return [
+    "Every action plan must follow this exact structure:",
+    "1. Cover summary.",
+    "2. Trader profile based on the paid intake answers and the 30-question assessment.",
+    "3. Main weakness.",
+    "4. Main strength.",
+    "5. Four-pillar trading analysis:",
+    "- Technical analysis: what the trader is doing well and what needs improvement.",
+    "- Risk management: what the trader is doing well and what needs improvement.",
+    "- Trading plan: what the trader is doing well and what needs improvement.",
+    "- Psychology: what the trader is doing well and what needs improvement.",
+    "6. Root cause.",
+    "7. Daily routine to follow in order to see improvement.",
+    "The daily routine must include a weekly routine: set 1-2 hours during the weekend while markets are closed, review weekly charts for the traded assets, read COT where relevant, check the economic calendar, keep a saved seasonality file by month and asset, review that seasonality each weekend, then draw levels from monthly, weekly, and 4H charts and set alerts without going smaller. Explain that this focused weekend session builds the bias for the week.",
+    "The daily routine must adapt to the client's life, country, session, work status, and whether trading is main income. If the client is in Europe, mention how London, US, and Asia session timing can shape the routine. Use examples only when they fit the client.",
+    "When discussing execution, explain that many openings can involve manipulation or opposite-direction movement before distribution. Mention accumulation, manipulation, and distribution conceptually.",
+    "If the client is a scalper, suggest monitor discipline and strict session rules. If the client is a day trader, suggest executing according to plan, then stepping away from the screen to avoid moving stops or closing emotionally, checking only at planned candle closes that fit their strategy.",
+    "8. Trading rules the trader must write into their daily routine. Include examples such as reading rules, checking news, seasonality, and the economic calendar, but do not pretend to know exact rules the client did not give.",
+    "9. What to stop doing.",
+    "10. What to track.",
+    "11. Final notes.",
+    "Use Mohamad's coaching voice: clear, serious, practical, and focused on behavior change.",
+  ].join("\n");
 }
 
 function clippedText(value, maxLength = 60000) {
@@ -305,7 +332,7 @@ export async function POST(request) {
 
     const context = await getAdminActionPlanGeneratorContext(orderId);
 
-    if (action === "deliver_draft") {
+    if (action === "deliver_draft" || action === "preview_pdf") {
       const draft = String(body.draft || "").trim();
 
       if (!draft) {
@@ -317,6 +344,15 @@ export async function POST(request) {
         draft,
         context,
       });
+
+      if (action === "preview_pdf") {
+        return NextResponse.json({
+          ok: true,
+          fileName: `${displayId}-action-plan-preview.pdf`,
+          dataBase64: pdfBuffer.toString("base64"),
+        });
+      }
+
       const order = await uploadTailoredPlanPdf({
         orderId,
         fileName: `${displayId}-action-plan.pdf`,
