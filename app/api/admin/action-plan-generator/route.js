@@ -349,7 +349,7 @@ const PAGE = {
   height: 842,
   contentLeft: 56,
   contentRight: 556,
-  top: 754,
+  top: 724,
   bottom: 66,
 };
 
