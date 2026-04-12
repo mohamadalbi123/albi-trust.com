@@ -399,6 +399,10 @@ function rect({ x, y, width, height, fill }) {
   return `${color(fill)}\n${x} ${y} ${width} ${height} re f`;
 }
 
+function outlineRect({ x, y, width, height, stroke = PDF_COLORS.line, lineWidth = 1 }) {
+  return `${stroke[0]} ${stroke[1]} ${stroke[2]} RG\n${lineWidth} w\n${x} ${y} ${width} ${height} re S`;
+}
+
 function line({ x1, y1, x2, y2, stroke = PDF_COLORS.line, width = 1 }) {
   return `${stroke[0]} ${stroke[1]} ${stroke[2]} RG\n${width} w\n${x1} ${y1} m\n${x2} ${y2} l\nS`;
 }
@@ -428,14 +432,26 @@ function cleanHeading(value) {
     .trim();
 }
 
+function drawPdfBrandMark({ x, y, size = 34 }) {
+  const glyphSize = size >= 40 ? 16 : 13;
+  const glyphX = x + (size >= 40 ? 11 : 8);
+  const glyphY = y + (size >= 40 ? 15 : 12);
+  const accentSize = size >= 40 ? 8 : 6;
+
+  return [
+    rect({ x, y, width: size, height: size, fill: PDF_COLORS.paper }),
+    outlineRect({ x, y, width: size, height: size, stroke: [0.82, 0.86, 0.92], lineWidth: 1 }),
+    rect({ x: x + size - accentSize - 4, y: y + size - accentSize - 4, width: accentSize, height: accentSize, fill: [0.79, 0.6, 0.27] }),
+    text({ value: "AT", x: glyphX, y: glyphY, size: glyphSize, bold: true, fill: PDF_COLORS.ink }),
+  ];
+}
+
 function drawBrandHeader({ sectionLabel = "Tailored Action Plan" } = {}) {
   return [
     rect({ x: 0, y: 0, width: PAGE.width, height: PAGE.height, fill: PDF_COLORS.paper }),
     rect({ x: 0, y: 772, width: PAGE.width, height: 70, fill: PDF_COLORS.ink }),
     rect({ x: 0, y: 758, width: PAGE.width, height: 14, fill: PDF_COLORS.accent }),
-    rect({ x: 56, y: 788, width: 34, height: 34, fill: PDF_COLORS.paper }),
-    rect({ x: 81, y: 812, width: 6, height: 6, fill: [0.79, 0.6, 0.27] }),
-    text({ value: "AT", x: 64, y: 800, size: 13, bold: true, fill: PDF_COLORS.ink }),
+    ...drawPdfBrandMark({ x: 56, y: 788, size: 34 }),
     text({ value: "ALBI TRUST", x: 104, y: 806, size: 15, bold: true, fill: PDF_COLORS.paper }),
     text({ value: "Tailored trading performance improvement", x: 104, y: 790, size: 8.5, fill: [0.84, 0.9, 0.97] }),
     text({ value: sectionLabel.toUpperCase(), x: 438, y: 801, size: 8.5, bold: true, fill: PDF_COLORS.paper }),
@@ -505,26 +521,25 @@ function parseDraftBlocks(draft) {
 function createCoverPage({ assessment, clientName, orderNumber, traderLevel, primaryWeakness, strongest, overallScore, categoryScores }) {
   const commands = [
     rect({ x: 0, y: 0, width: PAGE.width, height: PAGE.height, fill: PDF_COLORS.pageTint }),
-    rect({ x: 0, y: 584, width: PAGE.width, height: 258, fill: PDF_COLORS.ink }),
-    rect({ x: 0, y: 562, width: PAGE.width, height: 22, fill: PDF_COLORS.accent }),
-    rect({ x: 56, y: 734, width: 44, height: 44, fill: PDF_COLORS.paper }),
-    rect({ x: 88, y: 766, width: 8, height: 8, fill: [0.79, 0.6, 0.27] }),
-    text({ value: "AT", x: 67, y: 749, size: 16, bold: true, fill: PDF_COLORS.ink }),
-    text({ value: "ALBI TRUST", x: 114, y: 754, size: 16, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: "Tailored Action Plan", x: 56, y: 662, size: 30, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: `Structured diagnosis and improvement path for ${clientName}.`, x: 56, y: 636, size: 11, fill: [0.84, 0.9, 0.97] }),
-    text({ value: clientName, x: 56, y: 606, size: 17, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: `Order ${orderNumber}`, x: 56, y: 590, size: 10, fill: [0.84, 0.9, 0.97] }),
-    rect({ x: 56, y: 486, width: 500, height: 86, fill: PDF_COLORS.paper }),
-    text({ value: "Client summary", x: 76, y: 544, size: 10, bold: true, fill: PDF_COLORS.softText }),
-    text({ value: traderLevel, x: 76, y: 517, size: 23, bold: true, fill: PDF_COLORS.ink }),
+    rect({ x: 0, y: 500, width: PAGE.width, height: 342, fill: PDF_COLORS.ink }),
+    rect({ x: 0, y: 484, width: PAGE.width, height: 16, fill: PDF_COLORS.accent }),
+    ...drawPdfBrandMark({ x: 56, y: 730, size: 42 }),
+    text({ value: "ALBI TRUST", x: 114, y: 748, size: 16, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: "Tailored trading performance improvement", x: 114, y: 730, size: 8.8, fill: [0.84, 0.9, 0.97] }),
+    text({ value: "Tailored Action Plan", x: 56, y: 648, size: 31, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: `Structured diagnosis and improvement path for ${clientName}.`, x: 56, y: 620, size: 11, fill: [0.84, 0.9, 0.97] }),
+    text({ value: clientName, x: 56, y: 586, size: 18, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: `Order ${orderNumber}`, x: 56, y: 566, size: 10.5, fill: [0.84, 0.9, 0.97] }),
+    rect({ x: 56, y: 512, width: 500, height: 64, fill: [0.98, 0.99, 1] }),
+    text({ value: "Client summary", x: 76, y: 552, size: 10, bold: true, fill: PDF_COLORS.softText }),
+    text({ value: traderLevel, x: 76, y: 526, size: 22, bold: true, fill: PDF_COLORS.ink }),
   ];
 
   if (overallScore !== null) {
     commands.push(
-      text({ value: `Assessment score: ${overallScore}/100`, x: 396, y: 544, size: 10, bold: true, fill: PDF_COLORS.softText }),
-      rect({ x: 396, y: 510, width: 132, height: 16, fill: PDF_COLORS.line }),
-      rect({ x: 396, y: 510, width: Math.max(4, Math.round(132 * (overallScore / 100))), height: 16, fill: PDF_COLORS.accent }),
+      text({ value: `Assessment score: ${overallScore}/100`, x: 390, y: 552, size: 10, bold: true, fill: PDF_COLORS.softText }),
+      rect({ x: 390, y: 520, width: 136, height: 16, fill: PDF_COLORS.line }),
+      rect({ x: 390, y: 520, width: Math.max(4, Math.round(136 * (overallScore / 100))), height: 16, fill: PDF_COLORS.accent }),
     );
   }
 
