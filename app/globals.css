@@ -1852,7 +1852,7 @@ select {
 }
 
 .tailored-intake-form {
-  gap: 10px;
+  gap: 18px;
 }
 
 .auth-name-row {
@@ -1862,15 +1862,68 @@ select {
 }
 
 .tailored-intake-row {
-  gap: 10px;
+  gap: 14px;
+}
+
+.tailored-intake-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tailored-intake-summary-card {
+  min-height: 82px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbfdff, #f5f9ff);
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  box-shadow: 0 12px 28px rgba(16, 33, 63, 0.05);
+}
+
+.tailored-intake-section {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.96));
+  padding: 24px;
+  box-shadow: 0 14px 36px rgba(16, 33, 63, 0.05);
+}
+
+.tailored-intake-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(18, 53, 107, 0.08);
+}
+
+.tailored-intake-section-title {
+  margin: 0 0 6px;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+  color: #10213f;
+}
+
+.intake-field-label {
+  color: #173867;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tailored-intake-subgroup,
+.tailored-intake-upload {
+  margin-top: 4px;
 }
 
 .intake-choice-group,
 .intake-file-field {
   grid-column: 1 / -1;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid rgba(18, 53, 107, 0.09);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
   padding: 18px;
 }
 
@@ -1878,6 +1931,7 @@ select {
   padding: 0 8px;
   color: #10213f;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .intake-choice-grid {
@@ -1891,10 +1945,10 @@ select {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #f9fbff;
+  min-height: 48px;
+  border: 1px solid rgba(18, 53, 107, 0.1);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbfdff, #f3f7ff);
   padding: 10px 12px;
   color: var(--text);
   font-size: 0.92rem;
@@ -1934,9 +1988,9 @@ select {
 
 .form-field input {
   width: 100%;
-  min-height: 48px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  min-height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(18, 53, 107, 0.1);
   background: #ffffff;
   color: var(--text);
   padding: 0 16px;
@@ -1946,9 +2000,9 @@ select {
 
 .form-select {
   width: 100%;
-  min-height: 48px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  min-height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(18, 53, 107, 0.1);
   background: #ffffff;
   color: var(--text);
   padding: 0 16px;
@@ -1960,9 +2014,9 @@ select {
 .tailored-textarea {
   width: 100%;
   min-height: 220px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: #f9fbff;
+  border-radius: 18px;
+  border: 1px solid rgba(18, 53, 107, 0.1);
+  background: linear-gradient(180deg, #fbfdff, #f6f9ff);
   color: var(--text);
   padding: 16px;
   outline: none;
@@ -1976,16 +2030,18 @@ select {
 }
 
 .tailored-textarea-compact {
-  min-height: 150px;
+  min-height: 170px;
 }
 
 .form-field input::placeholder {
   color: rgba(16, 33, 63, 0.42);
 }
 
-.form-field input:focus {
+.form-field input:focus,
+.form-select:focus,
+.tailored-textarea:focus {
   border-color: rgba(127, 196, 255, 0.48);
-  box-shadow: none;
+  box-shadow: 0 0 0 4px rgba(127, 196, 255, 0.12);
 }
 
 .form-field-full {
@@ -2247,6 +2303,10 @@ select {
   .home-section-light .stat-card {
     min-height: auto;
   }
+
+  .tailored-intake-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2280,6 +2340,15 @@ select {
 
   .action-plan-status-card .mini-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tailored-intake-section {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .tailored-intake-section-title {
+    font-size: 1.28rem;
   }
 
   .intake-choice-grid {

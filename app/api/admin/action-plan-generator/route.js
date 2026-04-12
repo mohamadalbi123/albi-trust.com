@@ -123,12 +123,52 @@ function pdfEscape(value) {
     .replaceAll(")", "\\)");
 }
 
+const PDF_COLORS = {
+  ink: [0.06, 0.13, 0.25],
+  accent: [0.09, 0.42, 0.3],
+  softText: [0.38, 0.44, 0.56],
+  body: [0.18, 0.24, 0.35],
+  paper: [1, 1, 1],
+  pageTint: [0.97, 0.98, 1],
+  line: [0.88, 0.91, 0.96],
+  card: [0.95, 0.97, 1],
+  cardStrong: [0.92, 0.95, 0.99],
+};
+
+const PAGE = {
+  width: 612,
+  height: 842,
+  contentLeft: 56,
+  contentRight: 556,
+  top: 754,
+  bottom: 66,
+};
+
+function normalizeInlineText(value) {
+  return String(value || "")
+    .replace(/\t+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function wrapLine(line, maxLength = 92) {
-  const words = String(line || "").split(/\s+/).filter(Boolean);
+  const words = normalizeInlineText(line).split(" ").filter(Boolean);
   const lines = [];
   let current = "";
 
   for (const word of words) {
+    if (word.length > maxLength) {
+      if (current) {
+        lines.push(current);
+        current = "";
+      }
+
+      for (let index = 0; index < word.length; index += maxLength) {
+        lines.push(word.slice(index, index + maxLength));
+      }
+      continue;
+    }
+
     const next = current ? `${current} ${word}` : word;
 
     if (next.length > maxLength && current) {
@@ -148,6 +188,10 @@ function color([r, g, b]) {
 
 function rect({ x, y, width, height, fill }) {
   return `${color(fill)}\n${x} ${y} ${width} ${height} re f`;
+}
+
+function line({ x1, y1, x2, y2, stroke = PDF_COLORS.line, width = 1 }) {
+  return `${stroke[0]} ${stroke[1]} ${stroke[2]} RG\n${width} w\n${x1} ${y1} m\n${x2} ${y2} l\nS`;
 }
 
 function text({ value, x, y, size = 11, bold = false, fill = [0.06, 0.13, 0.25] }) {
@@ -170,16 +214,207 @@ function cleanHeading(value) {
   return String(value || "")
     .replace(/^#{1,6}\s*/, "")
     .replace(/^\d+\.\s*/, "")
+    .replace(/^[-*]\s+/, "")
     .replace(/\*\*/g, "")
     .trim();
 }
 
-function contentPageBase() {
+function drawBrandHeader({ sectionLabel = "Tailored Action Plan" } = {}) {
   return [
-    rect({ x: 0, y: 0, width: 612, height: 842, fill: [1, 1, 1] }),
-    rect({ x: 0, y: 800, width: 612, height: 42, fill: [0.06, 0.13, 0.25] }),
-    text({ value: "ALBI TRUST ACTION PLAN", x: 50, y: 815, size: 10, bold: true, fill: [1, 1, 1] }),
+    rect({ x: 0, y: 0, width: PAGE.width, height: PAGE.height, fill: PDF_COLORS.paper }),
+    rect({ x: 0, y: 772, width: PAGE.width, height: 70, fill: PDF_COLORS.ink }),
+    rect({ x: 0, y: 758, width: PAGE.width, height: 14, fill: PDF_COLORS.accent }),
+    rect({ x: 56, y: 788, width: 34, height: 34, fill: PDF_COLORS.paper }),
+    text({ value: "AT", x: 64, y: 800, size: 13, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "ALBI TRUST", x: 104, y: 806, size: 15, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: "Tailored trading performance improvement", x: 104, y: 790, size: 8.5, fill: [0.84, 0.9, 0.97] }),
+    text({ value: sectionLabel.toUpperCase(), x: 438, y: 801, size: 8.5, bold: true, fill: PDF_COLORS.paper }),
   ];
+}
+
+function contentPageBase({ sectionLabel } = {}) {
+  return [
+    ...drawBrandHeader({ sectionLabel }),
+    line({ x1: 56, y1: 748, x2: 556, y2: 748, stroke: PDF_COLORS.line }),
+  ];
+}
+
+function drawPageFooter(pageNumber, totalPages) {
+  return [
+    line({ x1: 56, y1: 44, x2: 556, y2: 44, stroke: PDF_COLORS.line }),
+    text({
+      value: "Prepared by Albi Trust for internal review before client delivery",
+      x: 56,
+      y: 28,
+      size: 7.5,
+      fill: PDF_COLORS.softText,
+    }),
+    text({
+      value: `Page ${pageNumber} of ${totalPages}`,
+      x: 500,
+      y: 28,
+      size: 7.5,
+      fill: PDF_COLORS.softText,
+    }),
+  ];
+}
+
+function parseDraftBlocks(draft) {
+  const rawLines = String(draft || "").split(/\r?\n/);
+  const blocks = [];
+
+  for (const rawLine of rawLines) {
+    const original = String(rawLine || "");
+    const trimmed = original.trim();
+
+    if (!trimmed) {
+      blocks.push({ type: "spacer", size: 10 });
+      continue;
+    }
+
+    const heading = cleanHeading(original);
+    const isHeading = Boolean(heading) && (/^\s*(#{1,6}|\d+\.)/.test(original) || trimmed === trimmed.toUpperCase());
+    const isBullet = /^\s*[-*]\s+/.test(original);
+
+    if (isHeading) {
+      blocks.push({ type: "heading", text: heading });
+      continue;
+    }
+
+    if (isBullet) {
+      blocks.push({ type: "bullet", text: cleanHeading(original) });
+      continue;
+    }
+
+    blocks.push({ type: "paragraph", text: normalizeInlineText(trimmed) });
+  }
+
+  return blocks;
+}
+
+function createCoverPage({ assessment, clientName, orderNumber, traderLevel, primaryWeakness, strongest, overallScore, categoryScores }) {
+  const commands = [
+    rect({ x: 0, y: 0, width: PAGE.width, height: PAGE.height, fill: PDF_COLORS.pageTint }),
+    rect({ x: 0, y: 612, width: PAGE.width, height: 230, fill: PDF_COLORS.ink }),
+    rect({ x: 0, y: 590, width: PAGE.width, height: 22, fill: PDF_COLORS.accent }),
+    rect({ x: 56, y: 744, width: 44, height: 44, fill: PDF_COLORS.paper }),
+    text({ value: "AT", x: 67, y: 759, size: 16, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "ALBI TRUST", x: 114, y: 764, size: 16, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: "Tailored Action Plan", x: 56, y: 684, size: 30, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: "Structured diagnosis and improvement path for the client.", x: 56, y: 658, size: 11, fill: [0.84, 0.9, 0.97] }),
+    text({ value: clientName, x: 56, y: 621, size: 17, bold: true, fill: PDF_COLORS.paper }),
+    text({ value: `Order ${orderNumber}`, x: 56, y: 600, size: 10, fill: [0.84, 0.9, 0.97] }),
+    rect({ x: 56, y: 486, width: 500, height: 86, fill: PDF_COLORS.paper }),
+    text({ value: "Client summary", x: 76, y: 544, size: 10, bold: true, fill: PDF_COLORS.softText }),
+    text({ value: traderLevel, x: 76, y: 517, size: 23, bold: true, fill: PDF_COLORS.ink }),
+  ];
+
+  if (overallScore !== null) {
+    commands.push(
+      text({ value: `Assessment score: ${overallScore}/100`, x: 396, y: 544, size: 10, bold: true, fill: PDF_COLORS.softText }),
+      rect({ x: 396, y: 510, width: 132, height: 16, fill: PDF_COLORS.line }),
+      rect({ x: 396, y: 510, width: Math.max(4, Math.round(132 * (overallScore / 100))), height: 16, fill: PDF_COLORS.accent }),
+    );
+  }
+
+  commands.push(
+    rect({ x: 56, y: 372, width: 238, height: 86, fill: PDF_COLORS.paper }),
+    text({ value: "Main blocker", x: 76, y: 430, size: 10, bold: true, fill: PDF_COLORS.softText }),
+    ...drawWrappedText({ value: primaryWeakness, x: 76, y: 402, size: 15, bold: true, maxLength: 28, lineHeight: 18, fill: PDF_COLORS.ink }).commands,
+    rect({ x: 318, y: 372, width: 238, height: 86, fill: PDF_COLORS.paper }),
+    text({ value: "Strongest area", x: 338, y: 430, size: 10, bold: true, fill: PDF_COLORS.softText }),
+    ...drawWrappedText({ value: strongest, x: 338, y: 402, size: 15, bold: true, maxLength: 28, lineHeight: 18, fill: PDF_COLORS.ink }).commands,
+    text({ value: "Score profile", x: 56, y: 330, size: 16, bold: true, fill: PDF_COLORS.ink }),
+  );
+
+  categoryScores.slice(0, 6).forEach((entry, index) => {
+    const y = 296 - index * 34;
+    const score = typeof entry.score === "number" ? Math.max(0, Math.min(100, entry.score)) : 0;
+    commands.push(
+      text({ value: entry.label || entry.key || "Category", x: 56, y: y + 7, size: 9.5, bold: true, fill: PDF_COLORS.body }),
+      rect({ x: 226, y, width: 250, height: 14, fill: PDF_COLORS.line }),
+      rect({ x: 226, y, width: Math.max(3, Math.round(250 * (score / 100))), height: 14, fill: PDF_COLORS.ink }),
+      text({ value: `${score}/100`, x: 490, y: y + 2, size: 8.5, bold: true, fill: PDF_COLORS.softText }),
+    );
+  });
+
+  if (assessment?.level?.focus) {
+    commands.push(
+      rect({ x: 56, y: 62, width: 500, height: 66, fill: PDF_COLORS.paper }),
+      text({ value: "Primary focus now", x: 76, y: 102, size: 10, bold: true, fill: PDF_COLORS.softText }),
+      ...drawWrappedText({
+        value: assessment.level.focus,
+        x: 76,
+        y: 79,
+        size: 11,
+        maxLength: 74,
+        lineHeight: 14,
+        fill: PDF_COLORS.body,
+      }).commands,
+    );
+  }
+
+  return commands;
+}
+
+function createDashboardPage() {
+  const dashboard = [
+    ...contentPageBase({ sectionLabel: "Action Dashboard" }),
+    text({ value: "How Albi Trust reviews a trader", x: 56, y: 716, size: 23, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "Every paid action plan is built around the same four pillars, then adapted to the client's reality.", x: 56, y: 692, size: 10.5, fill: PDF_COLORS.softText }),
+  ];
+
+  [
+    ["Technical analysis", "Chart clarity, higher-timeframe bias, execution timing, and whether the trader reads context properly."],
+    ["Risk management", "Position sizing, stop discipline, drawdown control, and whether capital is protected first."],
+    ["Trading plan", "Rules, routine, preparation quality, review process, and whether execution is actually repeatable."],
+    ["Psychology", "Loss acceptance, impulse control, patience, emotional regulation, and reaction after mistakes."],
+  ].forEach(([heading, body], index) => {
+    const x = index % 2 === 0 ? 56 : 316;
+    const y = index < 2 ? 554 : 404;
+    dashboard.push(
+      rect({ x, y, width: 240, height: 108, fill: PDF_COLORS.card }),
+      rect({ x, y: y + 98, width: 240, height: 10, fill: index % 2 === 0 ? PDF_COLORS.accent : PDF_COLORS.ink }),
+      text({ value: heading, x: x + 18, y: y + 68, size: 13, bold: true, fill: PDF_COLORS.ink }),
+      ...drawWrappedText({
+        value: body,
+        x: x + 18,
+        y: y + 43,
+        size: 9.5,
+        maxLength: 32,
+        lineHeight: 12.5,
+        fill: PDF_COLORS.body,
+      }).commands,
+    );
+  });
+
+  dashboard.push(
+    text({ value: "Routine structure we normally reinforce", x: 56, y: 340, size: 16, bold: true, fill: PDF_COLORS.ink }),
+    rect({ x: 56, y: 246, width: 145, height: 64, fill: PDF_COLORS.paper }),
+    text({ value: "Weekend review", x: 74, y: 284, size: 11.5, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "Bias, levels, calendar", x: 74, y: 264, size: 8.8, fill: PDF_COLORS.softText }),
+    rect({ x: 233, y: 246, width: 145, height: 64, fill: PDF_COLORS.paper }),
+    text({ value: "Daily prep", x: 251, y: 284, size: 11.5, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "Rules, timing, focus check", x: 251, y: 264, size: 8.8, fill: PDF_COLORS.softText }),
+    rect({ x: 410, y: 246, width: 145, height: 64, fill: PDF_COLORS.paper }),
+    text({ value: "Review + reminders", x: 428, y: 284, size: 11.5, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "Journal and phone prompts", x: 428, y: 264, size: 8.8, fill: PDF_COLORS.softText }),
+    line({ x1: 201, y1: 278, x2: 233, y2: 278, stroke: PDF_COLORS.accent, width: 3 }),
+    line({ x1: 378, y1: 278, x2: 410, y2: 278, stroke: PDF_COLORS.accent, width: 3 }),
+    rect({ x: 56, y: 108, width: 500, height: 94, fill: PDF_COLORS.cardStrong }),
+    text({ value: "What the plan should feel like", x: 76, y: 171, size: 11, bold: true, fill: PDF_COLORS.softText }),
+    ...drawWrappedText({
+      value: "Not generic motivation. The final action plan should read like a focused diagnosis and a realistic correction path: clear priorities, practical routines, capital protection, and behavior change linked to the trader's actual weaknesses.",
+      x: 76,
+      y: 146,
+      size: 10.5,
+      maxLength: 79,
+      lineHeight: 14,
+      fill: PDF_COLORS.body,
+    }).commands,
+  );
+
+  return dashboard;
 }
 
 function createDraftPdfBuffer({ draft, context }) {
@@ -192,156 +427,109 @@ function createDraftPdfBuffer({ draft, context }) {
   const overallScore = typeof assessment.overallScore === "number" ? assessment.overallScore : null;
   const categoryScores = Array.isArray(assessment.categoryScores) ? assessment.categoryScores : [];
   const pageStreams = [];
-  const cover = [
-    rect({ x: 0, y: 0, width: 612, height: 842, fill: [0.95, 0.97, 1] }),
-    rect({ x: 0, y: 720, width: 612, height: 122, fill: [0.06, 0.13, 0.25] }),
-    rect({ x: 50, y: 764, width: 42, height: 42, fill: [1, 1, 1] }),
-    text({ value: "AT", x: 62, y: 778, size: 15, bold: true, fill: [0.06, 0.13, 0.25] }),
-    text({ value: "ALBI TRUST", x: 108, y: 790, size: 13, bold: true, fill: [1, 1, 1] }),
-    text({ value: "Tailored Action Plan", x: 50, y: 690, size: 28, bold: true }),
-    text({ value: clientName, x: 50, y: 662, size: 16, bold: true, fill: [0.13, 0.22, 0.38] }),
-    text({ value: `Order ${orderNumber}`, x: 50, y: 640, size: 10, fill: [0.38, 0.44, 0.56] }),
-    rect({ x: 50, y: 550, width: 512, height: 70, fill: [1, 1, 1] }),
-    text({ value: "Top summary", x: 70, y: 592, size: 12, bold: true }),
-    text({ value: traderLevel, x: 70, y: 570, size: 20, bold: true }),
-    rect({ x: 50, y: 450, width: 246, height: 76, fill: [1, 1, 1] }),
-    text({ value: "Main blocker", x: 70, y: 500, size: 11, bold: true, fill: [0.38, 0.44, 0.56] }),
-    ...drawWrappedText({ value: primaryWeakness, x: 70, y: 478, size: 15, bold: true, maxLength: 28, lineHeight: 18 }).commands,
-    rect({ x: 316, y: 450, width: 246, height: 76, fill: [1, 1, 1] }),
-    text({ value: "Strongest area", x: 336, y: 500, size: 11, bold: true, fill: [0.38, 0.44, 0.56] }),
-    ...drawWrappedText({ value: strongest, x: 336, y: 478, size: 15, bold: true, maxLength: 28, lineHeight: 18 }).commands,
-  ];
+  pageStreams.push(
+    createCoverPage({
+      assessment,
+      clientName,
+      orderNumber,
+      traderLevel,
+      primaryWeakness,
+      strongest,
+      overallScore,
+      categoryScores,
+    }).join("\n"),
+  );
+  pageStreams.push(createDashboardPage().join("\n"));
 
-  if (overallScore !== null) {
-    cover.push(
-      rect({ x: 50, y: 390, width: 512, height: 24, fill: [0.86, 0.9, 0.96] }),
-      rect({ x: 50, y: 390, width: Math.max(1, Math.round(512 * (overallScore / 100))), height: 24, fill: [0.09, 0.42, 0.3] }),
-      text({ value: `Overall score: ${overallScore}/100`, x: 50, y: 424, size: 12, bold: true }),
-    );
+  const blocks = parseDraftBlocks(draft);
+  let page = contentPageBase({ sectionLabel: "Client Plan" });
+  let y = PAGE.top;
+
+  function ensureSpace(requiredHeight, nextSectionLabel = "Client Plan") {
+    if (y - requiredHeight >= PAGE.bottom) {
+      return;
+    }
+
+    pageStreams.push(page.join("\n"));
+    page = contentPageBase({ sectionLabel: nextSectionLabel });
+    y = PAGE.top;
   }
 
-  cover.push(text({ value: "Score profile", x: 50, y: 350, size: 15, bold: true }));
-
-  categoryScores.slice(0, 6).forEach((entry, index) => {
-    const y = 320 - index * 34;
-    const score = typeof entry.score === "number" ? Math.max(0, Math.min(100, entry.score)) : 0;
-    cover.push(
-      text({ value: entry.label || entry.key || "Category", x: 50, y: y + 8, size: 10, bold: true }),
-      rect({ x: 220, y, width: 270, height: 14, fill: [0.86, 0.9, 0.96] }),
-      rect({ x: 220, y, width: Math.max(1, Math.round(270 * (score / 100))), height: 14, fill: [0.06, 0.13, 0.25] }),
-      text({ value: `${score}/100`, x: 505, y: y + 2, size: 9, bold: true, fill: [0.38, 0.44, 0.56] }),
-    );
-  });
-
-  cover.push(
-    text({
-      value: "Prepared for review and delivery by Albi Trust.",
-      x: 50,
-      y: 60,
-      size: 9,
-      fill: [0.38, 0.44, 0.56],
-    }),
-  );
-  pageStreams.push(cover.join("\n"));
-
-  const dashboard = [
-    rect({ x: 0, y: 0, width: 612, height: 842, fill: [0.98, 0.99, 1] }),
-    rect({ x: 0, y: 800, width: 612, height: 42, fill: [0.06, 0.13, 0.25] }),
-    text({ value: "ACTION DASHBOARD", x: 50, y: 815, size: 10, bold: true, fill: [1, 1, 1] }),
-    text({ value: "The four pillars we use to coach the trader", x: 50, y: 758, size: 20, bold: true }),
-  ];
-  [
-    ["Technical analysis", "Clarity of levels, context, timing, and chart behavior."],
-    ["Risk management", "Position size, drawdown limits, stop discipline, and capital protection."],
-    ["Trading plan", "Rules, routine, review process, session plan, and repeatable execution."],
-    ["Psychology", "Loss acceptance, overtrading control, patience, and emotional discipline."],
-  ].forEach(([heading, body], index) => {
-    const x = index % 2 === 0 ? 50 : 316;
-    const yCard = index < 2 ? 640 : 515;
-    dashboard.push(
-      rect({ x, y: yCard, width: 246, height: 92, fill: [1, 1, 1] }),
-      rect({ x, y: yCard + 86, width: 246, height: 6, fill: index % 2 === 0 ? [0.09, 0.42, 0.3] : [0.06, 0.13, 0.25] }),
-      text({ value: heading, x: x + 18, y: yCard + 58, size: 13, bold: true }),
-      ...drawWrappedText({ value: body, x: x + 18, y: yCard + 36, size: 9.5, maxLength: 32, lineHeight: 12, fill: [0.38, 0.44, 0.56] }).commands,
-    );
-  });
-  dashboard.push(
-    text({ value: "Routine map", x: 50, y: 445, size: 17, bold: true }),
-    rect({ x: 50, y: 365, width: 150, height: 54, fill: [1, 1, 1] }),
-    text({ value: "Weekend", x: 68, y: 397, size: 12, bold: true }),
-    text({ value: "1-2h weekly review", x: 68, y: 378, size: 9, fill: [0.38, 0.44, 0.56] }),
-    rect({ x: 231, y: 365, width: 150, height: 54, fill: [1, 1, 1] }),
-    text({ value: "Daily", x: 249, y: 397, size: 12, bold: true }),
-    text({ value: "Rules and calendar", x: 249, y: 378, size: 9, fill: [0.38, 0.44, 0.56] }),
-    rect({ x: 412, y: 365, width: 150, height: 54, fill: [1, 1, 1] }),
-    text({ value: "Reminders", x: 430, y: 397, size: 12, bold: true }),
-    text({ value: "Phone check-ins", x: 430, y: 378, size: 9, fill: [0.38, 0.44, 0.56] }),
-    rect({ x: 200, y: 389, width: 31, height: 4, fill: [0.09, 0.42, 0.3] }),
-    rect({ x: 381, y: 389, width: 31, height: 4, fill: [0.09, 0.42, 0.3] }),
-    text({ value: "Course-based action focus", x: 50, y: 300, size: 17, bold: true }),
-    rect({ x: 50, y: 205, width: 512, height: 70, fill: [1, 1, 1] }),
-    ...drawWrappedText({
-      value: "The final plan must translate the Albi Trust course into specific actions for this trader: avoid overtrading, accept controlled losses, protect capital, follow one plan, and track repeated mistakes.",
-      x: 70,
-      y: 248,
-      size: 11,
-      maxLength: 78,
-      lineHeight: 15,
-      fill: [0.18, 0.24, 0.35],
-    }).commands,
-  );
-  pageStreams.push(dashboard.join("\n"));
-
-  const draftLines = String(draft || "").split(/\r?\n/);
-  let page = contentPageBase();
-  let y = 760;
-
-  for (const rawLine of draftLines) {
-    const cleanLine = cleanHeading(rawLine);
-    const isHeading = Boolean(cleanLine) && (/^\s*(#{1,6}|\d+\.)/.test(rawLine) || rawLine === rawLine.toUpperCase());
-    const wrapped = drawWrappedText({
-      value: cleanLine,
-      x: 50,
-      y,
-      size: isHeading ? 14 : 10.5,
-      bold: isHeading,
-      maxLength: isHeading ? 62 : 92,
-      lineHeight: isHeading ? 18 : 14,
-      fill: isHeading ? [0.06, 0.13, 0.25] : [0.18, 0.24, 0.35],
-    });
-
-    if (y < 88 || wrapped.y < 76) {
-      pageStreams.push(page.join("\n"));
-      page = contentPageBase();
-      y = 760;
-      const nextWrapped = drawWrappedText({
-        value: cleanLine,
-        x: 50,
-        y,
-        size: isHeading ? 14 : 10.5,
-        bold: isHeading,
-        maxLength: isHeading ? 62 : 92,
-        lineHeight: isHeading ? 18 : 14,
-        fill: isHeading ? [0.06, 0.13, 0.25] : [0.18, 0.24, 0.35],
-      });
-      if (isHeading) {
-        page.push(
-          rect({ x: 44, y: y - 8, width: 524, height: 28, fill: [0.95, 0.97, 1] }),
-          rect({ x: 44, y: y - 8, width: 5, height: 28, fill: [0.09, 0.42, 0.3] }),
-        );
-      }
-      page.push(...nextWrapped.commands);
-      y = nextWrapped.y - (isHeading ? 8 : 3);
-    } else {
-      if (isHeading) {
-        page.push(
-          rect({ x: 44, y: y - 8, width: 524, height: 28, fill: [0.95, 0.97, 1] }),
-          rect({ x: 44, y: y - 8, width: 5, height: 28, fill: [0.09, 0.42, 0.3] }),
-        );
-      }
-      page.push(...wrapped.commands);
-      y = wrapped.y - (isHeading ? 8 : 3);
+  for (const block of blocks) {
+    if (block.type === "spacer") {
+      y -= block.size;
+      continue;
     }
+
+    if (block.type === "heading") {
+      ensureSpace(40, "Client Plan");
+      page.push(
+        rect({ x: 56, y: y - 8, width: 500, height: 30, fill: PDF_COLORS.card }),
+        rect({ x: 56, y: y - 8, width: 6, height: 30, fill: PDF_COLORS.accent }),
+        ...drawWrappedText({
+          value: block.text,
+          x: 74,
+          y: y + 2,
+          size: 13.5,
+          bold: true,
+          maxLength: 56,
+          lineHeight: 16,
+          fill: PDF_COLORS.ink,
+        }).commands,
+      );
+      y -= 40;
+      continue;
+    }
+
+    if (block.type === "bullet") {
+      const wrapped = drawWrappedText({
+        value: block.text,
+        x: 86,
+        y,
+        size: 10.4,
+        maxLength: 80,
+        lineHeight: 14,
+        fill: PDF_COLORS.body,
+      });
+      ensureSpace((wrapped.commands.length / 2) * 14 + 8, "Client Plan");
+      page.push(
+        text({ value: "-", x: 72, y, size: 13, bold: true, fill: PDF_COLORS.accent }),
+        ...drawWrappedText({
+          value: block.text,
+          x: 86,
+          y,
+          size: 10.4,
+          maxLength: 80,
+          lineHeight: 14,
+          fill: PDF_COLORS.body,
+        }).commands,
+      );
+      y = wrapped.y - 4;
+      continue;
+    }
+
+    const paragraph = drawWrappedText({
+      value: block.text,
+      x: 56,
+      y,
+      size: 10.4,
+      maxLength: 92,
+      lineHeight: 14,
+      fill: PDF_COLORS.body,
+    });
+    ensureSpace((paragraph.commands.length / 2) * 14 + 6, "Client Plan");
+    page.push(
+      ...drawWrappedText({
+        value: block.text,
+        x: 56,
+        y,
+        size: 10.4,
+        maxLength: 92,
+        lineHeight: 14,
+        fill: PDF_COLORS.body,
+      }).commands,
+    );
+    y = paragraph.y - 6;
   }
 
   const objects = [];
@@ -360,13 +548,7 @@ function createDraftPdfBuffer({ draft, context }) {
   pageStreams.forEach((pageContent, pageIndex) => {
     const stream = [
       pageContent,
-      text({
-        value: `Albi Trust - Page ${pageIndex + 1} of ${pageStreams.length}`,
-        x: 50,
-        y: 28,
-        size: 8,
-        fill: [0.38, 0.44, 0.56],
-      }),
+      ...drawPageFooter(pageIndex + 1, pageStreams.length),
     ].join("\n");
     const contentId = addObject(`<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`);
     const pageId = addObject(
