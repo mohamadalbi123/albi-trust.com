@@ -93,6 +93,7 @@ export function TailoredIntakeClient() {
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [successNotice, setSuccessNotice] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
+  const [stepError, setStepError] = useState("");
   const finalizeStartedRef = useRef(false);
   const isPaidStep = searchParams.get("paid") === "1";
   const orderId = searchParams.get("order");
@@ -102,10 +103,12 @@ export function TailoredIntakeClient() {
   const progress = ((currentStep + 1) / INTAKE_STEPS.length) * 100;
 
   function updateField(key, value) {
+    setStepError("");
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function updateMultiField(key, value) {
+    setStepError("");
     setForm((prev) => {
       const currentValues = Array.isArray(prev[key]) ? prev[key] : [];
       return {
@@ -128,6 +131,7 @@ export function TailoredIntakeClient() {
 
   function handleScreenshotChange(files) {
     setError("");
+    setStepError("");
     const nextFiles = Array.from(files || []).slice(0, 3);
     const oversized = nextFiles.find((file) => file.size > MAX_SCREENSHOT_BYTES);
 
@@ -140,11 +144,75 @@ export function TailoredIntakeClient() {
     setAccountScreenshots(nextFiles);
   }
 
+  function isFilled(value) {
+    return Boolean(String(value || "").trim());
+  }
+
+  function validateStep(stepId = activeStep.id) {
+    if (stepId === "style") {
+      if (!form.tradingYears || !form.profitableBefore || !form.tradingSession || !form.usualTradingTime) {
+        return "Complete the core trading profile first so we can diagnose your style properly.";
+      }
+
+      if (!form.tradedAssets.length) {
+        return "Choose at least one market you trade most.";
+      }
+
+      return "";
+    }
+
+    if (stepId === "method") {
+      if (!form.chartStyle || !form.usesTradingSignals || !form.riskPerTrade || !form.averageHoldingTime) {
+        return "Answer the execution questions before moving on.";
+      }
+
+      if (!form.indicators.length) {
+        return "Choose at least one tool you rely on, or select Other if needed.";
+      }
+
+      if (!isFilled(form.strategyDescription)) {
+        return "Add a short strategy description so the action plan has something concrete to work from.";
+      }
+
+      return "";
+    }
+
+    if (stepId === "reality") {
+      if (
+        !form.currentWorkStatus ||
+        !form.employmentType ||
+        !form.familyResponsibilities ||
+        !form.dependsOnTradingIncome ||
+        !form.dailyTradingHours ||
+        !form.energyLevel
+      ) {
+        return "Complete the personal reality questions so the plan can fit your routine.";
+      }
+
+      if (!isFilled(form.country) || !isFilled(form.personalBackground)) {
+        return "Tell us where you live and give a short picture of your daily reality before continuing.";
+      }
+
+      return "";
+    }
+
+    return "";
+  }
+
   function nextStep() {
+    const validationMessage = validateStep();
+
+    if (validationMessage) {
+      setStepError(validationMessage);
+      return;
+    }
+
+    setStepError("");
     setCurrentStep((prev) => Math.min(prev + 1, INTAKE_STEPS.length - 1));
   }
 
   function previousStep() {
+    setStepError("");
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }
 
@@ -152,6 +220,16 @@ export function TailoredIntakeClient() {
     event.preventDefault();
     setError("");
     setSuccessNotice("");
+
+    const validationMessage = validateStep("style") || validateStep("method") || validateStep("reality");
+
+    if (validationMessage) {
+      setStepError(validationMessage);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setStepError("");
     setIsSubmitting(true);
 
     let screenshotPayload = [];
@@ -642,7 +720,7 @@ export function TailoredIntakeClient() {
         <div className="eyebrow">Tailored intake</div>
         <h1 className="page-title">Let&apos;s shape your action plan.</h1>
         <p className="page-lead">
-          This is a live example of a more guided intake flow. Same information underneath, but asked in a quicker, more human way before payment.
+          This guided intake keeps the important questions mandatory, while uploads and extra notes stay optional so the flow still feels fast before payment.
         </p>
 
         <div className="tailored-intake-summary-grid" style={{ marginTop: 24 }}>
@@ -680,7 +758,19 @@ export function TailoredIntakeClient() {
                     key={step.id}
                     type="button"
                     className={`tailored-intake-step-chip ${index === currentStep ? "is-active" : ""} ${index < currentStep ? "is-complete" : ""}`}
-                    onClick={() => setCurrentStep(index)}
+                    onClick={() => {
+                      if (index > currentStep) {
+                        const validationMessage = validateStep();
+
+                        if (validationMessage) {
+                          setStepError(validationMessage);
+                          return;
+                        }
+                      }
+
+                      setStepError("");
+                      setCurrentStep(index);
+                    }}
                   >
                     {step.title}
                   </button>
@@ -689,10 +779,17 @@ export function TailoredIntakeClient() {
             </div>
 
             <div className="tailored-intake-stage-card">
+              <div className="tailored-intake-stage-callout">
+                <strong>What matters here</strong>
+                <span>
+                  The core answers are required because they shape the diagnosis. Screenshots and extra notes stay optional.
+                </span>
+              </div>
               {renderStepContent()}
             </div>
           </section>
 
+          {stepError ? <p className="auth-error tailored-step-error">{stepError}</p> : null}
           {error ? <p className="auth-error">{error}</p> : null}
 
           <div className="tailored-intake-nav">
