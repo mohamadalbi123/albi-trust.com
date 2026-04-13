@@ -84,6 +84,7 @@ export function AdminActionPlansClient() {
   const [generatorOrder, setGeneratorOrder] = useState(null);
   const [generatorInstructions, setGeneratorInstructions] = useState("");
   const [generatorKnowledge, setGeneratorKnowledge] = useState("");
+  const [generatorChat, setGeneratorChat] = useState([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
@@ -242,6 +243,7 @@ export function AdminActionPlansClient() {
     setNotice("");
     setGeneratorDraft("");
     setGeneratorOrder(null);
+    setGeneratorChat([]);
     setGeneratingOrderId(orderId);
 
     try {
@@ -263,6 +265,25 @@ export function AdminActionPlansClient() {
 
       setGeneratorDraft(data.draft || "");
       setGeneratorOrder(data.order || null);
+      setGeneratorChat(
+        generatorInstructions.trim()
+          ? [
+              {
+                role: "admin",
+                content: generatorInstructions.trim(),
+              },
+              {
+                role: "model",
+                content: "Draft generated from your instruction. Review it and send another message if you want changes.",
+              },
+            ]
+          : [
+              {
+                role: "model",
+                content: "Draft generated. Review it and send a message if you want anything changed.",
+              },
+            ],
+      );
       setNotice("Draft generated. Review and edit it before creating the PDF.");
     } catch {
       setError("Unable to generate action plan draft.");
@@ -285,6 +306,7 @@ export function AdminActionPlansClient() {
     setError("");
     setNotice("");
     setRevisingDraft(true);
+    const revisionInstruction = generatorInstructions.trim();
 
     try {
       const response = await fetch("/api/admin/action-plan-generator", {
@@ -307,6 +329,22 @@ export function AdminActionPlansClient() {
 
       setGeneratorDraft(data.draft || generatorDraft);
       setGeneratorOrder(data.order || generatorOrder);
+      setGeneratorChat((prev) => [
+        ...prev,
+        ...(revisionInstruction
+          ? [
+              {
+                role: "admin",
+                content: revisionInstruction,
+              },
+            ]
+          : []),
+        {
+          role: "model",
+          content: "Draft updated. Review the new version or send another change request.",
+        },
+      ]);
+      setGeneratorInstructions("");
       setNotice("Draft revised. Review it before delivery.");
     } catch {
       setError("Unable to revise action plan draft.");
@@ -315,7 +353,7 @@ export function AdminActionPlansClient() {
     }
   }
 
-  function openBase64Pdf({ dataBase64, fileName }) {
+  function openBase64Pdf({ dataBase64, fileName, previewWindow }) {
     const binary = window.atob(dataBase64);
     const bytes = new Uint8Array(binary.length);
 
@@ -324,13 +362,21 @@ export function AdminActionPlansClient() {
     }
 
     const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    const link = document.createElement("a");
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.location.href = url;
+      previewWindow.document.title = fileName || "albi-trust-action-plan-preview.pdf";
+    } else {
+      const link = document.createElement("a");
 
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-    link.title = fileName || "albi-trust-action-plan-preview.pdf";
-    link.click();
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.title = fileName || "albi-trust-action-plan-preview.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
@@ -343,6 +389,13 @@ export function AdminActionPlansClient() {
     setError("");
     setNotice("");
     setPreviewingPdf(true);
+    const previewWindow = window.open("", "_blank");
+
+    if (previewWindow) {
+      previewWindow.opener = null;
+      previewWindow.document.write("<title>Preparing PDF preview...</title><p style=\"font-family:system-ui;padding:24px\">Preparing PDF preview...</p>");
+      previewWindow.document.close();
+    }
 
     try {
       const response = await fetch("/api/admin/action-plan-generator", {
@@ -357,13 +410,19 @@ export function AdminActionPlansClient() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (previewWindow && !previewWindow.closed) {
+          previewWindow.close();
+        }
         setError(data.error || "Unable to preview PDF.");
         return;
       }
 
-      openBase64Pdf(data);
+      openBase64Pdf({ ...data, previewWindow });
       setNotice("PDF preview opened. Review it before delivery.");
     } catch {
+      if (previewWindow && !previewWindow.closed) {
+        previewWindow.close();
+      }
       setError("Unable to preview PDF.");
     } finally {
       setPreviewingPdf(false);
@@ -707,12 +766,12 @@ export function AdminActionPlansClient() {
               <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
               <div className="admin-generator-control-block">
                 <label className="form-field">
-                  <span>Instruction to AI</span>
+                  <span>Message the AI</span>
                   <textarea
                     className="admin-generator-small-textarea"
                     value={generatorInstructions}
                     onChange={(event) => setGeneratorInstructions(event.target.value)}
-                    placeholder="Example: Make this action plan stricter, focus on risk control, and use my tone."
+                    placeholder="Example: Make this more direct. Focus on risk control, remove generic language, and strengthen the weekly plan."
                   />
                 </label>
                 <label className="form-field">
@@ -729,6 +788,19 @@ export function AdminActionPlansClient() {
                   <input type="file" accept=".txt,.md,.markdown,.csv,text/*" onChange={uploadGeneratorKnowledge} />
                 </label>
               </div>
+              {generatorChat.length ? (
+                <div className="admin-generator-chat">
+                  {generatorChat.map((entry, index) => (
+                    <div
+                      key={`${entry.role}-${index}`}
+                      className={`admin-generator-chat-bubble ${entry.role === "admin" ? "is-admin" : "is-model"}`}
+                    >
+                      <strong>{entry.role === "admin" ? "You" : "Model"}</strong>
+                      <p>{entry.content}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               <div className="admin-generator-order-list">
                 {generatorOrders.map((order) => (
                   <button

@@ -1462,6 +1462,39 @@ select {
   opacity: 0;
 }
 
+.admin-generator-chat {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-generator-chat-bubble {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.admin-generator-chat-bubble strong {
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-generator-chat-bubble p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.admin-generator-chat-bubble.is-admin {
+  background: linear-gradient(180deg, #f7fbff, #eef5ff);
+}
+
+.admin-generator-chat-bubble.is-model {
+  background: linear-gradient(180deg, #ffffff, #f7f8fb);
+}
+
 .admin-generator-order-button {
   display: flex;
   align-items: center;
