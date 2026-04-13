@@ -83,8 +83,7 @@ export function AdminActionPlansClient() {
   const [deliveringDraft, setDeliveringDraft] = useState(false);
   const [generatorDraft, setGeneratorDraft] = useState("");
   const [generatorOrder, setGeneratorOrder] = useState(null);
-  const [generatorInstructions, setGeneratorInstructions] = useState("");
-  const [generatorKnowledge, setGeneratorKnowledge] = useState("");
+  const [generatorPrompt, setGeneratorPrompt] = useState("");
   const [generatorChat, setGeneratorChat] = useState([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -253,8 +252,6 @@ export function AdminActionPlansClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId,
-          instructions: generatorInstructions,
-          knowledge: generatorKnowledge,
         }),
       });
       const data = await response.json();
@@ -281,15 +278,19 @@ export function AdminActionPlansClient() {
       return;
     }
 
-    if (!generatorInstructions.trim() && !generatorKnowledge.trim()) {
-      setError("Add an instruction or method notes before asking the AI to revise.");
+    const revisionInstruction =
+      generatorPrompt.trim() ||
+      [...generatorChat].reverse().find((entry) => entry.role === "admin")?.content ||
+      "";
+
+    if (!revisionInstruction) {
+      setError("Tell the model what to change first.");
       return;
     }
 
     setError("");
     setNotice("");
     setRevisingDraft(true);
-    const revisionInstruction = generatorInstructions.trim();
 
     try {
       const response = await fetch("/api/admin/action-plan-generator", {
@@ -299,8 +300,8 @@ export function AdminActionPlansClient() {
           action: "revise_draft",
           orderId: generatorOrder.id,
           draft: generatorDraft,
-          instructions: generatorInstructions,
-          knowledge: generatorKnowledge,
+          instructions: revisionInstruction,
+          chatHistory: generatorChat,
         }),
       });
       const data = await response.json();
@@ -314,20 +315,15 @@ export function AdminActionPlansClient() {
       setGeneratorOrder(data.order || generatorOrder);
       setGeneratorChat((prev) => [
         ...prev,
-        ...(revisionInstruction
-          ? [
-              {
-                role: "admin",
-                content: revisionInstruction,
-              },
-            ]
+        ...(generatorPrompt.trim()
+          ? [{ role: "admin", content: revisionInstruction }]
           : []),
         {
           role: "model",
-          content: "Draft updated. Review the new version or send another change request.",
+          content: "Draft updated with your requested change. Review it and keep chatting if you want more adjustments.",
         },
       ]);
-      setGeneratorInstructions("");
+      setGeneratorPrompt("");
       setNotice("Draft revised. Review it before delivery.");
     } catch {
       setError("Unable to revise action plan draft.");
@@ -342,7 +338,7 @@ export function AdminActionPlansClient() {
       return;
     }
 
-    if (!generatorInstructions.trim()) {
+    if (!generatorPrompt.trim()) {
       setError("Type a message for the AI first.");
       return;
     }
@@ -350,7 +346,7 @@ export function AdminActionPlansClient() {
     setError("");
     setNotice("");
     setChattingWithAi(true);
-    const nextMessage = generatorInstructions.trim();
+    const nextMessage = generatorPrompt.trim();
 
     try {
       const response = await fetch("/api/admin/action-plan-generator", {
@@ -361,7 +357,6 @@ export function AdminActionPlansClient() {
           orderId: generatorOrder.id,
           draft: generatorDraft,
           instructions: nextMessage,
-          knowledge: generatorKnowledge,
           chatHistory: generatorChat,
         }),
       });
@@ -377,8 +372,8 @@ export function AdminActionPlansClient() {
         { role: "admin", content: nextMessage },
         { role: "model", content: data.reply || "No reply returned." },
       ]);
-      setGeneratorInstructions("");
-      setNotice("AI reply added. If you like the direction, use Revise with my instructions to apply a change to the draft.");
+      setGeneratorPrompt("");
+      setNotice("AI reply added. If you want those ideas inside the document, click Apply to draft.");
     } catch {
       setError("Unable to chat with the AI.");
     } finally {
@@ -459,30 +454,6 @@ export function AdminActionPlansClient() {
       setError("Unable to preview PDF.");
     } finally {
       setPreviewingPdf(false);
-    }
-  }
-
-  async function uploadGeneratorKnowledge(event) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    if (!/\.(txt|md|markdown|csv)$/i.test(file.name) && !file.type.startsWith("text/")) {
-      setError("For now, upload a text, Markdown, or CSV file. For PDF/book upload we will add a proper knowledge base next.");
-      event.target.value = "";
-      return;
-    }
-
-    try {
-      const text = await file.text();
-      setGeneratorKnowledge((prev) => [prev, `Notes from ${file.name}:\n${text}`].filter(Boolean).join("\n\n"));
-      setNotice("Notes uploaded into the generator context.");
-    } catch {
-      setError("Unable to read this file.");
-    } finally {
-      event.target.value = "";
     }
   }
 
@@ -799,26 +770,13 @@ export function AdminActionPlansClient() {
               <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
               <div className="admin-generator-control-block">
                 <label className="form-field">
-                  <span>Message the AI</span>
+                  <span>Chat with the model</span>
                   <textarea
                     className="admin-generator-small-textarea"
-                    value={generatorInstructions}
-                    onChange={(event) => setGeneratorInstructions(event.target.value)}
-                    placeholder="Example: Make this more direct. Focus on risk control, remove generic language, and strengthen the weekly plan."
+                    value={generatorPrompt}
+                    onChange={(event) => setGeneratorPrompt(event.target.value)}
+                    placeholder="Example: Add a stronger diagnosis about revenge trading, make the tone more direct, and mention London session timing."
                   />
-                </label>
-                <label className="form-field">
-                  <span>Your method notes</span>
-                  <textarea
-                    className="admin-generator-small-textarea"
-                    value={generatorKnowledge}
-                    onChange={(event) => setGeneratorKnowledge(event.target.value)}
-                    placeholder="Paste your book/course notes, rules, or framework here."
-                  />
-                </label>
-                <label className="button-secondary admin-generator-upload">
-                  Upload text notes
-                  <input type="file" accept=".txt,.md,.markdown,.csv,text/*" onChange={uploadGeneratorKnowledge} />
                 </label>
               </div>
               {generatorChat.length ? (
@@ -875,7 +833,7 @@ export function AdminActionPlansClient() {
                   type="button"
                   className="button-secondary"
                   onClick={askGeneratorAssistant}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorInstructions.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
                 >
                   {chattingWithAi ? "Thinking..." : "Ask AI"}
                 </button>
@@ -885,7 +843,7 @@ export function AdminActionPlansClient() {
                   onClick={reviseActionPlanDraft}
                   disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
                 >
-                  {revisingDraft ? "Revising..." : "Revise with my instructions"}
+                  {revisingDraft ? "Applying..." : "Apply to draft"}
                 </button>
                 <button
                   type="button"

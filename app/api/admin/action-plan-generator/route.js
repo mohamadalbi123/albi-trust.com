@@ -996,6 +996,12 @@ export async function POST(request) {
                 "Return valid JSON only. Do not return prose outside the JSON object.",
                 `Use this exact JSON schema:\n${JSON.stringify(FIXED_PLAN_JSON_SCHEMA, null, 2)}`,
                 adminInstructions ? `Mohamad's revision instruction:\n${adminInstructions}` : "",
+                ...(chatHistory.length
+                  ? [
+                      "Recent admin chat about the draft:",
+                      ...chatHistory.map((entry) => `${entry.role === "assistant" ? "Model" : "Mohamad"}: ${entry.content}`),
+                    ]
+                  : []),
                 knowledgeNotes ? `Mohamad's method notes / uploaded text:\n${knowledgeNotes}` : "",
                 "",
                 "Paid order data:",
