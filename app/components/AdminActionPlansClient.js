@@ -803,22 +803,6 @@ export function AdminActionPlansClient() {
                   <button
                     type="button"
                     className="button-secondary"
-                    onClick={askGeneratorAssistant}
-                    disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
-                  >
-                    {chattingWithAi ? "Thinking..." : "Ask AI"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button-secondary"
-                    onClick={reviseActionPlanDraft}
-                    disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
-                  >
-                    {revisingDraft ? "Applying..." : "Apply to draft"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button-secondary"
                     onClick={previewGeneratedPdf}
                     disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
                   >
@@ -839,7 +823,7 @@ export function AdminActionPlansClient() {
                 <div className="action-card admin-generator-chat-panel">
                   <div className="admin-generator-subhead">
                     <strong>Conversation</strong>
-                    <p className="muted">Discuss additions, tone, diagnosis strength, and structure with the model before applying changes.</p>
+                    <p className="muted">Discuss additions, tone, diagnosis strength, and structure here. The model replies in the conversation area below.</p>
                   </div>
                   <div className="admin-generator-chat-thread">
                     {generatorChat.length ? (
@@ -871,6 +855,24 @@ export function AdminActionPlansClient() {
                         placeholder="Example: Add a stronger diagnosis about revenge trading, make the tone more direct, and mention London session timing."
                       />
                     </label>
+                    <div className="admin-generator-prompt-actions">
+                      <button
+                        type="button"
+                        className="button-primary"
+                        onClick={askGeneratorAssistant}
+                        disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
+                      >
+                        {chattingWithAi ? "Sending..." : "Send"}
+                      </button>
+                      <button
+                        type="button"
+                        className="button-secondary"
+                        onClick={reviseActionPlanDraft}
+                        disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
+                      >
+                        {revisingDraft ? "Updating..." : "Update draft"}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
