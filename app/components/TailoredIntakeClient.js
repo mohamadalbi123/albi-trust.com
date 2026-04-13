@@ -12,7 +12,7 @@ const STEP_OPTIONS = {
   tradingYears: ["Less than 1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
   profitableBefore: ["Yes", "No"],
   riskPerTrade: ["Less than 0.5%", "0.5% - 1%", "1% - 2%", "More than 2%", "I do not use fixed risk"],
-  averageHoldingTime: ["Minutes", "Less than 1 hour", "1-4 hours", "Same day", "Several days"],
+  averageHoldingTime: ["Minutes", "1-4 hours", "4-12 hours", "Several days"],
   tradingSession: ["Asia", "London", "New York"],
   usualTradingTime: ["Before work", "During work", "After work", "Random"],
   usesTradingSignals: ["I trade on my own", "I rely on trading signals", "Both"],
@@ -409,8 +409,9 @@ export function TailoredIntakeClient() {
         <>
           <TradingViewGoldChart />
 
-          <div className="tailored-question-grid">
-            <div className="tailored-question-block">
+          <section className="tailored-chart-panel">
+            <div className="tailored-chart-field-grid tailored-chart-field-grid-triple">
+              <div className="tailored-chart-field">
               <span className="intake-field-label">Signals or your own trades?</span>
               <div className="intake-pill-grid intake-pill-grid-compact">
                 {STEP_OPTIONS.usesTradingSignals.map((option) => (
@@ -422,11 +423,9 @@ export function TailoredIntakeClient() {
                   />
                 ))}
               </div>
-            </div>
-          </div>
+              </div>
 
-          <div className="tailored-question-grid">
-            <div className="tailored-question-block">
+              <div className="tailored-chart-field">
               <span className="intake-field-label">Risk per trade</span>
               <div className="intake-pill-grid">
                 {STEP_OPTIONS.riskPerTrade.map((option) => (
@@ -438,9 +437,9 @@ export function TailoredIntakeClient() {
                   />
                 ))}
               </div>
-            </div>
+              </div>
 
-            <div className="tailored-question-block">
+              <div className="tailored-chart-field">
               <span className="intake-field-label">Average holding time</span>
               <div className="intake-pill-grid">
                 {STEP_OPTIONS.averageHoldingTime.map((option) => (
@@ -452,11 +451,12 @@ export function TailoredIntakeClient() {
                   />
                 ))}
               </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div className="tailored-question-grid">
-            <div className="tailored-question-block">
+          <section className="tailored-chart-panel tailored-chart-panel-split">
+            <div className="tailored-chart-field">
               <span className="intake-field-label">How would you trade this chart?</span>
               <div className="intake-pill-grid intake-pill-grid-compact">
                 {["Buy", "Sell", "Wait for confirmation", "Skip this setup", "Not sure"].map((option) => (
@@ -470,7 +470,7 @@ export function TailoredIntakeClient() {
               </div>
             </div>
 
-            <label className="form-field tailored-question-block">
+            <label className="form-field tailored-chart-field">
               <span className="intake-field-label">Why would you take that decision?</span>
               <textarea
                 className="tailored-textarea tailored-textarea-compact"
@@ -480,9 +480,10 @@ export function TailoredIntakeClient() {
                 onChange={(event) => updateField("chartReasoning", event.target.value)}
               />
             </label>
-          </div>
+          </section>
 
-          <label className="form-field form-field-full tailored-question-block">
+          <section className="tailored-chart-panel">
+            <label className="form-field form-field-full tailored-chart-field">
             <span className="intake-field-label">Describe your trading strategy in simple words</span>
             <textarea
               className="tailored-textarea tailored-textarea-compact"
@@ -492,6 +493,7 @@ export function TailoredIntakeClient() {
               onChange={(event) => updateField("strategyDescription", event.target.value)}
             />
           </label>
+          </section>
         </>
       );
     }
