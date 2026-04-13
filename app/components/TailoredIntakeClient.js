@@ -28,25 +28,25 @@ const INTAKE_STEPS = [
     id: "style",
     eyebrow: "Step 1",
     title: "How do you actually trade?",
-    description: "We start with the essentials so your plan fits your real trading style instead of assumptions.",
+    description: "Start with the essentials so the plan fits how you really trade.",
   },
   {
     id: "chart",
     eyebrow: "Step 2",
     title: "How would you trade this gold chart?",
-    description: "Use the chart, mark levels if you want, choose the indicators you actually use, and tell us your trade idea.",
+    description: "Use the chart the way you normally would, then tell us your trade idea.",
   },
   {
     id: "reality",
     eyebrow: "Step 3",
     title: "What does your daily reality look like?",
-    description: "A strong plan has to fit your work, energy, responsibilities, and available time.",
+    description: "Your plan needs to fit your work, energy, and available time.",
   },
   {
     id: "extras",
     eyebrow: "Step 4",
     title: "Anything else that helps us diagnose better?",
-    description: "Optional screenshots and context can make the final plan much more specific.",
+    description: "Add anything extra that helps us make the plan more specific.",
   },
 ];
 
@@ -407,23 +407,6 @@ export function TailoredIntakeClient() {
     if (activeStep.id === "chart") {
       return (
         <>
-          <div className="tailored-chart-hero">
-            <div>
-              <span className="intake-field-label">Interactive gold chart</span>
-              <h3 className="tailored-chart-title">Review XAUUSD the way you normally would.</h3>
-              <p className="muted">
-                Use the TradingView chart below. If you want, add a simple trend line or level on the chart toolbar, then answer the questions under it.
-              </p>
-            </div>
-          </div>
-
-          <div className="tailored-chart-instruction">
-            <strong>Mark the level you care about.</strong>
-            <p className="muted">
-              If you want, use the chart tools to draw a simple trend line or horizontal level, then answer the questions below like you would in a real session.
-            </p>
-          </div>
-
           <TradingViewGoldChart />
 
           <div className="tailored-question-grid">
@@ -735,7 +718,7 @@ export function TailoredIntakeClient() {
         <div className="eyebrow">Tailored intake</div>
         <h1 className="page-title">Let&apos;s shape your action plan.</h1>
         <p className="page-lead">
-          This guided intake keeps the important questions mandatory, while uploads and extra notes stay optional so the flow still feels fast before payment.
+          Short guided questions before payment. Core answers are required, extra context stays optional.
         </p>
 
         <div className="tailored-intake-summary-grid" style={{ marginTop: 24 }}>
@@ -794,12 +777,6 @@ export function TailoredIntakeClient() {
             </div>
 
             <div className="tailored-intake-stage-card">
-              <div className="tailored-intake-stage-callout">
-                <strong>What matters here</strong>
-                <span>
-                  The core answers are required because they shape the diagnosis. Screenshots and extra notes stay optional.
-                </span>
-              </div>
               {renderStepContent()}
             </div>
           </section>

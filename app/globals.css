@@ -2004,26 +2004,6 @@ select {
   box-shadow: 0 22px 56px rgba(16, 33, 63, 0.08);
 }
 
-.tailored-intake-stage-callout {
-  display: grid;
-  gap: 6px;
-  border: 1px solid rgba(18, 53, 107, 0.08);
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fbfdff, #f3f8ff);
-  padding: 16px 18px;
-}
-
-.tailored-intake-stage-callout strong {
-  color: #10213f;
-  font-size: 0.96rem;
-}
-
-.tailored-intake-stage-callout span {
-  color: rgba(16, 33, 63, 0.7);
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-
 .tailored-question-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2037,46 +2017,6 @@ select {
   border: 1px solid rgba(18, 53, 107, 0.07);
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.92));
-}
-
-.tailored-chart-hero {
-  display: grid;
-  gap: 10px;
-  padding: 22px 24px;
-  border: 1px solid rgba(18, 53, 107, 0.08);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(127, 196, 255, 0.18), transparent 32%),
-    linear-gradient(180deg, #fbfdff, #f3f8ff);
-}
-
-.tailored-chart-title {
-  margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: -0.04em;
-  color: #10213f;
-}
-
-.tailored-chart-hero .muted {
-  margin: 0;
-}
-
-.tailored-chart-instruction {
-  display: grid;
-  gap: 8px;
-  padding: 16px 18px;
-  border: 1px solid rgba(18, 53, 107, 0.08);
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fbfdff, #f5f9ff);
-}
-
-.tailored-chart-instruction strong {
-  color: #10213f;
-  font-size: 1.02rem;
-}
-
-.tailored-chart-instruction .muted {
-  margin: 0;
 }
 
 .tv-chart-shell {
