@@ -7,7 +7,7 @@ import { TradingViewGoldChart } from "./TradingViewGoldChart";
 import { useCurrentUser } from "./useCurrentUser";
 
 const MAX_SCREENSHOT_BYTES = 800 * 1024;
-const ASSET_OPTIONS = ["Gold", "Silver", "Forex", "Indices", "Crypto", "Futures indices"];
+const ASSET_OPTIONS = ["Metals", "Forex", "Indices", "Crypto", "Commodities", "Futures"];
 const STEP_OPTIONS = {
   tradingYears: ["Less than 1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
   profitableBefore: ["Yes", "No"],
