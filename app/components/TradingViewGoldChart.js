@@ -17,18 +17,19 @@ export function TradingViewGoldChart() {
     widgetRef.current = widget;
 
     const script = document.createElement("script");
+    const isMobile = window.matchMedia("(max-width: 640px)").matches;
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
     script.innerHTML = JSON.stringify({
       width: "100%",
-      height: 520,
+      height: isMobile ? 420 : 520,
       symbol: "OANDA:XAUUSD",
       interval: "60",
       timezone: "Europe/Paris",
       theme: "light",
       style: "1",
       locale: "en",
-      withdateranges: true,
+      withdateranges: !isMobile,
       allow_symbol_change: false,
       hide_top_toolbar: false,
       hide_side_toolbar: false,

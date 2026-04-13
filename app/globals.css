@@ -2618,7 +2618,7 @@ select {
   }
 
   .tailored-intake-stage-card {
-    padding: 20px;
+    padding: 16px;
     border-radius: 22px;
   }
 
@@ -2628,11 +2628,11 @@ select {
   }
 
   .tailored-question-block {
-    padding: 16px;
+    padding: 14px;
   }
 
   .tailored-chart-panel {
-    padding: 18px;
+    padding: 14px;
   }
 
   .tailored-chart-panel-split,
@@ -2641,7 +2641,7 @@ select {
   }
 
   .tv-chart-widget {
-    min-height: 380px;
+    min-height: 340px;
   }
 
   .tailored-intake-step-row,
