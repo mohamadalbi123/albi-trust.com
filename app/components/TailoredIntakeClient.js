@@ -13,7 +13,7 @@ const STEP_OPTIONS = {
   profitableBefore: ["Yes", "No"],
   riskPerTrade: ["Less than 0.5%", "0.5% - 1%", "1% - 2%", "More than 2%", "I do not use fixed risk"],
   averageHoldingTime: ["Minutes", "Less than 1 hour", "1-4 hours", "Same day", "Several days"],
-  tradingSession: ["Asia", "London", "New York", "No fixed session"],
+  tradingSession: ["Asia", "London", "New York"],
   usualTradingTime: ["Before work", "During work", "After work", "Random"],
   usesTradingSignals: ["I trade on my own", "I rely on trading signals", "Both"],
   currentWorkStatus: ["Full-time", "Part-time", "Unemployed", "Student"],
@@ -71,7 +71,7 @@ export function TailoredIntakeClient() {
     familyResponsibilities: "",
     country: "",
     originCountry: "",
-    tradingSession: "",
+    tradingSession: [],
     dailyTradingHours: "",
     usualTradingTime: "",
     energyLevel: "",
@@ -151,7 +151,7 @@ export function TailoredIntakeClient() {
 
   function validateStep(stepId = activeStep.id) {
     if (stepId === "style") {
-      if (!form.tradingYears || !form.profitableBefore || !form.tradingSession || !form.usualTradingTime) {
+      if (!form.tradingYears || !form.profitableBefore || !form.tradingSession.length || !form.usualTradingTime) {
         return "Complete the core trading profile first so we can diagnose your style properly.";
       }
 
@@ -378,9 +378,9 @@ export function TailoredIntakeClient() {
                 {STEP_OPTIONS.tradingSession.map((option) => (
                   <ChoicePill
                     key={option}
-                    active={form.tradingSession === option}
+                    active={form.tradingSession.includes(option)}
                     label={option}
-                    onClick={() => updateField("tradingSession", option)}
+                    onClick={() => updateMultiField("tradingSession", option)}
                   />
                 ))}
               </div>

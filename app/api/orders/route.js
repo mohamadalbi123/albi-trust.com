@@ -11,6 +11,14 @@ function stringArray(value) {
   return Array.isArray(value) ? value.map((entry) => String(entry || "").trim()).filter(Boolean) : [];
 }
 
+function stringOrJoinedArray(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry || "").trim()).filter(Boolean).join(", ");
+  }
+
+  return String(value || "");
+}
+
 function accountScreenshots(value) {
   if (!Array.isArray(value)) return [];
 
@@ -53,7 +61,7 @@ export async function POST(request) {
       familyResponsibilities: String(body.familyResponsibilities || ""),
       country: String(body.country || ""),
       originCountry: String(body.originCountry || ""),
-      tradingSession: String(body.tradingSession || ""),
+      tradingSession: stringOrJoinedArray(body.tradingSession),
       dailyTradingHours: String(body.dailyTradingHours || ""),
       usualTradingTime: String(body.usualTradingTime || ""),
       energyLevel: String(body.energyLevel || ""),
