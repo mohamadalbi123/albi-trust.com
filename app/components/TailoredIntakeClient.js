@@ -286,6 +286,7 @@ export function TailoredIntakeClient() {
   const [successNotice, setSuccessNotice] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [stepError, setStepError] = useState("");
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
   const finalizeStartedRef = useRef(false);
   const isPaidStep = searchParams.get("paid") === "1";
   const orderId = searchParams.get("order");
@@ -311,6 +312,17 @@ export function TailoredIntakeClient() {
       };
     });
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const mediaQuery = window.matchMedia("(max-width: 640px)");
+    const syncLayout = () => setIsMobileLayout(mediaQuery.matches);
+
+    syncLayout();
+    mediaQuery.addEventListener("change", syncLayout);
+    return () => mediaQuery.removeEventListener("change", syncLayout);
+  }, []);
 
   function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
@@ -517,36 +529,66 @@ export function TailoredIntakeClient() {
   }, [status, isPaidStep, orderId, stripeSessionId, isFinalizing, successNotice, handleFinalize]);
 
   function renderStepContent() {
+    function renderSingleChoiceField({
+      label,
+      value,
+      options,
+      onSelect,
+      compact = false,
+      placeholder = "Select one",
+      wrapperClassName = "tailored-question-block",
+    }) {
+      return (
+        <div className={wrapperClassName}>
+          <span className="intake-field-label">{label}</span>
+          {isMobileLayout ? (
+            <select
+              className="tailored-mobile-select"
+              value={value}
+              onChange={(event) => onSelect(event.target.value)}
+            >
+              <option value="">{placeholder}</option>
+              {options.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className={`intake-pill-grid ${compact ? "intake-pill-grid-compact" : ""}`}>
+              {options.map((option) => (
+                <ChoicePill
+                  key={option}
+                  active={value === option}
+                  label={option}
+                  onClick={() => onSelect(option)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     if (activeStep.id === "style") {
       return (
         <>
-          <div className="tailored-question-block">
-            <span className="intake-field-label">How long have you really been trading?</span>
-            <div className="intake-pill-grid">
-              {STEP_OPTIONS.tradingYears.map((option) => (
-                <ChoicePill
-                  key={option}
-                  active={form.tradingYears === option}
-                  label={option}
-                  onClick={() => updateField("tradingYears", option)}
-                />
-              ))}
-            </div>
-          </div>
+          {renderSingleChoiceField({
+            label: "How long have you really been trading?",
+            value: form.tradingYears,
+            options: STEP_OPTIONS.tradingYears,
+            onSelect: (value) => updateField("tradingYears", value),
+            placeholder: "Select trading experience",
+          })}
 
-          <div className="tailored-question-block">
-            <span className="intake-field-label">Have you ever been profitable?</span>
-            <div className="intake-pill-grid intake-pill-grid-compact">
-              {STEP_OPTIONS.profitableBefore.map((option) => (
-                <ChoicePill
-                  key={option}
-                  active={form.profitableBefore === option}
-                  label={option}
-                  onClick={() => updateField("profitableBefore", option)}
-                />
-              ))}
-            </div>
-          </div>
+          {renderSingleChoiceField({
+            label: "Have you ever been profitable?",
+            value: form.profitableBefore,
+            options: STEP_OPTIONS.profitableBefore,
+            onSelect: (value) => updateField("profitableBefore", value),
+            compact: true,
+            placeholder: "Select one",
+          })}
 
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">Previous experience before trading</span>
@@ -587,19 +629,14 @@ export function TailoredIntakeClient() {
               </div>
             </div>
 
-            <div className="tailored-question-block">
-              <span className="intake-field-label">When do you usually trade?</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.usualTradingTime.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.usualTradingTime === option}
-                    label={option}
-                    onClick={() => updateField("usualTradingTime", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "When do you usually trade?",
+              value: form.usualTradingTime,
+              options: STEP_OPTIONS.usualTradingTime,
+              onSelect: (value) => updateField("usualTradingTime", value),
+              compact: true,
+              placeholder: "Select timing",
+            })}
           </div>
         </>
       );
@@ -612,47 +649,33 @@ export function TailoredIntakeClient() {
 
           <section className="tailored-chart-panel">
             <div className="tailored-chart-field-grid tailored-chart-field-grid-triple">
-              <div className="tailored-chart-field">
-              <span className="intake-field-label">Signals or your own trades?</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.usesTradingSignals.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.usesTradingSignals === option}
-                    label={option}
-                    onClick={() => updateField("usesTradingSignals", option)}
-                  />
-                ))}
-              </div>
-              </div>
+              {renderSingleChoiceField({
+                label: "Signals or your own trades?",
+                value: form.usesTradingSignals,
+                options: STEP_OPTIONS.usesTradingSignals,
+                onSelect: (value) => updateField("usesTradingSignals", value),
+                compact: true,
+                placeholder: "Select one",
+                wrapperClassName: "tailored-chart-field",
+              })}
 
-              <div className="tailored-chart-field">
-              <span className="intake-field-label">Risk per trade</span>
-              <div className="intake-pill-grid">
-                {STEP_OPTIONS.riskPerTrade.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.riskPerTrade === option}
-                    label={option}
-                    onClick={() => updateField("riskPerTrade", option)}
-                  />
-                ))}
-              </div>
-              </div>
+              {renderSingleChoiceField({
+                label: "Risk per trade",
+                value: form.riskPerTrade,
+                options: STEP_OPTIONS.riskPerTrade,
+                onSelect: (value) => updateField("riskPerTrade", value),
+                placeholder: "Select risk",
+                wrapperClassName: "tailored-chart-field",
+              })}
 
-              <div className="tailored-chart-field">
-              <span className="intake-field-label">Average holding time</span>
-              <div className="intake-pill-grid">
-                {STEP_OPTIONS.averageHoldingTime.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.averageHoldingTime === option}
-                    label={option}
-                    onClick={() => updateField("averageHoldingTime", option)}
-                  />
-                ))}
-              </div>
-              </div>
+              {renderSingleChoiceField({
+                label: "Average holding time",
+                value: form.averageHoldingTime,
+                options: STEP_OPTIONS.averageHoldingTime,
+                onSelect: (value) => updateField("averageHoldingTime", value),
+                placeholder: "Select holding time",
+                wrapperClassName: "tailored-chart-field",
+              })}
             </div>
           </section>
 
@@ -703,63 +726,43 @@ export function TailoredIntakeClient() {
       return (
         <>
           <div className="tailored-question-grid">
-            <div className="tailored-question-block">
-              <span className="intake-field-label">Current work status</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.currentWorkStatus.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.currentWorkStatus === option}
-                    label={option}
-                    onClick={() => updateField("currentWorkStatus", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "Current work status",
+              value: form.currentWorkStatus,
+              options: STEP_OPTIONS.currentWorkStatus,
+              onSelect: (value) => updateField("currentWorkStatus", value),
+              compact: true,
+              placeholder: "Select status",
+            })}
 
-            <div className="tailored-question-block">
-              <span className="intake-field-label">Employment type</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.employmentType.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.employmentType === option}
-                    label={option}
-                    onClick={() => updateField("employmentType", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "Employment type",
+              value: form.employmentType,
+              options: STEP_OPTIONS.employmentType,
+              onSelect: (value) => updateField("employmentType", value),
+              compact: true,
+              placeholder: "Select type",
+            })}
           </div>
 
           <div className="tailored-question-grid">
-            <div className="tailored-question-block">
-              <span className="intake-field-label">Family responsibilities</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.familyResponsibilities.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.familyResponsibilities === option}
-                    label={option}
-                    onClick={() => updateField("familyResponsibilities", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "Family responsibilities",
+              value: form.familyResponsibilities,
+              options: STEP_OPTIONS.familyResponsibilities,
+              onSelect: (value) => updateField("familyResponsibilities", value),
+              compact: true,
+              placeholder: "Select one",
+            })}
 
-            <div className="tailored-question-block">
-              <span className="intake-field-label">Do you depend on trading income?</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.dependsOnTradingIncome.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.dependsOnTradingIncome === option}
-                    label={option}
-                    onClick={() => updateField("dependsOnTradingIncome", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "Do you depend on trading income?",
+              value: form.dependsOnTradingIncome,
+              options: STEP_OPTIONS.dependsOnTradingIncome,
+              onSelect: (value) => updateField("dependsOnTradingIncome", value),
+              compact: true,
+              placeholder: "Select one",
+            })}
           </div>
 
           <div className="tailored-question-grid">
@@ -793,33 +796,23 @@ export function TailoredIntakeClient() {
           </datalist>
 
           <div className="tailored-question-grid">
-            <div className="tailored-question-block">
-              <span className="intake-field-label">How much time can you trade per day?</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.dailyTradingHours.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.dailyTradingHours === option}
-                    label={option}
-                    onClick={() => updateField("dailyTradingHours", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "How much time can you trade per day?",
+              value: form.dailyTradingHours,
+              options: STEP_OPTIONS.dailyTradingHours,
+              onSelect: (value) => updateField("dailyTradingHours", value),
+              compact: true,
+              placeholder: "Select hours",
+            })}
 
-            <div className="tailored-question-block">
-              <span className="intake-field-label">What is your energy usually like?</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.energyLevel.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.energyLevel === option}
-                    label={option}
-                    onClick={() => updateField("energyLevel", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "What is your energy usually like?",
+              value: form.energyLevel,
+              options: STEP_OPTIONS.energyLevel,
+              onSelect: (value) => updateField("energyLevel", value),
+              compact: true,
+              placeholder: "Select energy",
+            })}
           </div>
 
           <label className="form-field form-field-full tailored-question-block">

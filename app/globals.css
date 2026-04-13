@@ -2052,6 +2052,17 @@ select {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.92));
 }
 
+.tailored-mobile-select {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1px solid rgba(18, 53, 107, 0.1);
+  background: linear-gradient(180deg, #ffffff, #f5f9ff);
+  color: #173867;
+  padding: 0 16px;
+  font: inherit;
+}
+
 .tailored-chart-panel {
   display: grid;
   gap: 20px;
