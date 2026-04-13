@@ -237,13 +237,7 @@ const INTAKE_STEPS = [
     id: "reality",
     eyebrow: "Step 3",
     title: "What does your daily reality look like?",
-    description: "Your plan needs to fit your work, energy, and available time.",
-  },
-  {
-    id: "extras",
-    eyebrow: "Step 4",
-    title: "Anything else that helps us diagnose better?",
-    description: "Add anything extra that helps us make the plan more specific.",
+    description: "Your plan needs to fit your work, energy, time, and any extra context you want to share.",
   },
 ];
 
@@ -554,6 +548,16 @@ export function TailoredIntakeClient() {
             </div>
           </div>
 
+          <label className="form-field form-field-full tailored-question-block">
+            <span className="intake-field-label">Previous experience before trading</span>
+            <input
+              type="text"
+              placeholder="Optional: finance, gambling, sales, engineering, entrepreneurship"
+              value={form.previousExperience}
+              onChange={(event) => updateField("previousExperience", event.target.value)}
+            />
+          </label>
+
           <div className="tailored-question-block">
             <span className="intake-field-label">What do you trade most?</span>
             <div className="intake-pill-grid">
@@ -828,21 +832,6 @@ export function TailoredIntakeClient() {
               onChange={(event) => updateField("personalBackground", event.target.value)}
             />
           </label>
-        </>
-      );
-    }
-
-    return (
-      <>
-        <label className="form-field form-field-full tailored-question-block">
-          <span className="intake-field-label">Previous experience before trading</span>
-          <input
-            type="text"
-            placeholder="Example: finance, gambling, sales, engineering, entrepreneurship"
-            value={form.previousExperience}
-            onChange={(event) => updateField("previousExperience", event.target.value)}
-          />
-        </label>
 
         <label className="form-field form-field-full tailored-question-block">
           <span className="intake-field-label">Anything important about your current account or execution?</span>
@@ -866,13 +855,16 @@ export function TailoredIntakeClient() {
         </label>
 
         <div className="tailored-intake-note-card">
-          <strong>Almost there.</strong>
+          <strong>Optional extra context</strong>
           <p className="muted">
-            You already gave us the important trading and lifestyle context. Add anything extra here if it helps us understand your situation better, then continue to secure payment.
+            Add anything else that helps us understand your situation better, then continue to payment.
           </p>
         </div>
-      </>
-    );
+        </>
+      );
+    }
+
+    return null;
   }
 
   if (status === "loading") {
