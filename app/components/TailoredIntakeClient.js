@@ -205,6 +205,40 @@ const COUNTRY_OPTIONS = [
   "Zambia",
   "Zimbabwe",
 ];
+const INDUSTRY_OPTIONS = [
+  "Accounting",
+  "Architecture",
+  "Arts & Design",
+  "Aviation",
+  "Construction",
+  "Consulting",
+  "Customer Service",
+  "Education",
+  "Engineering",
+  "Entrepreneurship",
+  "Finance & Banking",
+  "Government",
+  "Healthcare",
+  "Hospitality",
+  "Human Resources",
+  "Information Technology",
+  "Insurance",
+  "Legal",
+  "Logistics",
+  "Manufacturing",
+  "Marketing",
+  "Military",
+  "Oil & Gas",
+  "Real Estate",
+  "Retail",
+  "Sales",
+  "Security",
+  "Sports",
+  "Telecommunications",
+  "Trading",
+  "Transportation",
+  "Other",
+];
 const STEP_OPTIONS = {
   tradingYears: ["Less than 1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
   profitableBefore: ["Yes", "No"],
@@ -213,7 +247,7 @@ const STEP_OPTIONS = {
   tradingSession: ["Asia", "London", "New York"],
   usualTradingTime: ["Before work", "During work", "After work", "Random"],
   usesTradingSignals: ["I trade on my own", "I rely on trading signals", "Both"],
-  currentWorkStatus: ["Full-time", "Part-time", "Unemployed", "Student"],
+  currentWorkStatus: ["Full-time", "Part-time", "Self-employed", "Unemployed", "Student"],
   employmentType: ["Fixed hours", "Flexible", "Self-employed"],
   familyResponsibilities: ["Yes", "No", "Prefer not to say"],
   dependsOnTradingIncome: ["Yes", "No"],
@@ -237,7 +271,7 @@ const INTAKE_STEPS = [
     id: "reality",
     eyebrow: "Step 3",
     title: "What does your daily reality look like?",
-    description: "Your plan needs to fit your work, energy, time, and any extra context you want to share.",
+    description: "Your plan needs to fit your work, location, routine, and available time.",
   },
 ];
 
@@ -348,6 +382,12 @@ export function TailoredIntakeClient() {
     setAccountScreenshots(nextFiles);
   }
 
+  function removeScreenshot(indexToRemove) {
+    setError("");
+    setStepError("");
+    setAccountScreenshots((prev) => prev.filter((_, index) => index !== indexToRemove));
+  }
+
   function isFilled(value) {
     return Boolean(String(value || "").trim());
   }
@@ -378,19 +418,12 @@ export function TailoredIntakeClient() {
     }
 
     if (stepId === "reality") {
-      if (
-        !form.currentWorkStatus ||
-        !form.employmentType ||
-        !form.familyResponsibilities ||
-        !form.dependsOnTradingIncome ||
-        !form.dailyTradingHours ||
-        !form.energyLevel
-      ) {
+      if (!form.currentWorkStatus || !form.dependsOnTradingIncome) {
         return "Complete the personal reality questions so the plan can fit your routine.";
       }
 
-      if (!isFilled(form.country) || !isFilled(form.personalBackground)) {
-        return "Tell us where you live and give a short picture of your daily reality before continuing.";
+      if (!isFilled(form.country) || !isFilled(form.originCountry) || !isFilled(form.personalBackground)) {
+        return "Tell us where you live, where you are from, and give a short picture of your trading routine before continuing.";
       }
 
       return "";
@@ -537,11 +570,12 @@ export function TailoredIntakeClient() {
       compact = false,
       placeholder = "Select one",
       wrapperClassName = "tailored-question-block",
+      forceSelect = false,
     }) {
       return (
         <div className={wrapperClassName}>
           <span className="intake-field-label">{label}</span>
-          {isMobileLayout ? (
+          {isMobileLayout || forceSelect ? (
             <select
               className="tailored-mobile-select"
               value={value}
@@ -591,14 +625,21 @@ export function TailoredIntakeClient() {
           })}
 
           <label className="form-field form-field-full tailored-question-block">
-            <span className="intake-field-label">Previous experience before trading</span>
+            <span className="intake-field-label">Which industry were you in before trading?</span>
             <input
               type="text"
-              placeholder="Optional: finance, gambling, sales, engineering, entrepreneurship"
+              list="industry-options"
+              placeholder="Select or type an industry"
               value={form.previousExperience}
               onChange={(event) => updateField("previousExperience", event.target.value)}
             />
           </label>
+
+          <datalist id="industry-options">
+            {INDUSTRY_OPTIONS.map((industry) => (
+              <option key={industry} value={industry} />
+            ))}
+          </datalist>
 
           <div className="tailored-question-block">
             <span className="intake-field-label">What do you trade most?</span>
@@ -680,19 +721,16 @@ export function TailoredIntakeClient() {
           </section>
 
           <section className="tailored-chart-panel tailored-chart-panel-split">
-            <div className="tailored-chart-field">
-              <span className="intake-field-label">How would you trade this chart?</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {["Buy", "Sell", "Wait for confirmation", "Skip this setup", "Not sure"].map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.chartTradeDecision === option}
-                    label={option}
-                    onClick={() => updateField("chartTradeDecision", option)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderSingleChoiceField({
+              label: "How do you trade this chart?",
+              value: form.chartTradeDecision,
+              options: ["Buy", "Sell", "Wait for confirmation", "Skip this setup", "Not sure"],
+              onSelect: (value) => updateField("chartTradeDecision", value),
+              compact: true,
+              placeholder: "Select one decision",
+              wrapperClassName: "tailored-chart-field",
+              forceSelect: true,
+            })}
 
             <label className="form-field tailored-chart-field">
               <span className="intake-field-label">Why would you take that decision?</span>
@@ -736,26 +774,6 @@ export function TailoredIntakeClient() {
             })}
 
             {renderSingleChoiceField({
-              label: "Employment type",
-              value: form.employmentType,
-              options: STEP_OPTIONS.employmentType,
-              onSelect: (value) => updateField("employmentType", value),
-              compact: true,
-              placeholder: "Select type",
-            })}
-          </div>
-
-          <div className="tailored-question-grid">
-            {renderSingleChoiceField({
-              label: "Family responsibilities",
-              value: form.familyResponsibilities,
-              options: STEP_OPTIONS.familyResponsibilities,
-              onSelect: (value) => updateField("familyResponsibilities", value),
-              compact: true,
-              placeholder: "Select one",
-            })}
-
-            {renderSingleChoiceField({
               label: "Do you depend on trading income?",
               value: form.dependsOnTradingIncome,
               options: STEP_OPTIONS.dependsOnTradingIncome,
@@ -795,46 +813,16 @@ export function TailoredIntakeClient() {
             ))}
           </datalist>
 
-          <div className="tailored-question-grid">
-            {renderSingleChoiceField({
-              label: "How much time can you trade per day?",
-              value: form.dailyTradingHours,
-              options: STEP_OPTIONS.dailyTradingHours,
-              onSelect: (value) => updateField("dailyTradingHours", value),
-              compact: true,
-              placeholder: "Select hours",
-            })}
-
-            {renderSingleChoiceField({
-              label: "What is your energy usually like?",
-              value: form.energyLevel,
-              options: STEP_OPTIONS.energyLevel,
-              onSelect: (value) => updateField("energyLevel", value),
-              compact: true,
-              placeholder: "Select energy",
-            })}
-          </div>
-
           <label className="form-field form-field-full tailored-question-block">
-            <span className="intake-field-label">Tell us your weekly and daily routine, personal and trading related</span>
+            <span className="intake-field-label">Tell us about your trading weekly and daily routine</span>
             <textarea
               className="tailored-textarea"
-              placeholder="Shortly: what your week looks like, what your trading days look like, and what affects your trading personally."
+              placeholder="Shortly: what your trading week looks like, what your trading days look like, and when you are usually active."
               value={form.personalBackground}
               maxLength={6000}
               onChange={(event) => updateField("personalBackground", event.target.value)}
             />
           </label>
-
-        <label className="form-field form-field-full tailored-question-block">
-          <span className="intake-field-label">Anything important about your current account or execution?</span>
-          <input
-            type="text"
-            placeholder="Optional notes about your account, execution style, or current issue"
-            value={form.tradingAccountNotes}
-            onChange={(event) => updateField("tradingAccountNotes", event.target.value)}
-          />
-        </label>
 
         <label className="form-field form-field-full intake-file-field tailored-intake-upload tailored-question-block">
           <span>Recent account screenshots</span>
@@ -846,13 +834,18 @@ export function TailoredIntakeClient() {
           />
           <small>Optional. Upload up to 3 screenshots from recent trading accounts. Each screenshot must be under 800KB.</small>
         </label>
-
-        <div className="tailored-intake-note-card">
-          <strong>Optional extra context</strong>
-          <p className="muted">
-            Add anything else that helps us understand your situation better, then continue to payment.
-          </p>
-        </div>
+        {accountScreenshots.length ? (
+          <div className="tailored-upload-list">
+            {accountScreenshots.map((file, index) => (
+              <div key={`${file.name}-${index}`} className="tailored-upload-chip">
+                <span>{file.name}</span>
+                <button type="button" className="tailored-upload-remove" onClick={() => removeScreenshot(index)} aria-label={`Remove ${file.name}`}>
+                  x
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
         </>
       );
     }

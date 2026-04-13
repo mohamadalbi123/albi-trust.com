@@ -2267,6 +2267,46 @@ select {
   line-height: 1.5;
 }
 
+.tailored-upload-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tailored-upload-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(18, 53, 107, 0.09);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  padding: 12px 14px;
+  color: #10213f;
+}
+
+.tailored-upload-chip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tailored-upload-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(165, 61, 61, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #8c2c2c;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .form-field {
   display: grid;
   gap: 8px;
