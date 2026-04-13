@@ -205,39 +205,23 @@ const COUNTRY_OPTIONS = [
   "Zambia",
   "Zimbabwe",
 ];
-const INDUSTRY_OPTIONS = [
-  "Accounting",
-  "Architecture",
-  "Arts & Design",
-  "Aviation",
-  "Construction",
-  "Consulting",
-  "Customer Service",
-  "Education",
-  "Engineering",
-  "Entrepreneurship",
-  "Finance & Banking",
-  "Government",
-  "Healthcare",
-  "Hospitality",
-  "Human Resources",
-  "Information Technology",
-  "Insurance",
-  "Legal",
-  "Logistics",
-  "Manufacturing",
-  "Marketing",
-  "Military",
-  "Oil & Gas",
-  "Real Estate",
-  "Retail",
-  "Sales",
-  "Security",
-  "Sports",
-  "Telecommunications",
-  "Trading",
-  "Transportation",
-  "Other",
+const INDUSTRY_GROUPS = [
+  {
+    label: "Business & Finance",
+    options: ["Accounting", "Banking", "Consulting", "Entrepreneurship", "Finance", "Insurance", "Real Estate", "Sales"],
+  },
+  {
+    label: "Technical & Industrial",
+    options: ["Architecture", "Construction", "Engineering", "Information Technology", "Logistics", "Manufacturing", "Oil & Gas", "Telecommunications", "Transportation"],
+  },
+  {
+    label: "Public & Professional Services",
+    options: ["Customer Service", "Education", "Government", "Healthcare", "Human Resources", "Legal", "Military", "Security"],
+  },
+  {
+    label: "Commercial & Creative",
+    options: ["Arts & Design", "Aviation", "Hospitality", "Marketing", "Retail", "Sports", "Trading", "Other"],
+  },
 ];
 const STEP_OPTIONS = {
   tradingYears: ["Less than 1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
@@ -626,20 +610,23 @@ export function TailoredIntakeClient() {
 
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">Which industry were you in before trading?</span>
-            <input
-              type="text"
-              list="industry-options"
-              placeholder="Select or type an industry"
+            <select
+              className="tailored-mobile-select"
               value={form.previousExperience}
               onChange={(event) => updateField("previousExperience", event.target.value)}
-            />
+            >
+              <option value="">Select industry</option>
+              {INDUSTRY_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((industry) => (
+                    <option key={industry} value={industry}>
+                      {industry}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </label>
-
-          <datalist id="industry-options">
-            {INDUSTRY_OPTIONS.map((industry) => (
-              <option key={industry} value={industry} />
-            ))}
-          </datalist>
 
           <div className="tailored-question-block">
             <span className="intake-field-label">What do you trade most?</span>
