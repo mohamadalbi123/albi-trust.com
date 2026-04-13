@@ -78,6 +78,7 @@ export function AdminActionPlansClient() {
   const [activeUserAction, setActiveUserAction] = useState("");
   const [generatingOrderId, setGeneratingOrderId] = useState("");
   const [revisingDraft, setRevisingDraft] = useState(false);
+  const [chattingWithAi, setChattingWithAi] = useState(false);
   const [previewingPdf, setPreviewingPdf] = useState(false);
   const [deliveringDraft, setDeliveringDraft] = useState(false);
   const [generatorDraft, setGeneratorDraft] = useState("");
@@ -265,25 +266,7 @@ export function AdminActionPlansClient() {
 
       setGeneratorDraft(data.draft || "");
       setGeneratorOrder(data.order || null);
-      setGeneratorChat(
-        generatorInstructions.trim()
-          ? [
-              {
-                role: "admin",
-                content: generatorInstructions.trim(),
-              },
-              {
-                role: "model",
-                content: "Draft generated from your instruction. Review it and send another message if you want changes.",
-              },
-            ]
-          : [
-              {
-                role: "model",
-                content: "Draft generated. Review it and send a message if you want anything changed.",
-              },
-            ],
-      );
+      setGeneratorChat([]);
       setNotice("Draft generated. Review and edit it before creating the PDF.");
     } catch {
       setError("Unable to generate action plan draft.");
@@ -350,6 +333,56 @@ export function AdminActionPlansClient() {
       setError("Unable to revise action plan draft.");
     } finally {
       setRevisingDraft(false);
+    }
+  }
+
+  async function askGeneratorAssistant() {
+    if (!generatorOrder?.id || !generatorDraft.trim()) {
+      setError("Generate a draft first.");
+      return;
+    }
+
+    if (!generatorInstructions.trim()) {
+      setError("Type a message for the AI first.");
+      return;
+    }
+
+    setError("");
+    setNotice("");
+    setChattingWithAi(true);
+    const nextMessage = generatorInstructions.trim();
+
+    try {
+      const response = await fetch("/api/admin/action-plan-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "chat",
+          orderId: generatorOrder.id,
+          draft: generatorDraft,
+          instructions: nextMessage,
+          knowledge: generatorKnowledge,
+          chatHistory: generatorChat,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to chat with the AI.");
+        return;
+      }
+
+      setGeneratorChat((prev) => [
+        ...prev,
+        { role: "admin", content: nextMessage },
+        { role: "model", content: data.reply || "No reply returned." },
+      ]);
+      setGeneratorInstructions("");
+      setNotice("AI reply added. If you like the direction, use Revise with my instructions to apply a change to the draft.");
+    } catch {
+      setError("Unable to chat with the AI.");
+    } finally {
+      setChattingWithAi(false);
     }
   }
 
@@ -841,8 +874,16 @@ export function AdminActionPlansClient() {
                 <button
                   type="button"
                   className="button-secondary"
+                  onClick={askGeneratorAssistant}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorInstructions.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
+                >
+                  {chattingWithAi ? "Thinking..." : "Ask AI"}
+                </button>
+                <button
+                  type="button"
+                  className="button-secondary"
                   onClick={reviseActionPlanDraft}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || previewingPdf || deliveringDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
                 >
                   {revisingDraft ? "Revising..." : "Revise with my instructions"}
                 </button>
@@ -850,7 +891,7 @@ export function AdminActionPlansClient() {
                   type="button"
                   className="button-secondary"
                   onClick={previewGeneratedPdf}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || previewingPdf || deliveringDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
                 >
                   {previewingPdf ? "Opening preview..." : "Preview PDF"}
                 </button>
@@ -858,7 +899,7 @@ export function AdminActionPlansClient() {
                   type="button"
                   className="button-primary"
                   onClick={deliverGeneratedDraft}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || previewingPdf || deliveringDraft}
+                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
                 >
                   {deliveringDraft ? "Delivering..." : "Save as PDF and deliver"}
                 </button>

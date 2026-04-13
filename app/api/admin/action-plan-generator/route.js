@@ -73,6 +73,18 @@ function extractResponseText(data) {
   return chunks.join("\n").trim();
 }
 
+function sanitizeChatHistory(value) {
+  return Array.isArray(value)
+    ? value
+        .map((entry) => ({
+          role: entry?.role === "model" ? "assistant" : "user",
+          content: clippedText(entry?.content, 4000),
+        }))
+        .filter((entry) => entry.content)
+        .slice(-12)
+    : [];
+}
+
 function systemPrompt() {
   return [
     "You are the Albi Trust internal action plan assistant.",
@@ -399,6 +411,14 @@ function rect({ x, y, width, height, fill }) {
   return `${color(fill)}\n${x} ${y} ${width} ${height} re f`;
 }
 
+function diamond({ cx, cy, radius, fill }) {
+  const top = `${cx} ${cy + radius} m`;
+  const right = `${cx + radius} ${cy} l`;
+  const bottom = `${cx} ${cy - radius} l`;
+  const left = `${cx - radius} ${cy} l`;
+  return `${color(fill)}\n${top}\n${right}\n${bottom}\n${left}\nh\nf`;
+}
+
 function outlineRect({ x, y, width, height, stroke = PDF_COLORS.line, lineWidth = 1 }) {
   return `${stroke[0]} ${stroke[1]} ${stroke[2]} RG\n${lineWidth} w\n${x} ${y} ${width} ${height} re S`;
 }
@@ -436,12 +456,17 @@ function drawPdfBrandMark({ x, y, size = 34 }) {
   const glyphSize = size >= 40 ? 16 : 13;
   const glyphX = x + (size >= 40 ? 11 : 8);
   const glyphY = y + (size >= 40 ? 15 : 12);
-  const accentSize = size >= 40 ? 8 : 6;
+  const accentRadius = size >= 40 ? 4.5 : 3.25;
 
   return [
     rect({ x, y, width: size, height: size, fill: PDF_COLORS.paper }),
     outlineRect({ x, y, width: size, height: size, stroke: [0.82, 0.86, 0.92], lineWidth: 1 }),
-    rect({ x: x + size - accentSize - 4, y: y + size - accentSize - 4, width: accentSize, height: accentSize, fill: [0.79, 0.6, 0.27] }),
+    diamond({
+      cx: x + size - (size >= 40 ? 8 : 7),
+      cy: y + size - (size >= 40 ? 8 : 7),
+      radius: accentRadius,
+      fill: [0.79, 0.6, 0.27],
+    }),
     text({ value: "AT", x: glyphX, y: glyphY, size: glyphSize, bold: true, fill: PDF_COLORS.ink }),
   ];
 }
@@ -824,6 +849,7 @@ export async function POST(request) {
     const action = String(body.action || "generate").trim();
     const adminInstructions = clippedText(body.instructions, 12000);
     const knowledgeNotes = clippedText(body.knowledge, 60000);
+    const chatHistory = sanitizeChatHistory(body.chatHistory);
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required." }, { status: 400 });
@@ -871,6 +897,73 @@ export async function POST(request) {
       }
 
       return NextResponse.json({ ok: true, order });
+    }
+
+    if (action === "chat") {
+      const draft = clippedText(body.draft, 60000);
+
+      if (!draft) {
+        return NextResponse.json({ error: "Draft text is required before chatting about revisions." }, { status: 400 });
+      }
+
+      if (!adminInstructions && !chatHistory.length) {
+        return NextResponse.json({ error: "Add a message for the AI first." }, { status: 400 });
+      }
+
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: process.env.OPENAI_MODEL || "gpt-4.1",
+          input: [
+            {
+              role: "system",
+              content: [
+                systemPrompt(),
+                "You are chatting with Mohamad inside the Albi Trust admin action plan generator.",
+                "Your job is to discuss what should change in the draft before Mohamad applies revisions.",
+                "Reply like ChatGPT: clear, direct, practical, and conversational.",
+                "Do not return JSON for this chat action.",
+                "Do not rewrite the full draft unless Mohamad explicitly asks for it in the chat.",
+                "When useful, suggest exact improvements to sections, tone, diagnosis strength, or action steps.",
+              ].join("\n\n"),
+            },
+            {
+              role: "user",
+              content: [
+                "Paid order data:",
+                JSON.stringify(context, null, 2),
+                "",
+                "Current draft:",
+                draft,
+                knowledgeNotes ? `Mohamad's method notes / uploaded text:\n${knowledgeNotes}` : "",
+              ]
+                .filter(Boolean)
+                .join("\n\n"),
+            },
+            ...chatHistory,
+            ...(adminInstructions ? [{ role: "user", content: adminInstructions }] : []),
+          ],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return NextResponse.json(
+          { error: data?.error?.message || "Unable to chat with the action plan assistant." },
+          { status: response.status },
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        reply: extractResponseText(data) || "No reply returned.",
+        order: context.order,
+      });
     }
 
     if (action === "revise_draft") {
