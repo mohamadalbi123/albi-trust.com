@@ -1428,8 +1428,8 @@ select {
 
 .admin-generator-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.2fr);
-  gap: 18px;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(640px, 1.28fr);
+  gap: 20px;
 }
 
 .admin-generator-orders,
@@ -1439,6 +1439,40 @@ select {
     radial-gradient(circle at top right, rgba(127, 196, 255, 0.14), transparent 28%),
     linear-gradient(180deg, #ffffff, #f8fbff);
   border: 1px solid rgba(18, 53, 107, 0.08);
+}
+
+.admin-generator-orders {
+  align-self: start;
+}
+
+.admin-generator-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-generator-workspace-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(127, 196, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid rgba(18, 53, 107, 0.08);
+}
+
+.admin-generator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-generator-panels {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.78fr) minmax(360px, 1.22fr);
+  gap: 18px;
 }
 
 .admin-generator-section-head {
@@ -1482,6 +1516,44 @@ select {
   margin-top: 16px;
 }
 
+.admin-generator-chat-panel {
+  display: grid;
+  grid-template-rows: auto minmax(260px, 1fr) auto;
+  gap: 16px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(127, 196, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid rgba(18, 53, 107, 0.08);
+}
+
+.admin-generator-chat-thread {
+  min-height: 320px;
+  max-height: 620px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.admin-generator-chat-empty {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-height: 220px;
+  border: 1px dashed rgba(18, 53, 107, 0.14);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbfdff, #f4f8ff);
+  padding: 18px;
+}
+
+.admin-generator-chat-empty .muted {
+  margin: 0;
+}
+
+.admin-generator-prompt {
+  border-top: 1px solid rgba(18, 53, 107, 0.08);
+  padding-top: 14px;
+}
+
 .admin-generator-small-textarea {
   min-height: 130px;
   resize: vertical;
@@ -1507,7 +1579,6 @@ select {
 .admin-generator-chat {
   display: grid;
   gap: 10px;
-  margin-top: 16px;
 }
 
 .admin-generator-chat-bubble {
@@ -1563,12 +1634,11 @@ select {
 
 .admin-generator-draft {
   width: 100%;
-  min-height: 560px;
-  margin-top: 16px;
+  min-height: 640px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 18px;
   padding: 16px;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
   color: var(--text);
   font: inherit;
   line-height: 1.65;
@@ -2666,6 +2736,18 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .admin-generator-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-generator-workspace-head {
+    flex-direction: column;
+  }
+
+  .admin-generator-actions {
+    justify-content: flex-start;
+  }
+
   .dashboard-status-item {
     border-right: 0;
     border-bottom: 1px solid var(--border);
@@ -2802,6 +2884,11 @@ select {
 
   .admin-generator-draft {
     min-height: 420px;
+  }
+
+  .admin-generator-chat-thread {
+    min-height: 220px;
+    max-height: none;
   }
 
   .feature-item,

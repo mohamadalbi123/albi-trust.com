@@ -767,37 +767,9 @@ export function AdminActionPlansClient() {
           <div className="admin-generator-layout">
             <div className="action-card admin-generator-orders">
               <div className="admin-generator-section-head">
-                <strong>AI Action Plan Workspace</strong>
-                <p className="muted">Generate a draft, chat with the model about changes, then apply the final revision to the draft.</p>
+                <strong>Orders Needing Action Plan</strong>
+                <p className="muted">Pick a client, generate the first draft, then refine it in the workspace.</p>
               </div>
-              <div className="admin-generator-subhead">
-                <strong>Orders needing action plan</strong>
-                <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
-              </div>
-              <div className="admin-generator-control-block">
-                <label className="form-field">
-                  <span>Chat with the model</span>
-                  <textarea
-                    className="admin-generator-small-textarea"
-                    value={generatorPrompt}
-                    onChange={(event) => setGeneratorPrompt(event.target.value)}
-                    placeholder="Example: Add a stronger diagnosis about revenge trading, make the tone more direct, and mention London session timing."
-                  />
-                </label>
-              </div>
-              {generatorChat.length ? (
-                <div className="admin-generator-chat">
-                  {generatorChat.map((entry, index) => (
-                    <div
-                      key={`${entry.role}-${index}`}
-                      className={`admin-generator-chat-bubble ${entry.role === "admin" ? "is-admin" : "is-model"}`}
-                    >
-                      <strong>{entry.role === "admin" ? "You" : "Model"}</strong>
-                      <p>{entry.content}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
               <div className="admin-generator-order-list">
                 {generatorOrders.map((order) => (
                   <button
@@ -817,60 +789,104 @@ export function AdminActionPlansClient() {
               </div>
             </div>
 
-            <div className="action-card admin-generator-draft-card">
-              <div className="admin-generator-section-head">
-                <div>
-                  <strong>Draft action plan</strong>
+            <div className="admin-generator-workspace">
+              <div className="action-card admin-generator-workspace-head">
+                <div className="admin-generator-section-head">
+                  <strong>AI Action Plan Workspace</strong>
                   <p className="muted">
                     {generatorOrder
-                      ? `${generatorOrder.fullName || generatorOrder.email} - ${generatorOrder.displayId || generatorOrder.id}`
-                      : "Generated text will appear here."}
+                      ? `Working on ${generatorOrder.fullName || generatorOrder.email} - ${generatorOrder.displayId || generatorOrder.id}`
+                      : "Select a paid order and generate the first draft to begin."}
                   </p>
                 </div>
+                <div className="admin-generator-actions">
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={askGeneratorAssistant}
+                    disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
+                  >
+                    {chattingWithAi ? "Thinking..." : "Ask AI"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={reviseActionPlanDraft}
+                    disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
+                  >
+                    {revisingDraft ? "Applying..." : "Apply to draft"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={previewGeneratedPdf}
+                    disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
+                  >
+                    {previewingPdf ? "Opening preview..." : "Preview PDF"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button-primary"
+                    onClick={deliverGeneratedDraft}
+                    disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
+                  >
+                    {deliveringDraft ? "Delivering..." : "Save as PDF and deliver"}
+                  </button>
+                </div>
               </div>
-              <textarea
-                className="admin-generator-draft"
-                value={generatorDraft}
-                onChange={(event) => setGeneratorDraft(event.target.value)}
-                placeholder="Select a paid order and click Generate."
-              />
-              <div className="stack-actions" style={{ marginTop: 16 }}>
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={askGeneratorAssistant}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
-                >
-                  {chattingWithAi ? "Thinking..." : "Ask AI"}
-                </button>
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={reviseActionPlanDraft}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
-                >
-                  {revisingDraft ? "Applying..." : "Apply to draft"}
-                </button>
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={previewGeneratedPdf}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
-                >
-                  {previewingPdf ? "Opening preview..." : "Preview PDF"}
-                </button>
-                <button
-                  type="button"
-                  className="button-primary"
-                  onClick={deliverGeneratedDraft}
-                  disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
-                >
-                  {deliveringDraft ? "Delivering..." : "Save as PDF and deliver"}
-                </button>
+
+              <div className="admin-generator-panels">
+                <div className="action-card admin-generator-chat-panel">
+                  <div className="admin-generator-subhead">
+                    <strong>Conversation</strong>
+                    <p className="muted">Discuss additions, tone, diagnosis strength, and structure with the model before applying changes.</p>
+                  </div>
+                  <div className="admin-generator-chat-thread">
+                    {generatorChat.length ? (
+                      <div className="admin-generator-chat">
+                        {generatorChat.map((entry, index) => (
+                          <div
+                            key={`${entry.role}-${index}`}
+                            className={`admin-generator-chat-bubble ${entry.role === "admin" ? "is-admin" : "is-model"}`}
+                          >
+                            <strong>{entry.role === "admin" ? "You" : "Model"}</strong>
+                            <p>{entry.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="admin-generator-chat-empty">
+                        <strong>No conversation yet</strong>
+                        <p className="muted">Ask the model what to add, remove, or improve once you have generated a draft.</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="admin-generator-prompt">
+                    <label className="form-field">
+                      <span>Message</span>
+                      <textarea
+                        className="admin-generator-small-textarea"
+                        value={generatorPrompt}
+                        onChange={(event) => setGeneratorPrompt(event.target.value)}
+                        placeholder="Example: Add a stronger diagnosis about revenge trading, make the tone more direct, and mention London session timing."
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="action-card admin-generator-draft-card">
+                  <div className="admin-generator-subhead">
+                    <strong>Draft Action Plan</strong>
+                    <p className="muted">Edit manually if needed, then preview or deliver when it looks right.</p>
+                  </div>
+                  <textarea
+                    className="admin-generator-draft"
+                    value={generatorDraft}
+                    onChange={(event) => setGeneratorDraft(event.target.value)}
+                    placeholder="Select a paid order and click Generate."
+                  />
+                </div>
               </div>
-              <p className="muted" style={{ marginTop: 12 }}>
-                Review this draft and add your final thinking before delivery. You can still replace the PDF later from Paid orders.
-              </p>
             </div>
           </div>
         ) : null}
