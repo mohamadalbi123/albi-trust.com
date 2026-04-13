@@ -499,17 +499,6 @@ export function TailoredIntakeClient() {
             </label>
           </div>
 
-          <label className="form-field form-field-full intake-file-field tailored-intake-upload tailored-question-block">
-            <span>Upload your marked-up chart screenshot</span>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              multiple
-              onChange={(event) => handleScreenshotChange(event.target.files)}
-            />
-            <small>Optional. If you draw levels or notes on the chart, upload 1 to 3 screenshots so the admin can review exactly what you saw.</small>
-          </label>
-
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">Describe your trading strategy in simple words</span>
             <textarea
