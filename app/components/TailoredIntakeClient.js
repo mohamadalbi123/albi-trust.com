@@ -7,7 +7,6 @@ import { TradingViewGoldChart } from "./TradingViewGoldChart";
 import { useCurrentUser } from "./useCurrentUser";
 
 const MAX_SCREENSHOT_BYTES = 800 * 1024;
-const INDICATOR_OPTIONS = ["None / naked chart", "Moving averages", "RSI", "MACD", "Bollinger Bands", "Volume", "VWAP", "Fibonacci", "Other"];
 const ASSET_OPTIONS = ["Gold", "Silver", "Forex", "Indices", "Crypto", "Futures indices"];
 const STEP_OPTIONS = {
   tradingYears: ["Less than 1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
@@ -16,7 +15,6 @@ const STEP_OPTIONS = {
   averageHoldingTime: ["Minutes", "Less than 1 hour", "1-4 hours", "Same day", "Several days"],
   tradingSession: ["Asia", "London", "New York", "No fixed session"],
   usualTradingTime: ["Before work", "During work", "After work", "Random"],
-  chartStyle: ["Naked chart", "Indicators", "Both"],
   usesTradingSignals: ["I trade on my own", "I rely on trading signals", "Both"],
   currentWorkStatus: ["Full-time", "Part-time", "Unemployed", "Student"],
   employmentType: ["Fixed hours", "Flexible", "Self-employed"],
@@ -165,12 +163,8 @@ export function TailoredIntakeClient() {
     }
 
     if (stepId === "chart") {
-      if (!form.chartStyle || !form.usesTradingSignals || !form.riskPerTrade || !form.averageHoldingTime) {
+      if (!form.usesTradingSignals || !form.riskPerTrade || !form.averageHoldingTime) {
         return "Answer the chart execution questions before moving on.";
-      }
-
-      if (!form.indicators.length) {
-        return "Choose the indicator style you used on the chart, or select None / naked chart.";
       }
 
       if (!form.chartTradeDecision || !isFilled(form.chartReasoning)) {
@@ -423,23 +417,26 @@ export function TailoredIntakeClient() {
             </div>
           </div>
 
-          <TradingViewGoldChart />
-
-          <div className="tailored-question-grid">
-            <div className="tailored-question-block">
-              <span className="intake-field-label">Chart style</span>
-              <div className="intake-pill-grid intake-pill-grid-compact">
-                {STEP_OPTIONS.chartStyle.map((option) => (
-                  <ChoicePill
-                    key={option}
-                    active={form.chartStyle === option}
-                    label={option}
-                    onClick={() => updateField("chartStyle", option)}
-                  />
-                ))}
-              </div>
+          <div className="tailored-chart-layout">
+            <div className="tailored-chart-main">
+              <TradingViewGoldChart />
             </div>
 
+            <aside className="tailored-chart-sidecard">
+              <span className="intake-field-label">Chart instructions</span>
+              <h4>Mark the level you care about.</h4>
+              <p className="muted">
+                If you want, use the chart tools to draw a simple trend line, horizontal level, or zone the way you normally would before taking a trade.
+              </p>
+              <div className="tailored-chart-prompt-list">
+                <div className="tailored-chart-prompt-item">Show the level or structure you would focus on first.</div>
+                <div className="tailored-chart-prompt-item">Think like you would in a real session, not like a quiz.</div>
+                <div className="tailored-chart-prompt-item">Then tell us whether you would buy, sell, wait, or skip.</div>
+              </div>
+            </aside>
+          </div>
+
+          <div className="tailored-question-grid">
             <div className="tailored-question-block">
               <span className="intake-field-label">Signals or your own trades?</span>
               <div className="intake-pill-grid intake-pill-grid-compact">
@@ -485,43 +482,6 @@ export function TailoredIntakeClient() {
             </div>
           </div>
 
-          <div className="tailored-question-block">
-            <span className="intake-field-label">Which indicators did you use on this chart?</span>
-            <div className="intake-pill-grid">
-              {INDICATOR_OPTIONS.map((option) => (
-                <ChoicePill
-                  key={option}
-                  active={form.indicators.includes(option)}
-                  label={option}
-                  onClick={() => {
-                    if (option === "None / naked chart") {
-                      updateField("chartStyle", "Naked chart");
-                      setStepError("");
-                      setForm((prev) => ({
-                        ...prev,
-                        indicators: prev.indicators.includes(option) ? [] : [option],
-                      }));
-                      return;
-                    }
-
-                    setStepError("");
-                    setForm((prev) => {
-                      const currentValues = Array.isArray(prev.indicators) ? prev.indicators : [];
-                      const withoutNone = currentValues.filter((entry) => entry !== "None / naked chart");
-
-                      return {
-                        ...prev,
-                        indicators: withoutNone.includes(option)
-                          ? withoutNone.filter((entry) => entry !== option)
-                          : [...withoutNone, option],
-                      };
-                    });
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
           <div className="tailored-question-grid">
             <div className="tailored-question-block">
               <span className="intake-field-label">How would you trade this chart?</span>
@@ -548,6 +508,17 @@ export function TailoredIntakeClient() {
               />
             </label>
           </div>
+
+          <label className="form-field form-field-full intake-file-field tailored-intake-upload tailored-question-block">
+            <span>Upload your marked-up chart screenshot</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+              onChange={(event) => handleScreenshotChange(event.target.files)}
+            />
+            <small>Optional. If you draw levels or notes on the chart, upload 1 to 3 screenshots so the admin can review exactly what you saw.</small>
+          </label>
 
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">Describe your trading strategy in simple words</span>

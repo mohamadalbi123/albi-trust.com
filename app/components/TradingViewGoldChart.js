@@ -18,7 +18,7 @@ export function TradingViewGoldChart() {
       symbol: "OANDA:XAUUSD",
       interval: "60",
       timezone: "Europe/Paris",
-      theme: "light",
+      theme: "dark",
       style: "1",
       locale: "en",
       withdateranges: true,
@@ -29,6 +29,7 @@ export function TradingViewGoldChart() {
       hotlist: false,
       calendar: false,
       save_image: false,
+      hide_volume: true,
       studies: [],
       support_host: "https://www.tradingview.com",
     });
