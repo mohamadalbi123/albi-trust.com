@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TradingViewGoldChart } from "./TradingViewGoldChart";
 import { useCurrentUser } from "./useCurrentUser";
 
 const MAX_SCREENSHOT_BYTES = 800 * 1024;
-const INDICATOR_OPTIONS = ["Moving averages", "RSI", "MACD", "Bollinger Bands", "Volume", "VWAP", "Fibonacci", "Other"];
+const INDICATOR_OPTIONS = ["None / naked chart", "Moving averages", "RSI", "MACD", "Bollinger Bands", "Volume", "VWAP", "Fibonacci", "Other"];
 const ASSET_OPTIONS = ["Gold", "Silver", "Forex", "Indices", "Crypto", "Futures indices"];
 const STEP_OPTIONS = {
   tradingYears: ["Less than 1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
@@ -32,10 +33,10 @@ const INTAKE_STEPS = [
     description: "We start with the essentials so your plan fits your real trading style instead of assumptions.",
   },
   {
-    id: "method",
+    id: "chart",
     eyebrow: "Step 2",
-    title: "What does your method look like?",
-    description: "This is where we understand how much structure you really have today.",
+    title: "How would you trade this gold chart?",
+    description: "Use the chart, mark levels if you want, choose the indicators you actually use, and tell us your trade idea.",
   },
   {
     id: "reality",
@@ -86,6 +87,8 @@ export function TailoredIntakeClient() {
     tradingAccountNotes: "",
     strategyDescription: "",
     personalBackground: "",
+    chartTradeDecision: "",
+    chartReasoning: "",
   });
   const [accountScreenshots, setAccountScreenshots] = useState([]);
   const [error, setError] = useState("");
@@ -161,17 +164,17 @@ export function TailoredIntakeClient() {
       return "";
     }
 
-    if (stepId === "method") {
+    if (stepId === "chart") {
       if (!form.chartStyle || !form.usesTradingSignals || !form.riskPerTrade || !form.averageHoldingTime) {
-        return "Answer the execution questions before moving on.";
+        return "Answer the chart execution questions before moving on.";
       }
 
       if (!form.indicators.length) {
-        return "Choose at least one tool you rely on, or select Other if needed.";
+        return "Choose the indicator style you used on the chart, or select None / naked chart.";
       }
 
-      if (!isFilled(form.strategyDescription)) {
-        return "Add a short strategy description so the action plan has something concrete to work from.";
+      if (!form.chartTradeDecision || !isFilled(form.chartReasoning)) {
+        return "Tell us how you would trade this chart and why.";
       }
 
       return "";
@@ -221,7 +224,7 @@ export function TailoredIntakeClient() {
     setError("");
     setSuccessNotice("");
 
-    const validationMessage = validateStep("style") || validateStep("method") || validateStep("reality");
+    const validationMessage = validateStep("style") || validateStep("chart") || validateStep("reality");
 
     if (validationMessage) {
       setStepError(validationMessage);
@@ -407,9 +410,21 @@ export function TailoredIntakeClient() {
       );
     }
 
-    if (activeStep.id === "method") {
+    if (activeStep.id === "chart") {
       return (
         <>
+          <div className="tailored-chart-hero">
+            <div>
+              <span className="intake-field-label">Interactive gold chart</span>
+              <h3 className="tailored-chart-title">Review XAUUSD the way you normally would.</h3>
+              <p className="muted">
+                Use the TradingView chart below. If you want, add a simple trend line or level on the chart toolbar, then answer the questions under it.
+              </p>
+            </div>
+          </div>
+
+          <TradingViewGoldChart />
+
           <div className="tailored-question-grid">
             <div className="tailored-question-block">
               <span className="intake-field-label">Chart style</span>
@@ -471,17 +486,67 @@ export function TailoredIntakeClient() {
           </div>
 
           <div className="tailored-question-block">
-            <span className="intake-field-label">Which tools do you rely on most?</span>
+            <span className="intake-field-label">Which indicators did you use on this chart?</span>
             <div className="intake-pill-grid">
               {INDICATOR_OPTIONS.map((option) => (
                 <ChoicePill
                   key={option}
                   active={form.indicators.includes(option)}
                   label={option}
-                  onClick={() => updateMultiField("indicators", option)}
+                  onClick={() => {
+                    if (option === "None / naked chart") {
+                      updateField("chartStyle", "Naked chart");
+                      setStepError("");
+                      setForm((prev) => ({
+                        ...prev,
+                        indicators: prev.indicators.includes(option) ? [] : [option],
+                      }));
+                      return;
+                    }
+
+                    setStepError("");
+                    setForm((prev) => {
+                      const currentValues = Array.isArray(prev.indicators) ? prev.indicators : [];
+                      const withoutNone = currentValues.filter((entry) => entry !== "None / naked chart");
+
+                      return {
+                        ...prev,
+                        indicators: withoutNone.includes(option)
+                          ? withoutNone.filter((entry) => entry !== option)
+                          : [...withoutNone, option],
+                      };
+                    });
+                  }}
                 />
               ))}
             </div>
+          </div>
+
+          <div className="tailored-question-grid">
+            <div className="tailored-question-block">
+              <span className="intake-field-label">How would you trade this chart?</span>
+              <div className="intake-pill-grid intake-pill-grid-compact">
+                {["Buy", "Sell", "Wait for confirmation", "Skip this setup", "Not sure"].map((option) => (
+                  <ChoicePill
+                    key={option}
+                    active={form.chartTradeDecision === option}
+                    label={option}
+                    onClick={() => updateField("chartTradeDecision", option)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <label className="form-field tailored-question-block">
+              <span className="intake-field-label">Why would you take that decision?</span>
+              <textarea
+                className="tailored-textarea tailored-textarea-compact"
+                placeholder="Tell us what you see: levels, structure, confirmation, risk, session context, or why you would stay out."
+                value={form.chartReasoning}
+                maxLength={2000}
+                onChange={(event) => updateField("chartReasoning", event.target.value)}
+              />
+            </label>
           </div>
 
           <label className="form-field form-field-full tailored-question-block">
@@ -492,16 +557,6 @@ export function TailoredIntakeClient() {
               value={form.strategyDescription}
               maxLength={2000}
               onChange={(event) => updateField("strategyDescription", event.target.value)}
-            />
-          </label>
-
-          <label className="form-field form-field-full tailored-question-block">
-            <span className="intake-field-label">Anything important about your current account or execution?</span>
-            <input
-              type="text"
-              placeholder="Optional notes about your account, process, or current struggle"
-              value={form.tradingAccountNotes}
-              onChange={(event) => updateField("tradingAccountNotes", event.target.value)}
             />
           </label>
         </>
@@ -646,6 +701,16 @@ export function TailoredIntakeClient() {
             placeholder="Example: finance, gambling, sales, engineering, entrepreneurship"
             value={form.previousExperience}
             onChange={(event) => updateField("previousExperience", event.target.value)}
+          />
+        </label>
+
+        <label className="form-field form-field-full tailored-question-block">
+          <span className="intake-field-label">Anything important about your current account or execution?</span>
+          <input
+            type="text"
+            placeholder="Optional notes about your account, execution style, or current issue"
+            value={form.tradingAccountNotes}
+            onChange={(event) => updateField("tradingAccountNotes", event.target.value)}
           />
         </label>
 

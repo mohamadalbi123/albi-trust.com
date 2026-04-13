@@ -64,6 +64,8 @@ export async function POST(request) {
       riskPerTrade: String(body.riskPerTrade || ""),
       averageHoldingTime: String(body.averageHoldingTime || ""),
       usesTradingSignals: String(body.usesTradingSignals || ""),
+      chartTradeDecision: String(body.chartTradeDecision || ""),
+      chartReasoning: String(body.chartReasoning || ""),
       tradingAccountNotes: String(body.tradingAccountNotes || ""),
       strategyDescription: String(body.strategyDescription || ""),
       accountScreenshots: accountScreenshots(body.accountScreenshots),
