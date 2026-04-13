@@ -766,8 +766,14 @@ export function AdminActionPlansClient() {
         {activeView === "generator" && generatorOrders.length ? (
           <div className="admin-generator-layout">
             <div className="action-card admin-generator-orders">
-              <strong>Orders needing action plan</strong>
-              <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
+              <div className="admin-generator-section-head">
+                <strong>AI Action Plan Workspace</strong>
+                <p className="muted">Generate a draft, chat with the model about changes, then apply the final revision to the draft.</p>
+              </div>
+              <div className="admin-generator-subhead">
+                <strong>Orders needing action plan</strong>
+                <p className="muted">Delivered orders are removed from this list and stay in Paid orders.</p>
+              </div>
               <div className="admin-generator-control-block">
                 <label className="form-field">
                   <span>Chat with the model</span>
@@ -812,7 +818,7 @@ export function AdminActionPlansClient() {
             </div>
 
             <div className="action-card admin-generator-draft-card">
-              <div className="admin-order-heading">
+              <div className="admin-generator-section-head">
                 <div>
                   <strong>Draft action plan</strong>
                   <p className="muted">

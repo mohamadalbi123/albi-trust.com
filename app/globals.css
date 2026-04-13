@@ -1432,6 +1432,44 @@ select {
   gap: 18px;
 }
 
+.admin-generator-orders,
+.admin-generator-draft-card {
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(127, 196, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid rgba(18, 53, 107, 0.08);
+}
+
+.admin-generator-section-head {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-generator-section-head strong {
+  color: #10213f;
+  font-size: 1.12rem;
+  letter-spacing: -0.02em;
+}
+
+.admin-generator-section-head .muted {
+  margin: 0;
+}
+
+.admin-generator-subhead {
+  display: grid;
+  gap: 4px;
+  margin-top: 18px;
+}
+
+.admin-generator-subhead strong {
+  color: #10213f;
+}
+
+.admin-generator-subhead .muted {
+  margin: 0;
+}
+
 .admin-generator-order-list {
   display: grid;
   gap: 10px;
@@ -1447,6 +1485,10 @@ select {
 .admin-generator-small-textarea {
   min-height: 130px;
   resize: vertical;
+  border-radius: 18px;
+  border: 1px solid rgba(18, 53, 107, 0.1);
+  background: linear-gradient(180deg, #ffffff, #f6faff);
+  padding: 16px;
 }
 
 .admin-generator-upload {
