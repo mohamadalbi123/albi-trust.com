@@ -417,24 +417,14 @@ export function TailoredIntakeClient() {
             </div>
           </div>
 
-          <div className="tailored-chart-layout">
-            <div className="tailored-chart-main">
-              <TradingViewGoldChart />
-            </div>
-
-            <aside className="tailored-chart-sidecard">
-              <span className="intake-field-label">Chart instructions</span>
-              <h4>Mark the level you care about.</h4>
-              <p className="muted">
-                If you want, use the chart tools to draw a simple trend line, horizontal level, or zone the way you normally would before taking a trade.
-              </p>
-              <div className="tailored-chart-prompt-list">
-                <div className="tailored-chart-prompt-item">Show the level or structure you would focus on first.</div>
-                <div className="tailored-chart-prompt-item">Think like you would in a real session, not like a quiz.</div>
-                <div className="tailored-chart-prompt-item">Then tell us whether you would buy, sell, wait, or skip.</div>
-              </div>
-            </aside>
+          <div className="tailored-chart-instruction">
+            <strong>Mark the level you care about.</strong>
+            <p className="muted">
+              If you want, use the chart tools to draw a simple trend line or horizontal level, then answer the questions below like you would in a real session.
+            </p>
           </div>
+
+          <TradingViewGoldChart />
 
           <div className="tailored-question-grid">
             <div className="tailored-question-block">

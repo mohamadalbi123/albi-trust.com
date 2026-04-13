@@ -3,18 +3,25 @@
 import { useEffect, useRef } from "react";
 
 export function TradingViewGoldChart() {
-  const containerRef = useRef(null);
+  const widgetRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!widgetRef.current) return;
 
-    containerRef.current.innerHTML = "";
+    const container = widgetRef.current.parentElement;
+    if (!container) return;
+
+    container.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
+    const widget = container.querySelector(".tradingview-widget-container__widget");
+    if (!widget) return;
+    widgetRef.current = widget;
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
     script.innerHTML = JSON.stringify({
-      autosize: true,
+      width: "100%",
+      height: 520,
       symbol: "OANDA:XAUUSD",
       interval: "60",
       timezone: "Europe/Paris",
@@ -33,18 +40,20 @@ export function TradingViewGoldChart() {
       support_host: "https://www.tradingview.com",
     });
 
-    containerRef.current.appendChild(script);
+    container.appendChild(script);
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
+      if (container) {
+        container.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
       }
     };
   }, []);
 
   return (
     <div className="tv-chart-shell">
-      <div className="tradingview-widget-container tv-chart-widget" ref={containerRef} />
+      <div className="tradingview-widget-container tv-chart-widget">
+        <div className="tradingview-widget-container__widget" ref={widgetRef} />
+      </div>
     </div>
   );
 }

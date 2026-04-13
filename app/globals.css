@@ -2061,52 +2061,22 @@ select {
   margin: 0;
 }
 
-.tailored-chart-layout {
+.tailored-chart-instruction {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
-  gap: 18px;
-  align-items: stretch;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbfdff, #f5f9ff);
 }
 
-.tailored-chart-main {
-  min-width: 0;
+.tailored-chart-instruction strong {
+  color: #10213f;
+  font-size: 1.02rem;
 }
 
-.tailored-chart-sidecard {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 22px;
-  border-radius: 24px;
-  background: linear-gradient(180deg, #10213f, #173867);
-  color: #f5f9ff;
-  box-shadow: 0 20px 42px rgba(16, 33, 63, 0.18);
-}
-
-.tailored-chart-sidecard h4 {
+.tailored-chart-instruction .muted {
   margin: 0;
-  font-size: 1.45rem;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-}
-
-.tailored-chart-sidecard .muted {
-  margin: 0;
-  color: rgba(240, 246, 255, 0.76);
-}
-
-.tailored-chart-prompt-list {
-  display: grid;
-  gap: 10px;
-}
-
-.tailored-chart-prompt-item {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 12px 14px;
-  color: rgba(245, 249, 255, 0.92);
-  line-height: 1.5;
 }
 
 .tv-chart-shell {
@@ -2119,6 +2089,7 @@ select {
 
 .tv-chart-widget {
   min-height: 520px;
+  width: 100%;
 }
 
 .intake-pill-grid {
@@ -2626,10 +2597,6 @@ select {
 
   .tailored-intake-stage-meta {
     min-width: 0;
-  }
-
-  .tailored-chart-layout {
-    grid-template-columns: 1fr;
   }
 
   .tv-chart-widget {
