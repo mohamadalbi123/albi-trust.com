@@ -629,10 +629,10 @@ export function TailoredIntakeClient() {
           </div>
 
           <label className="form-field form-field-full tailored-question-block">
-            <span className="intake-field-label">Tell us about your daily life and trading reality</span>
+            <span className="intake-field-label">Tell us your weekly and daily routine, personal and trading related</span>
             <textarea
               className="tailored-textarea"
-              placeholder="Example: I work full time, trade in the evening, have 2 kids, feel tired after work, and struggle with discipline after losses."
+              placeholder="Shortly: what your week looks like, what your trading days look like, and what affects your trading personally."
               value={form.personalBackground}
               maxLength={6000}
               onChange={(event) => updateField("personalBackground", event.target.value)}
