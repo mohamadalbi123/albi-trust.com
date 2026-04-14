@@ -75,14 +75,28 @@ select {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  border: 1px solid rgba(16, 33, 63, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 255, 0.97));
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(16, 33, 63, 0.08);
+  background: #10173d;
   display: grid;
   place-items: center;
   position: relative;
   box-shadow:
-    0 10px 24px rgba(16, 33, 63, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+    0 14px 28px rgba(16, 33, 63, 0.16),
+    0 2px 8px rgba(16, 33, 63, 0.08);
+}
+
+.brand-mark-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.brand-mark-auth {
+  width: 58px;
+  height: 58px;
 }
 
 .brand-mark-glyph {
@@ -98,17 +112,7 @@ select {
 }
 
 .brand-mark::after {
-  content: "";
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
-  background: linear-gradient(180deg, #e2c485, #c99a44);
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  box-shadow:
-    0 0 10px rgba(201, 154, 68, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  content: none;
 }
 
 .nav-links {
@@ -323,8 +327,8 @@ select {
 }
 
 .home-page .brand-mark {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #10173d;
 }
 
 .home-page .brand-mark-glyph {
@@ -332,8 +336,7 @@ select {
 }
 
 .home-page .brand-mark::after {
-  background: #ffffff;
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.28);
+  content: none;
 }
 
 .home-page .nav-links,

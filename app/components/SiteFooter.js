@@ -14,8 +14,8 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            <span className="brand-mark-glyph">AT</span>
+          <span className="brand-mark brand-mark-image" aria-hidden="true">
+            <img src="/brand/albitrust-face-symbol.png" alt="" />
           </span>
           <span>Albi Trust</span>
         </div>

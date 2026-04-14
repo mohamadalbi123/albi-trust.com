@@ -39,8 +39,8 @@ export function ForgotPasswordClient() {
     <section className="auth-panel">
       <div className="auth-form-card">
         <Link href="/" className="auth-brand-center auth-brand-home-link">
-          <span className="brand-mark" aria-hidden="true">
-            <span className="brand-mark-glyph">AT</span>
+          <span className="brand-mark brand-mark-image brand-mark-auth" aria-hidden="true">
+            <img src="/brand/albitrust-face-symbol.png" alt="" />
           </span>
           <span className="auth-brand-center-text">Albi Trust</span>
         </Link>

@@ -288,34 +288,24 @@ function reportStyles(showToolbar) {
     }
 
     .report-brand-mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      border: 1px solid rgba(16, 33, 63, 0.12);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 255, 0.97));
-      display: grid;
-      place-items: center;
-      position: relative;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #10173d;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 14px 32px rgba(2, 7, 23, 0.22);
     }
 
-    .report-brand-mark::after {
-      content: "";
-      position: absolute;
-      top: 7px;
-      right: 7px;
-      width: 9px;
-      height: 9px;
-      background: linear-gradient(180deg, #e2c485, #c99a44);
-      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    }
-
-    .report-brand-glyph {
-      font-family: "Times New Roman", Georgia, serif;
-      font-size: 1.02rem;
-      font-weight: 700;
-      letter-spacing: -0.08em;
-      color: var(--report-ink);
+    .report-brand-mark img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
     }
 
     .report-brand-copy {
@@ -548,7 +538,7 @@ export function renderActionPlanReportHtml({ draft, clientName, reportLabel = "C
         <header class="report-header">
           <div class="report-brand">
             <span class="report-brand-mark" aria-hidden="true">
-              <span class="report-brand-glyph">AT</span>
+              <img src="/brand/albitrust-face-symbol.png" alt="" />
             </span>
             <div class="report-brand-copy">
               <strong>Albi Trust</strong>

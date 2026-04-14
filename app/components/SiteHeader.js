@@ -17,8 +17,8 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Link href="/" className="brand">
-        <span className="brand-mark" aria-hidden="true">
-          <span className="brand-mark-glyph">AT</span>
+        <span className="brand-mark brand-mark-image" aria-hidden="true">
+          <img src="/brand/albitrust-face-symbol.png" alt="" />
         </span>
         <span>Albi Trust</span>
       </Link>
