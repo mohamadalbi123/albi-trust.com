@@ -224,7 +224,7 @@ function extractJsonObject(value) {
   }
 }
 
-function normalizeInlineText(value) {
+function sanitizeInlineText(value) {
   return String(value || "")
     .replace(/\*\*(.*?)\*\*/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
@@ -235,7 +235,7 @@ function normalizeInlineText(value) {
 
 function textList(value, minimum = 0) {
   const items = Array.isArray(value)
-    ? value.map((entry) => normalizeInlineText(entry)).filter(Boolean)
+    ? value.map((entry) => sanitizeInlineText(entry)).filter(Boolean)
     : [];
 
   while (items.length < minimum) {
@@ -246,7 +246,7 @@ function textList(value, minimum = 0) {
 }
 
 function textValue(value, fallback = "To be refined during final review.") {
-  return normalizeInlineText(value) || fallback;
+  return sanitizeInlineText(value) || fallback;
 }
 
 function heading(title) {
