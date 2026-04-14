@@ -365,8 +365,10 @@ function reportStyles(showToolbar) {
       margin-bottom: 14px;
       padding: 12px 16px;
       border-radius: 16px;
-      background: linear-gradient(180deg, var(--report-soft), #fbfdff);
-      border-left: 4px solid var(--report-accent-deep);
+      background: linear-gradient(180deg, #183150, #10213f);
+      border-left: 4px solid #d7b06a;
+      color: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .report-h3 {
@@ -374,6 +376,8 @@ function reportStyles(showToolbar) {
       line-height: 1.3;
       margin-top: 20px;
       margin-bottom: 12px;
+      color: #10213f;
+      font-weight: 700;
     }
 
     .report-h4 {
@@ -381,7 +385,8 @@ function reportStyles(showToolbar) {
       line-height: 1.3;
       margin-top: 18px;
       margin-bottom: 10px;
-      color: #29466f;
+      color: #173867;
+      font-weight: 700;
     }
 
     .report-meta-line,
