@@ -55,6 +55,8 @@ export async function POST(request) {
       userId: user.id,
       tradingYears: String(body.tradingYears || ""),
       profitableBefore: String(body.profitableBefore || ""),
+      traderWeaknesses: stringArray(body.traderWeaknesses),
+      otherTraderWeakness: String(body.otherTraderWeakness || ""),
       previousExperience: String(body.previousExperience || ""),
       currentWorkStatus: String(body.currentWorkStatus || ""),
       employmentType: String(body.employmentType || ""),

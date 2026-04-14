@@ -238,6 +238,19 @@ const STEP_OPTIONS = {
   dailyTradingHours: ["<1h", "1-2h", "2-4h", "4h+"],
   energyLevel: ["High", "Medium", "Low"],
 };
+const TRADER_WEAKNESS_OPTIONS = [
+  "Fear of entering trades",
+  "Impulsive entries",
+  "Overtrading",
+  "Revenge trading",
+  "Moving stop-loss",
+  "Closing trades too early",
+  "Letting losses run",
+  "Not following a plan",
+  "No routine / structure",
+  "Changing strategies often",
+  "Other (please specify)",
+];
 const INTAKE_STEPS = [
   {
     id: "style",
@@ -274,6 +287,8 @@ export function TailoredIntakeClient() {
   const [form, setForm] = useState({
     tradingYears: "",
     profitableBefore: "",
+    traderWeaknesses: [],
+    otherTraderWeakness: "",
     previousExperience: "",
     currentWorkStatus: "",
     employmentType: "",
@@ -331,6 +346,17 @@ export function TailoredIntakeClient() {
     });
   }
 
+  function updateTraderWeaknesses(selectedOptions) {
+    setStepError("");
+    const nextValues = selectedOptions.slice(0, 3);
+
+    setForm((prev) => ({
+      ...prev,
+      traderWeaknesses: nextValues,
+      otherTraderWeakness: nextValues.includes("Other (please specify)") ? prev.otherTraderWeakness : "",
+    }));
+  }
+
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
 
@@ -380,6 +406,17 @@ export function TailoredIntakeClient() {
     if (stepId === "style") {
       if (!form.tradingYears || !form.profitableBefore || !form.tradingSession.length || !form.usualTradingTime) {
         return "Complete the core trading profile first so we can diagnose your style properly.";
+      }
+
+      if (form.traderWeaknesses.length !== 3) {
+        return "Choose exactly 3 trading weaknesses so the plan can target the right problems first.";
+      }
+
+      if (
+        form.traderWeaknesses.includes("Other (please specify)") &&
+        !isFilled(form.otherTraderWeakness)
+      ) {
+        return "Add a short note for the 'Other' weakness you selected.";
       }
 
       if (!form.tradedAssets.length) {
@@ -607,6 +644,46 @@ export function TailoredIntakeClient() {
             compact: true,
             placeholder: "Select one",
           })}
+
+          <label className="form-field form-field-full tailored-question-block">
+            <span className="intake-field-label">
+              If you had to be brutally honest, what are your biggest 3 weaknesses as a trader?
+            </span>
+            <select
+              className="tailored-mobile-select"
+              multiple
+              size={8}
+              value={form.traderWeaknesses}
+              onChange={(event) => {
+                const selectedValues = Array.from(event.target.selectedOptions, (option) => option.value);
+                updateTraderWeaknesses(selectedValues);
+              }}
+            >
+              {TRADER_WEAKNESS_OPTIONS.map((option) => (
+                <option
+                  key={option}
+                  value={option}
+                  disabled={!form.traderWeaknesses.includes(option) && form.traderWeaknesses.length >= 3}
+                >
+                  {option}
+                </option>
+              ))}
+            </select>
+            <small>Select exactly 3. On desktop, hold Command or Ctrl to choose multiple.</small>
+          </label>
+
+          {form.traderWeaknesses.includes("Other (please specify)") ? (
+            <label className="form-field form-field-full tailored-question-block">
+              <span className="intake-field-label">What is the other weakness?</span>
+              <input
+                type="text"
+                placeholder="Describe the weakness briefly"
+                value={form.otherTraderWeakness}
+                maxLength={200}
+                onChange={(event) => updateField("otherTraderWeakness", event.target.value)}
+              />
+            </label>
+          ) : null}
 
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">Which industry were you in before trading?</span>

@@ -1005,6 +1005,8 @@ export async function createTailoredPlanDraft({
   userId,
   tradingYears,
   profitableBefore,
+  traderWeaknesses,
+  otherTraderWeakness,
   previousExperience,
   currentWorkStatus,
   employmentType,
@@ -1056,6 +1058,8 @@ export async function createTailoredPlanDraft({
     intake: {
       tradingYears,
       profitableBefore,
+      traderWeaknesses,
+      otherTraderWeakness,
       previousExperience,
       currentWorkStatus,
       employmentType,
