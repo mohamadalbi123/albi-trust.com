@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel" x1="256" y1="48" x2="256" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.99"/>
+      <stop offset="1" stop-color="#F8FAFF" stop-opacity="0.97"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="406" y1="98" x2="406" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E2C485"/>
+      <stop offset="1" stop-color="#C99A44"/>
+    </linearGradient>
+    <filter id="shadow" x="44" y="44" width="424" height="440" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="26" stdDeviation="18" flood-color="#10213F" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#EEF3FA"/>
+  <g filter="url(#shadow)">
+    <rect x="76" y="76" width="360" height="360" rx="112" fill="url(#panel)"/>
+    <rect x="77" y="77" width="358" height="358" rx="111" stroke="#10213F" stroke-opacity="0.12" stroke-width="2"/>
+    <path d="M385 98L420 133L385 168L350 133L385 98Z" fill="url(#gold)"/>
+    <text x="256" y="284" text-anchor="middle" fill="#10213F" font-family="Times New Roman, Georgia, serif" font-size="132" font-weight="700" letter-spacing="-18">AT</text>
+  </g>
+</svg>

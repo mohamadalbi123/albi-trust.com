@@ -1,0 +1,19 @@
+<svg width="1600" height="420" viewBox="0 0 1600 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel" x1="120" y1="42" x2="120" y2="198" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.99"/>
+      <stop offset="1" stop-color="#F8FAFF" stop-opacity="0.97"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="181" y1="67" x2="181" y2="105" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E2C485"/>
+      <stop offset="1" stop-color="#C99A44"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="420" rx="48" fill="#FFFFFF"/>
+  <rect x="42" y="42" width="156" height="156" rx="48" fill="url(#panel)"/>
+  <rect x="43" y="43" width="154" height="154" rx="47" stroke="#10213F" stroke-opacity="0.12" stroke-width="2"/>
+  <path d="M181 67L200 86L181 105L162 86L181 67Z" fill="url(#gold)"/>
+  <text x="120" y="144" text-anchor="middle" fill="#10213F" font-family="Times New Roman, Georgia, serif" font-size="60" font-weight="700" letter-spacing="-8">AT</text>
+  <text x="238" y="112" fill="#10213F" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="700" letter-spacing="6">ALBI TRUST</text>
+  <text x="238" y="164" fill="#546B92" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="500">Tailored trading performance improvement</text>
+</svg>
