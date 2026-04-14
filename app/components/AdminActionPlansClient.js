@@ -89,6 +89,7 @@ export function AdminActionPlansClient() {
   const [adminPassword, setAdminPassword] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [previewScreenshot, setPreviewScreenshot] = useState(null);
   const isAdmin = String(user?.email || "").toLowerCase() === ADMIN_EMAIL;
   const generatorOrders = orders.filter((order) => order.actionPlanStatus !== "ready");
 
@@ -444,6 +445,20 @@ export function AdminActionPlansClient() {
 
   return (
     <section className="result-shell admin-action-plan-shell">
+      {previewScreenshot ? (
+        <div className="admin-image-preview-overlay" onClick={() => setPreviewScreenshot(null)} role="presentation">
+          <div className="admin-image-preview-dialog" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="admin-image-preview-top">
+              <strong>{previewScreenshot.title || "Trading screenshot"}</strong>
+              <button type="button" className="admin-image-preview-close" onClick={() => setPreviewScreenshot(null)}>
+                Close
+              </button>
+            </div>
+            <img src={previewScreenshot.src} alt={previewScreenshot.title || "Trading screenshot"} className="admin-image-preview-full" />
+          </div>
+        </div>
+      ) : null}
+
       <h1 className="page-title">Admin page.</h1>
       <p className="page-lead">Manage paid orders, client records, and action-plan reports.</p>
 
@@ -535,14 +550,22 @@ export function AdminActionPlansClient() {
               {order.intake?.accountScreenshots?.length ? (
                 <div className="admin-screenshot-list">
                   {order.intake.accountScreenshots.map((screenshot, index) => (
-                    <a
+                    <button
                       key={`${order.id}-${screenshot.name}-${index}`}
-                      href={screenshot.dataUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                      type="button"
+                      className="admin-screenshot-card"
+                      onClick={() =>
+                        setPreviewScreenshot({
+                          src: screenshot.dataUrl,
+                          title: `Screenshot ${index + 1}${screenshot.name ? ` - ${screenshot.name}` : ""}`,
+                        })}
                     >
-                      Screenshot {index + 1}: {screenshot.name}
-                    </a>
+                      <img src={screenshot.dataUrl} alt={`Screenshot ${index + 1}`} className="admin-screenshot-thumb" />
+                      <span className="admin-screenshot-meta">
+                        <strong>Screenshot {index + 1}</strong>
+                        <small>{screenshot.name || "Trading account screenshot"}</small>
+                      </span>
+                    </button>
                   ))}
                 </div>
               ) : null}
