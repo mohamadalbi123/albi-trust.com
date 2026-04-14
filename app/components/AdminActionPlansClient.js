@@ -701,7 +701,7 @@ export function AdminActionPlansClient() {
                     onClick={openPrintableReport}
                     disabled={!generatorOrder?.id || !generatorDraft.trim() || applyingAdjustment || deliveringDraft}
                   >
-                    Open printable report
+                    Preview report
                   </button>
                   <button
                     type="button"
