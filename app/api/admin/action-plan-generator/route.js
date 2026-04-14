@@ -177,6 +177,9 @@ function actionPlanStructurePrompt() {
     "- Execution at the Right Level",
     "Within 'Execution at the Right Level', always explain accumulation, manipulation, and distribution.",
     "Only the content inside each section should change based on the trader's data, assessment answers, scores, strengths, blockers, and life situation.",
+    "Trader Profile Overview must reflect the client's actual intake answers directly. Do not invent profile facts and do not drift away from the submitted questionnaire data.",
+    "For Biggest Blocker & Solution, start from the client's own reported blockers in the intake, then combine that with the assessment and chart/intake evidence to choose the main blocker you want to address first.",
+    "If the client selected multiple blockers, choose the most urgent one as the main blocker and keep the others in mind when writing the solution plan.",
     "Before writing, first reason internally about the trader's main blocker, strongest pillar, weakest pillar, behavior pattern, emotional pattern, and execution problem.",
     "Then write using the fixed structure.",
     "The routine section must be clearly doable and must include the following logic whenever relevant: weekend review while markets are closed, weekly charts, COT, economic calendar, seasonality review, monthly-weekly-daily top-down analysis, 4H refinement, and alerts instead of constant screen watching.",
@@ -248,6 +251,46 @@ function bulletList(items) {
   return textList(items).map((item) => `- ${item}`).join("\n");
 }
 
+function describeProfitabilityStatus(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "yes") return "Has been profitable before";
+  if (normalized === "no") return "Not yet consistent";
+  return textValue(value, "To be confirmed");
+}
+
+function describeHoldingStyle(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "minutes") return "Scalping / very short-term";
+  if (normalized === "1-4 hours") return "Intraday";
+  if (normalized === "4-12 hours") return "Intraday to multi-session";
+  if (normalized === "several days") return "Swing";
+  return textValue(value, "To be confirmed");
+}
+
+function joinValues(value, fallback = "To be confirmed") {
+  if (Array.isArray(value)) {
+    const joined = value.map((entry) => String(entry || "").trim()).filter(Boolean).join(" / ");
+    return joined || fallback;
+  }
+
+  return textValue(value, fallback);
+}
+
+function getReportedBlockers(intake) {
+  const selections = Array.isArray(intake?.traderWeaknesses)
+    ? intake.traderWeaknesses.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : [];
+  const otherSelected = selections.includes("Other (please specify)");
+  const otherValue = String(intake?.otherTraderWeakness || "").trim();
+  const normalizedSelections = selections.map((entry) => (
+    entry === "Other (please specify)" && otherValue ? `Other: ${otherValue}` : entry
+  ));
+
+  return otherSelected && otherValue
+    ? normalizedSelections
+    : normalizedSelections.filter((entry) => entry !== "Other (please specify)");
+}
+
 function formatStructuredDraft(plan, context) {
   const assessment = context?.order?.assessmentSnapshot || {};
   const intake = context?.order?.intake || {};
@@ -257,12 +300,12 @@ function formatStructuredDraft(plan, context) {
     month: "long",
     year: "numeric",
   }).format(new Date());
-  const marketsTraded = Array.isArray(intake?.tradedAssets)
-    ? intake.tradedAssets.filter(Boolean).join(" / ")
-    : textValue(intake?.tradedAssets, "To be confirmed");
-  const tradingSession = Array.isArray(intake?.tradingSession)
-    ? intake.tradingSession.filter(Boolean).join(" / ")
-    : textValue(intake?.tradingSession, "To be confirmed");
+  const marketsTraded = joinValues(intake?.tradedAssets);
+  const tradingSession = joinValues(intake?.tradingSession);
+  const reportedBlockers = getReportedBlockers(intake);
+  const fallbackProblem = reportedBlockers.length
+    ? `Your own intake answers point first to these blockers: ${reportedBlockers.join(", ")}. The plan should address the most urgent one first.`
+    : assessment?.primaryWeakness?.label || "Biggest blocker to be refined during final review.";
 
   return [
     "# Personalized Trading Action Plan",
@@ -297,13 +340,13 @@ function formatStructuredDraft(plan, context) {
     "",
     "## Trader Profile Overview",
     "",
-    `- **Experience Level:** ${textValue(plan?.traderProfileOverview?.experienceLevel, intake?.tradingYears || "To be confirmed")}`,
-    `- **Profitability Status:** ${textValue(plan?.traderProfileOverview?.profitabilityStatus, intake?.profitableBefore || "To be confirmed")}`,
-    `- **Markets Traded:** ${textValue(plan?.traderProfileOverview?.marketsTraded, marketsTraded || "To be confirmed")}`,
-    `- **Trading Session:** ${textValue(plan?.traderProfileOverview?.tradingSession, tradingSession || "To be confirmed")}`,
-    `- **Holding Style:** ${textValue(plan?.traderProfileOverview?.holdingStyle, intake?.averageHoldingTime || "To be confirmed")}`,
-    `- **Risk Per Trade:** ${textValue(plan?.traderProfileOverview?.riskPerTrade, intake?.riskPerTrade || "To be confirmed")}`,
-    `- **Trading Environment:** ${textValue(plan?.traderProfileOverview?.tradingEnvironment, intake?.currentWorkStatus || "To be confirmed")}`,
+    `- **Experience Level:** ${textValue(intake?.tradingYears, "To be confirmed")}`,
+    `- **Profitability Status:** ${describeProfitabilityStatus(intake?.profitableBefore)}`,
+    `- **Markets Traded:** ${marketsTraded}`,
+    `- **Trading Session:** ${tradingSession}`,
+    `- **Holding Style:** ${describeHoldingStyle(intake?.averageHoldingTime)}`,
+    `- **Risk Per Trade:** ${textValue(intake?.riskPerTrade, "To be confirmed")}`,
+    `- **Trading Environment:** ${textValue(intake?.currentWorkStatus, "To be confirmed")}`,
     "",
     "---",
     "",
@@ -363,10 +406,7 @@ function formatStructuredDraft(plan, context) {
     "## Biggest Blocker & Solution",
     "",
     "### Problem",
-    textValue(
-      plan?.biggestBlockerAndSolution?.problem,
-      assessment?.primaryWeakness?.label || "Biggest blocker to be refined during final review.",
-    ),
+    textValue(plan?.biggestBlockerAndSolution?.problem, fallbackProblem),
     "",
     "---",
     "",
