@@ -263,17 +263,22 @@ function reportStyles(showToolbar) {
       margin: 0 auto;
       background: #ffffff;
       box-shadow: 0 28px 80px rgba(16, 33, 63, 0.16);
-      padding: 18mm 16mm 20mm;
+      padding: 0 16mm 20mm;
     }
 
     .report-header {
       display: flex;
       align-items: flex-start;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 20px;
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--report-line);
-      margin-bottom: 24px;
+      padding: 18mm 0 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+      margin-bottom: 26px;
+      background: linear-gradient(180deg, #162744, #10213f 72%);
+      margin-left: -16mm;
+      margin-right: -16mm;
+      padding-left: 16mm;
+      padding-right: 16mm;
     }
 
     .report-brand {
@@ -322,19 +327,29 @@ function reportStyles(showToolbar) {
       font-size: 1.05rem;
       letter-spacing: 0.05em;
       text-transform: uppercase;
+      color: #ffffff;
     }
 
-    .report-brand-copy span,
-    .report-header-label {
-      color: var(--report-muted);
+    .report-brand-copy span {
+      color: rgba(233, 240, 250, 0.82);
       font-size: 0.9rem;
     }
 
-    .report-header-label {
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-top: 10px;
+    .report-intro {
+      margin-top: -6px;
+      margin-bottom: 22px;
+      padding: 0 0 18px;
+      border-bottom: 1px solid var(--report-line);
+    }
+
+    .report-intro .report-h1 {
+      margin-bottom: 14px;
+    }
+
+    .report-intro .report-meta-line {
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      color: #395279;
     }
 
     .report-h1,
@@ -487,7 +502,29 @@ function reportStyles(showToolbar) {
 
 export function renderActionPlanReportHtml({ draft, clientName, reportLabel = "Client Report", showToolbar = false }) {
   const blocks = parseDraftBlocks(draft);
-  const body = blocks.map(renderBlock).join("\n");
+  const introBlocks = [];
+  const contentBlocks = [];
+  let introFinished = false;
+
+  for (const block of blocks) {
+    const isIntroBlock =
+      !introFinished &&
+      (block.type === "heading" && block.level === 1 ||
+        (block.type === "paragraph" && /^\*\*[^*]+:\*\*/.test(block.text)));
+
+    if (isIntroBlock) {
+      introBlocks.push(block);
+      continue;
+    }
+
+    introFinished = true;
+    contentBlocks.push(block);
+  }
+
+  const intro = introBlocks.length
+    ? `<section class="report-intro">${introBlocks.map(renderBlock).join("\n")}</section>`
+    : "";
+  const body = contentBlocks.map(renderBlock).join("\n");
 
   return `<!doctype html>
 <html lang="en">
@@ -518,9 +555,9 @@ export function renderActionPlanReportHtml({ draft, clientName, reportLabel = "C
               <span>Tailored trading performance improvement</span>
             </div>
           </div>
-          <div class="report-header-label">${escapeHtml(reportLabel)}</div>
         </header>
 
+        ${intro}
         ${body}
       </article>
     </div>
