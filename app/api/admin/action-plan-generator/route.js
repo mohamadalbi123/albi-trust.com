@@ -224,6 +224,15 @@ function extractJsonObject(value) {
   }
 }
 
+function normalizeInlineText(value) {
+  return String(value || "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\t+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function textList(value, minimum = 0) {
   const items = Array.isArray(value)
     ? value.map((entry) => normalizeInlineText(entry)).filter(Boolean)
