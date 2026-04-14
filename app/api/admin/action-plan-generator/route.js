@@ -13,35 +13,54 @@ const DEFAULT_ADMIN_EMAIL = "mohalbi123@hotmail.com";
 let cachedCourseKnowledge = null;
 
 const FIXED_PLAN_JSON_SCHEMA = {
-  traderLevel: "string",
-  score: "string",
-  mainBlocker: "string",
-  albiTrustApproach: "string",
-  actualTradingBehavior: "string",
-  coreDiagnosis: "string",
-  whyThisIsHappening: "string",
-  fourPillars: {
+  observationBasedOnCoreTradingPillars: {
     technicalAnalysis: "string",
     riskManagement: "string",
     tradingPlan: "string",
     psychology: "string",
   },
-  realityCheck: "string",
-  whatWillChangeIn30Days: ["string", "string", "string"],
-  thirtyDayActionPlan: {
-    week1: ["string", "string"],
-    week2: ["string", "string"],
-    week3: ["string", "string"],
-    week4: ["string", "string"],
+  traderProfileOverview: {
+    experienceLevel: "string",
+    profitabilityStatus: "string",
+    marketsTraded: "string",
+    tradingSession: "string",
+    holdingStyle: "string",
+    riskPerTrade: "string",
+    tradingEnvironment: "string",
   },
-  nonNegotiableRules: ["string", "string", "string"],
-  dailyRoutine: {
-    beforeTrading: ["string", "string"],
-    duringTrading: ["string", "string"],
-    afterTrading: ["string", "string"],
+  dailyWeeklyRoutine: {
+    weeklyCotReport: ["string", "string"],
+    seasonalityAnalysis: {
+      intro: "string",
+      exampleMonth: "string",
+      exampleAsset: "string",
+      exampleInsight: "string",
+      closing: "string",
+    },
+    economicCalendar: ["string", "string", "string"],
+    chartAnalysisProcess: ["string", "string", "string", "string"],
   },
-  yourOnlyJob: "string",
-  fromMohamad: "string",
+  goldenAdvice: {
+    followTheTrend: {
+      intro: "string",
+      alignmentFactors: ["string", "string", "string", "string"],
+      closing: "string",
+    },
+    executionAtTheRightLevel: {
+      intro: "string",
+      accumulation: ["string"],
+      manipulation: ["string", "string"],
+      distribution: ["string", "string"],
+    },
+  },
+  biggestBlockerAndSolution: {
+    problem: "string",
+    solutionPlan: ["string", "string", "string", "string", "string", "string"],
+  },
+  finalNote: {
+    message: "string",
+    commitment: ["string", "string"],
+  },
 };
 
 function adminEmail() {
@@ -134,50 +153,37 @@ function actionPlanStructurePrompt() {
     "Think of this like a medical report template: the headings stay fixed, but the diagnosis and treatment change depending on the client.",
     "The PDF must look professional and consistent every time, so structure discipline matters as much as the analysis itself.",
     "Write it like a professional client-facing financial coaching document: clear, direct, serious, and practical.",
-    "Use this exact main structure every time:",
-    "1. Trader Level / Score / Main Blocker",
-    "2. Albi Trust Approach",
-    "3. This Is How You Actually Trade",
-    "4. Core Diagnosis",
-    "5. Why This Is Happening",
-    "6. Your 4 Pillars Breakdown",
-    "7. Reality Check",
-    "8. What Will Change in 30 Days",
-    "9. 30-Day Action Plan",
-    "10. Non-Negotiable Rules",
-    "11. Daily Routine",
-    "12. Your Only Job",
-    "13. From Mohamad",
-    "Within 'Your 4 Pillars Breakdown', always include exactly these four subsections:",
+    "Use this exact document structure every time:",
+    "1. Personalized Trading Action Plan",
+    "2. Prepared for / Prepared by / Date",
+    "3. Observation Based on Core Trading Pillars",
+    "4. Trader Profile Overview",
+    "5. Daily / Weekly Routine",
+    "6. Golden Advice",
+    "7. Biggest Blocker & Solution",
+    "8. Final Note",
+    "Within 'Observation Based on Core Trading Pillars', always include exactly these four subsections:",
     "- Technical Analysis",
     "- Risk Management",
     "- Trading Plan",
     "- Psychology",
-    "Within '30-Day Action Plan', always include exactly these four subsections:",
-    "- Week 1: Stop the Damage",
-    "- Week 2: Build Structure",
-    "- Week 3: Control Behavior",
-    "- Week 4: Consistency",
-    "Within 'Daily Routine', always include exactly these three subsections:",
-    "- Before Trading",
-    "- During Trading",
-    "- After Trading",
-    "Only the content inside each section should change based on the trader's data, assessment answers, scores, strengths, weaknesses, and life situation.",
-    "Before writing, first reason internally about:",
-    "- main blocker",
-    "- secondary blocker",
-    "- strongest pillar",
-    "- weakest pillar",
-    "- behavior pattern",
-    "- emotional pattern",
-    "- execution problem",
+    "Within 'Daily / Weekly Routine', always include exactly these four subsections:",
+    "- Weekly COT Report",
+    "- Seasonality Analysis",
+    "- Economic Calendar",
+    "- Chart Analysis Process",
+    "Within 'Golden Advice', always include exactly these two subsections:",
+    "- Follow the Trend",
+    "- Execution at the Right Level",
+    "Within 'Execution at the Right Level', always explain accumulation, manipulation, and distribution.",
+    "Only the content inside each section should change based on the trader's data, assessment answers, scores, strengths, blockers, and life situation.",
+    "Before writing, first reason internally about the trader's main blocker, strongest pillar, weakest pillar, behavior pattern, emotional pattern, and execution problem.",
     "Then write using the fixed structure.",
-    "The daily routine must be clearly doable, with weekly routine logic reflected inside the before-trading section where relevant.",
-    "The daily routine must include a weekly routine: set 1-2 hours during the weekend while markets are closed, review weekly charts for the traded assets, read COT where relevant, check the economic calendar, keep a saved seasonality file by month and asset, review that seasonality each weekend, then draw levels from monthly, weekly, and 4H charts and set alerts without going smaller. Explain that this focused weekend session builds the bias for the week.",
-    "The daily routine must adapt to the client's life, country, session, work status, and whether trading is main income. If the client is in Europe, mention how London, US, and Asia session timing can shape the routine. Use examples only when they fit the client.",
-    "Tell the trader to use the iPhone Reminders app, or a similar reminders/tasks app on Android or other phone brands, to schedule the weekly routine, daily trading rules review, economic calendar check, journaling reminder, and any planned candle-close check-ins. Make reminders practical and tied to the client's routine.",
+    "The routine section must be clearly doable and must include the following logic whenever relevant: weekend review while markets are closed, weekly charts, COT, economic calendar, seasonality review, monthly-weekly-daily top-down analysis, 4H refinement, and alerts instead of constant screen watching.",
+    "The routine must adapt to the client's life, country, session, work status, and whether trading is main income. Use examples only when they fit the client.",
+    "Tell the trader to use iPhone Reminders or a similar reminders/tasks app to schedule the weekly review, daily rules review, economic calendar check, journaling reminder, and any planned candle-close check-ins when relevant.",
     "When discussing execution, explain that many openings can involve manipulation or opposite-direction movement before distribution. Mention accumulation, manipulation, and distribution conceptually.",
-    "If the client is a scalper, suggest monitor discipline and strict session rules. If the client is a day trader, suggest executing according to plan, then stepping away from the screen to avoid moving stops or closing emotionally, checking only at planned candle closes that fit their strategy.",
+    "If the client is a scalper, suggest monitor discipline and strict session rules. If the client is intraday or swing, suggest executing according to plan, then stepping away from the screen to avoid moving stops or closing emotionally, checking only at planned candle closes that fit their strategy.",
     "Use Mohamad's coaching voice: clear, serious, practical, and focused on behavior change.",
     "Do not sound generic. Do not write like a course. Do not repeat the same sentence pattern in every section.",
     "Return the analysis as JSON only, using the exact schema requested by the user message.",
@@ -244,85 +250,141 @@ function bulletList(items) {
 
 function formatStructuredDraft(plan, context) {
   const assessment = context?.order?.assessmentSnapshot || {};
-  const traderLevel = textValue(plan?.traderLevel, assessment?.level?.title || "Trader level to be confirmed");
-  const score =
-    textValue(
-      plan?.score,
-      typeof assessment?.overallScore === "number" ? `${assessment.overallScore}/100` : "Score to be confirmed",
-    );
-  const mainBlocker = textValue(
-    plan?.mainBlocker,
-    assessment?.primaryWeakness?.label || "Main blocker to be confirmed",
-  );
+  const intake = context?.order?.intake || {};
+  const clientName = textValue(context?.order?.fullName, "Client");
+  const preparedDate = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+  const marketsTraded = Array.isArray(intake?.tradedAssets)
+    ? intake.tradedAssets.filter(Boolean).join(" / ")
+    : textValue(intake?.tradedAssets, "To be confirmed");
+  const tradingSession = Array.isArray(intake?.tradingSession)
+    ? intake.tradingSession.filter(Boolean).join(" / ")
+    : textValue(intake?.tradingSession, "To be confirmed");
 
   return [
-    "# Trader Level / Score / Main Blocker",
-    `- Trader Level: ${traderLevel}`,
-    `- Score: ${score}`,
-    `- Main Blocker: ${mainBlocker}`,
+    "# Personalized Trading Action Plan",
     "",
-    heading("Albi Trust Approach"),
-    textValue(plan?.albiTrustApproach),
+    `**Prepared for:** ${clientName}`,
+    "**Prepared by:** Mohamad Albi",
+    `**Date:** ${preparedDate}`,
     "",
-    heading("This Is How You Actually Trade"),
-    textValue(plan?.actualTradingBehavior),
+    "---",
     "",
-    heading("Core Diagnosis"),
-    textValue(plan?.coreDiagnosis),
+    "## Observation Based on Core Trading Pillars",
     "",
-    heading("Why This Is Happening"),
-    textValue(plan?.whyThisIsHappening),
+    "### 1. Technical Analysis",
+    textValue(plan?.observationBasedOnCoreTradingPillars?.technicalAnalysis),
     "",
-    heading("Your 4 Pillars Breakdown"),
-    subheading("Technical Analysis"),
-    textValue(plan?.fourPillars?.technicalAnalysis),
+    "---",
     "",
-    subheading("Risk Management"),
-    textValue(plan?.fourPillars?.riskManagement),
+    "### 2. Risk Management",
+    textValue(plan?.observationBasedOnCoreTradingPillars?.riskManagement),
     "",
-    subheading("Trading Plan"),
-    textValue(plan?.fourPillars?.tradingPlan),
+    "---",
     "",
-    subheading("Psychology"),
-    textValue(plan?.fourPillars?.psychology),
+    "### 3. Trading Plan",
+    textValue(plan?.observationBasedOnCoreTradingPillars?.tradingPlan),
     "",
-    heading("Reality Check"),
-    textValue(plan?.realityCheck),
+    "---",
     "",
-    heading("What Will Change in 30 Days"),
-    bulletList(plan?.whatWillChangeIn30Days),
+    "### 4. Psychology",
+    textValue(plan?.observationBasedOnCoreTradingPillars?.psychology),
     "",
-    heading("30-Day Action Plan"),
-    subheading("Week 1: Stop the Damage"),
-    bulletList(plan?.thirtyDayActionPlan?.week1),
+    "---",
     "",
-    subheading("Week 2: Build Structure"),
-    bulletList(plan?.thirtyDayActionPlan?.week2),
+    "## Trader Profile Overview",
     "",
-    subheading("Week 3: Control Behavior"),
-    bulletList(plan?.thirtyDayActionPlan?.week3),
+    `- **Experience Level:** ${textValue(plan?.traderProfileOverview?.experienceLevel, intake?.tradingYears || "To be confirmed")}`,
+    `- **Profitability Status:** ${textValue(plan?.traderProfileOverview?.profitabilityStatus, intake?.profitableBefore || "To be confirmed")}`,
+    `- **Markets Traded:** ${textValue(plan?.traderProfileOverview?.marketsTraded, marketsTraded || "To be confirmed")}`,
+    `- **Trading Session:** ${textValue(plan?.traderProfileOverview?.tradingSession, tradingSession || "To be confirmed")}`,
+    `- **Holding Style:** ${textValue(plan?.traderProfileOverview?.holdingStyle, intake?.averageHoldingTime || "To be confirmed")}`,
+    `- **Risk Per Trade:** ${textValue(plan?.traderProfileOverview?.riskPerTrade, intake?.riskPerTrade || "To be confirmed")}`,
+    `- **Trading Environment:** ${textValue(plan?.traderProfileOverview?.tradingEnvironment, intake?.currentWorkStatus || "To be confirmed")}`,
     "",
-    subheading("Week 4: Consistency"),
-    bulletList(plan?.thirtyDayActionPlan?.week4),
+    "---",
     "",
-    heading("Non-Negotiable Rules"),
-    bulletList(plan?.nonNegotiableRules),
+    "## Daily / Weekly Routine",
     "",
-    heading("Daily Routine"),
-    subheading("Before Trading"),
-    bulletList(plan?.dailyRoutine?.beforeTrading),
+    "### 1. Weekly COT Report",
+    bulletList(plan?.dailyWeeklyRoutine?.weeklyCotReport),
     "",
-    subheading("During Trading"),
-    bulletList(plan?.dailyRoutine?.duringTrading),
+    "---",
     "",
-    subheading("After Trading"),
-    bulletList(plan?.dailyRoutine?.afterTrading),
+    "### 2. Seasonality Analysis",
+    textValue(plan?.dailyWeeklyRoutine?.seasonalityAnalysis?.intro),
     "",
-    heading("Your Only Job"),
-    textValue(plan?.yourOnlyJob),
+    "| Month | Asset | Insight |",
+    "| --- | --- | --- |",
+    `| ${textValue(plan?.dailyWeeklyRoutine?.seasonalityAnalysis?.exampleMonth, "January")} | ${textValue(plan?.dailyWeeklyRoutine?.seasonalityAnalysis?.exampleAsset, "XAUUSD")} | ${textValue(plan?.dailyWeeklyRoutine?.seasonalityAnalysis?.exampleInsight, "Add a seasonality note relevant to the traded asset.")} |`,
     "",
-    heading("From Mohamad"),
-    textValue(plan?.fromMohamad),
+    textValue(plan?.dailyWeeklyRoutine?.seasonalityAnalysis?.closing),
+    "",
+    "---",
+    "",
+    "### 3. Economic Calendar",
+    bulletList(plan?.dailyWeeklyRoutine?.economicCalendar),
+    "",
+    "---",
+    "",
+    "### 4. Chart Analysis Process",
+    bulletList(plan?.dailyWeeklyRoutine?.chartAnalysisProcess),
+    "",
+    "---",
+    "",
+    "## Golden Advice",
+    "",
+    "### 1. Follow the Trend",
+    textValue(plan?.goldenAdvice?.followTheTrend?.intro),
+    "",
+    bulletList(plan?.goldenAdvice?.followTheTrend?.alignmentFactors),
+    "",
+    textValue(plan?.goldenAdvice?.followTheTrend?.closing),
+    "",
+    "---",
+    "",
+    "### 2. Execution at the Right Level",
+    textValue(plan?.goldenAdvice?.executionAtTheRightLevel?.intro),
+    "",
+    "#### Accumulation",
+    bulletList(plan?.goldenAdvice?.executionAtTheRightLevel?.accumulation, 1),
+    "",
+    "#### Manipulation",
+    bulletList(plan?.goldenAdvice?.executionAtTheRightLevel?.manipulation, 2),
+    "",
+    "#### Distribution",
+    bulletList(plan?.goldenAdvice?.executionAtTheRightLevel?.distribution, 2),
+    "",
+    "---",
+    "",
+    "## Biggest Blocker & Solution",
+    "",
+    "### Problem",
+    textValue(
+      plan?.biggestBlockerAndSolution?.problem,
+      assessment?.primaryWeakness?.label || "Biggest blocker to be refined during final review.",
+    ),
+    "",
+    "---",
+    "",
+    "### Solution Plan",
+    textList(plan?.biggestBlockerAndSolution?.solutionPlan, 4)
+      .map((item, index) => `${index + 1}. ${item}`)
+      .join("\n"),
+    "",
+    "---",
+    "",
+    "## Final Note",
+    "",
+    textValue(plan?.finalNote?.message),
+    "",
+    "### Your Commitment",
+    bulletList(plan?.finalNote?.commitment),
+    "",
+    "---",
   ].join("\n");
 }
 
@@ -367,6 +429,8 @@ const PAGE = {
 
 function normalizeInlineText(value) {
   return String(value || "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
     .replace(/\t+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -449,22 +513,30 @@ function cleanHeading(value) {
     .replace(/^\d+\.\s*/, "")
     .replace(/^[-*]\s+/, "")
     .replace(/\*\*/g, "")
+    .replace(/^📊\s*/, "")
+    .replace(/^🔍\s*/, "")
+    .replace(/^📌\s*/, "")
+    .replace(/^📅\s*/, "")
+    .replace(/^🏆\s*/, "")
+    .replace(/^🚧\s*/, "")
+    .replace(/^📣\s*/, "")
     .trim();
 }
 
 function drawPdfBrandMark({ x, y, size = 34 }) {
-  const glyphSize = size >= 40 ? 16 : 13;
-  const glyphX = x + (size >= 40 ? 11 : 8);
-  const glyphY = y + (size >= 40 ? 15 : 12);
-  const accentRadius = size >= 40 ? 4.5 : 3.25;
+  const accentSize = size >= 40 ? 9 : 8;
+  const accentOffset = size >= 40 ? 7 : 6;
+  const glyphSize = size >= 40 ? 15.5 : 12.8;
+  const glyphX = x + (size >= 40 ? 10.5 : 8);
+  const glyphY = y + (size >= 40 ? 15.5 : 12.5);
 
   return [
-    rect({ x, y, width: size, height: size, fill: PDF_COLORS.paper }),
-    outlineRect({ x, y, width: size, height: size, stroke: [0.82, 0.86, 0.92], lineWidth: 1 }),
+    rect({ x, y, width: size, height: size, fill: [0.985, 0.989, 0.997] }),
+    outlineRect({ x, y, width: size, height: size, stroke: [0.9, 0.92, 0.96], lineWidth: 1 }),
     diamond({
-      cx: x + size - (size >= 40 ? 8 : 7),
-      cy: y + size - (size >= 40 ? 8 : 7),
-      radius: accentRadius,
+      cx: x + size - accentOffset,
+      cy: y + size - accentOffset,
+      radius: accentSize / 2,
       fill: [0.79, 0.6, 0.27],
     }),
     text({ value: "AT", x: glyphX, y: glyphY, size: glyphSize, bold: true, fill: PDF_COLORS.ink }),
@@ -474,12 +546,12 @@ function drawPdfBrandMark({ x, y, size = 34 }) {
 function drawBrandHeader({ sectionLabel = "Tailored Action Plan" } = {}) {
   return [
     rect({ x: 0, y: 0, width: PAGE.width, height: PAGE.height, fill: PDF_COLORS.paper }),
-    rect({ x: 0, y: 772, width: PAGE.width, height: 70, fill: PDF_COLORS.ink }),
-    rect({ x: 0, y: 758, width: PAGE.width, height: 14, fill: PDF_COLORS.accent }),
-    ...drawPdfBrandMark({ x: 56, y: 788, size: 34 }),
-    text({ value: "ALBI TRUST", x: 104, y: 806, size: 15, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: "Tailored trading performance improvement", x: 104, y: 790, size: 8.5, fill: [0.84, 0.9, 0.97] }),
-    text({ value: sectionLabel.toUpperCase(), x: 438, y: 801, size: 8.5, bold: true, fill: PDF_COLORS.paper }),
+    rect({ x: 0, y: 772, width: PAGE.width, height: 70, fill: PDF_COLORS.paper }),
+    line({ x1: 56, y1: 770, x2: 556, y2: 770, stroke: PDF_COLORS.line }),
+    ...drawPdfBrandMark({ x: 56, y: 786, size: 38 }),
+    text({ value: "ALBI TRUST", x: 106, y: 808, size: 14.2, bold: true, fill: PDF_COLORS.ink }),
+    text({ value: "Tailored trading performance improvement", x: 106, y: 792, size: 8.2, fill: PDF_COLORS.softText }),
+    text({ value: sectionLabel.toUpperCase(), x: 441, y: 804, size: 8.2, bold: true, fill: PDF_COLORS.softText }),
   ];
 }
 
@@ -523,9 +595,15 @@ function parseDraftBlocks(draft) {
       continue;
     }
 
+    if (/^\s*---+\s*$/.test(trimmed)) {
+      blocks.push({ type: "divider" });
+      continue;
+    }
+
     const heading = cleanHeading(original);
     const isHeading = Boolean(heading) && (/^\s*(#{1,6}|\d+\.)/.test(original) || trimmed === trimmed.toUpperCase());
     const isBullet = /^\s*[-*]\s+/.test(original);
+    const isNumbered = /^\s*\d+\.\s+/.test(original);
 
     if (isHeading) {
       blocks.push({ type: "heading", text: heading });
@@ -537,166 +615,29 @@ function parseDraftBlocks(draft) {
       continue;
     }
 
+    if (isNumbered) {
+      const match = original.match(/^\s*(\d+)\.\s+(.*)$/);
+      blocks.push({
+        type: "numbered",
+        number: match?.[1] || "",
+        text: cleanHeading(match?.[2] || original),
+      });
+      continue;
+    }
+
     blocks.push({ type: "paragraph", text: normalizeInlineText(trimmed) });
   }
 
   return blocks;
 }
 
-function createCoverPage({ assessment, clientName, orderNumber, traderLevel, primaryWeakness, strongest, overallScore, categoryScores }) {
-  const commands = [
-    rect({ x: 0, y: 0, width: PAGE.width, height: PAGE.height, fill: PDF_COLORS.pageTint }),
-    rect({ x: 0, y: 500, width: PAGE.width, height: 342, fill: PDF_COLORS.ink }),
-    rect({ x: 0, y: 484, width: PAGE.width, height: 16, fill: PDF_COLORS.accent }),
-    ...drawPdfBrandMark({ x: 56, y: 730, size: 42 }),
-    text({ value: "ALBI TRUST", x: 114, y: 748, size: 16, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: "Tailored trading performance improvement", x: 114, y: 730, size: 8.8, fill: [0.84, 0.9, 0.97] }),
-    text({ value: "Tailored Action Plan", x: 56, y: 648, size: 31, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: `Structured diagnosis and improvement path for ${clientName}.`, x: 56, y: 620, size: 11, fill: [0.84, 0.9, 0.97] }),
-    text({ value: clientName, x: 56, y: 586, size: 18, bold: true, fill: PDF_COLORS.paper }),
-    text({ value: `Order ${orderNumber}`, x: 56, y: 566, size: 10.5, fill: [0.84, 0.9, 0.97] }),
-    rect({ x: 56, y: 512, width: 500, height: 64, fill: [0.98, 0.99, 1] }),
-    text({ value: "Client summary", x: 76, y: 552, size: 10, bold: true, fill: PDF_COLORS.softText }),
-    text({ value: traderLevel, x: 76, y: 526, size: 22, bold: true, fill: PDF_COLORS.ink }),
-  ];
-
-  if (overallScore !== null) {
-    commands.push(
-      text({ value: `Assessment score: ${overallScore}/100`, x: 390, y: 552, size: 10, bold: true, fill: PDF_COLORS.softText }),
-      rect({ x: 390, y: 520, width: 136, height: 16, fill: PDF_COLORS.line }),
-      rect({ x: 390, y: 520, width: Math.max(4, Math.round(136 * (overallScore / 100))), height: 16, fill: PDF_COLORS.accent }),
-    );
-  }
-
-  commands.push(
-    rect({ x: 56, y: 372, width: 238, height: 86, fill: PDF_COLORS.paper }),
-    text({ value: "Main blocker", x: 76, y: 430, size: 10, bold: true, fill: PDF_COLORS.softText }),
-    ...drawWrappedText({ value: primaryWeakness, x: 76, y: 402, size: 15, bold: true, maxLength: 28, lineHeight: 18, fill: PDF_COLORS.ink }).commands,
-    rect({ x: 318, y: 372, width: 238, height: 86, fill: PDF_COLORS.paper }),
-    text({ value: "Strongest area", x: 338, y: 430, size: 10, bold: true, fill: PDF_COLORS.softText }),
-    ...drawWrappedText({ value: strongest, x: 338, y: 402, size: 15, bold: true, maxLength: 28, lineHeight: 18, fill: PDF_COLORS.ink }).commands,
-    text({ value: "Score profile", x: 56, y: 330, size: 16, bold: true, fill: PDF_COLORS.ink }),
-  );
-
-  categoryScores.slice(0, 6).forEach((entry, index) => {
-    const y = 296 - index * 34;
-    const score = typeof entry.score === "number" ? Math.max(0, Math.min(100, entry.score)) : 0;
-    commands.push(
-      text({ value: entry.label || entry.key || "Category", x: 56, y: y + 7, size: 9.5, bold: true, fill: PDF_COLORS.body }),
-      rect({ x: 226, y, width: 250, height: 14, fill: PDF_COLORS.line }),
-      rect({ x: 226, y, width: Math.max(3, Math.round(250 * (score / 100))), height: 14, fill: PDF_COLORS.ink }),
-      text({ value: `${score}/100`, x: 490, y: y + 2, size: 8.5, bold: true, fill: PDF_COLORS.softText }),
-    );
-  });
-
-  if (assessment?.level?.focus) {
-    commands.push(
-      rect({ x: 56, y: 62, width: 500, height: 66, fill: PDF_COLORS.paper }),
-      text({ value: "Primary focus now", x: 76, y: 102, size: 10, bold: true, fill: PDF_COLORS.softText }),
-      ...drawWrappedText({
-        value: assessment.level.focus,
-        x: 76,
-        y: 79,
-        size: 11,
-        maxLength: 74,
-        lineHeight: 14,
-        fill: PDF_COLORS.body,
-      }).commands,
-    );
-  }
-
-  return commands;
-}
-
-function createDashboardPage() {
-  const dashboard = [
-    ...contentPageBase({ sectionLabel: "Action Dashboard" }),
-    text({ value: "How Albi Trust reviews a trader", x: 56, y: 716, size: 23, bold: true, fill: PDF_COLORS.ink }),
-    text({ value: "Every paid action plan is built around the same four pillars, then adapted to the client's reality.", x: 56, y: 692, size: 10.5, fill: PDF_COLORS.softText }),
-  ];
-
-  [
-    ["Technical analysis", "Chart clarity, higher-timeframe bias, execution timing, and whether the trader reads context properly."],
-    ["Risk management", "Position sizing, stop discipline, drawdown control, and whether capital is protected first."],
-    ["Trading plan", "Rules, routine, preparation quality, review process, and whether execution is actually repeatable."],
-    ["Psychology", "Loss acceptance, impulse control, patience, emotional regulation, and reaction after mistakes."],
-  ].forEach(([heading, body], index) => {
-    const x = index % 2 === 0 ? 56 : 316;
-    const y = index < 2 ? 554 : 404;
-    dashboard.push(
-      rect({ x, y, width: 240, height: 108, fill: PDF_COLORS.card }),
-      rect({ x, y: y + 98, width: 240, height: 10, fill: index % 2 === 0 ? PDF_COLORS.accent : PDF_COLORS.ink }),
-      text({ value: heading, x: x + 18, y: y + 68, size: 13, bold: true, fill: PDF_COLORS.ink }),
-      ...drawWrappedText({
-        value: body,
-        x: x + 18,
-        y: y + 43,
-        size: 9.5,
-        maxLength: 32,
-        lineHeight: 12.5,
-        fill: PDF_COLORS.body,
-      }).commands,
-    );
-  });
-
-  dashboard.push(
-    text({ value: "Routine structure we normally reinforce", x: 56, y: 340, size: 16, bold: true, fill: PDF_COLORS.ink }),
-    rect({ x: 56, y: 246, width: 145, height: 64, fill: PDF_COLORS.paper }),
-    text({ value: "Weekend review", x: 74, y: 284, size: 11.5, bold: true, fill: PDF_COLORS.ink }),
-    text({ value: "Bias, levels, calendar", x: 74, y: 264, size: 8.8, fill: PDF_COLORS.softText }),
-    rect({ x: 233, y: 246, width: 145, height: 64, fill: PDF_COLORS.paper }),
-    text({ value: "Daily prep", x: 251, y: 284, size: 11.5, bold: true, fill: PDF_COLORS.ink }),
-    text({ value: "Rules, timing, focus check", x: 251, y: 264, size: 8.8, fill: PDF_COLORS.softText }),
-    rect({ x: 410, y: 246, width: 145, height: 64, fill: PDF_COLORS.paper }),
-    text({ value: "Review + reminders", x: 428, y: 284, size: 11.5, bold: true, fill: PDF_COLORS.ink }),
-    text({ value: "Journal and phone prompts", x: 428, y: 264, size: 8.8, fill: PDF_COLORS.softText }),
-    line({ x1: 201, y1: 278, x2: 233, y2: 278, stroke: PDF_COLORS.accent, width: 3 }),
-    line({ x1: 378, y1: 278, x2: 410, y2: 278, stroke: PDF_COLORS.accent, width: 3 }),
-    rect({ x: 56, y: 108, width: 500, height: 94, fill: PDF_COLORS.cardStrong }),
-    text({ value: "What the plan should feel like", x: 76, y: 171, size: 11, bold: true, fill: PDF_COLORS.softText }),
-    ...drawWrappedText({
-      value: "Not generic motivation. The final action plan should read like a focused diagnosis and a realistic correction path: clear priorities, practical routines, capital protection, and behavior change linked to the trader's actual weaknesses.",
-      x: 76,
-      y: 146,
-      size: 10.5,
-      maxLength: 79,
-      lineHeight: 14,
-      fill: PDF_COLORS.body,
-    }).commands,
-  );
-
-  return dashboard;
-}
-
 function createDraftPdfBuffer({ draft, context }) {
-  const assessment = context?.order?.assessmentSnapshot || {};
-  const clientName = context?.order?.fullName || context?.order?.email || "Client";
-  const orderNumber = context?.order?.displayId || context?.order?.id || "";
-  const traderLevel = assessment.level?.title || context?.order?.traderLevel || "Not available";
-  const primaryWeakness = assessment.primaryWeakness?.label || "Not available";
-  const strongest = assessment.strongest?.label || "Not available";
-  const overallScore = typeof assessment.overallScore === "number" ? assessment.overallScore : null;
-  const categoryScores = Array.isArray(assessment.categoryScores) ? assessment.categoryScores : [];
   const pageStreams = [];
-  pageStreams.push(
-    createCoverPage({
-      assessment,
-      clientName,
-      orderNumber,
-      traderLevel,
-      primaryWeakness,
-      strongest,
-      overallScore,
-      categoryScores,
-    }).join("\n"),
-  );
-  pageStreams.push(createDashboardPage().join("\n"));
-
   const blocks = parseDraftBlocks(draft);
-  let page = contentPageBase({ sectionLabel: "Client Plan" });
-  let y = PAGE.top;
+  let page = contentPageBase({ sectionLabel: "Client Report" });
+  let y = 726;
 
-  function ensureSpace(requiredHeight, nextSectionLabel = "Client Plan") {
+  function ensureSpace(requiredHeight, nextSectionLabel = "Client Report") {
     if (y - requiredHeight >= PAGE.bottom) {
       return;
     }
@@ -712,18 +653,45 @@ function createDraftPdfBuffer({ draft, context }) {
       continue;
     }
 
+    if (block.type === "divider") {
+      ensureSpace(18, "Client Report");
+      page.push(line({ x1: 56, y1: y, x2: 556, y2: y, stroke: PDF_COLORS.line }));
+      y -= 18;
+      continue;
+    }
+
     if (block.type === "heading") {
-      ensureSpace(40, "Client Plan");
+      const isMainTitle = cleanHeading(block.text).toLowerCase() === "personalized trading action plan";
+
+      if (isMainTitle) {
+        ensureSpace(68, "Client Report");
+        page.push(
+          ...drawWrappedText({
+            value: block.text,
+            x: 56,
+            y,
+            size: 23,
+            bold: true,
+            maxLength: 36,
+            lineHeight: 26,
+            fill: PDF_COLORS.ink,
+          }).commands,
+        );
+        y -= 40;
+        continue;
+      }
+
+      ensureSpace(40, "Client Report");
       page.push(
-        rect({ x: 56, y: y - 8, width: 500, height: 30, fill: PDF_COLORS.card }),
-        rect({ x: 56, y: y - 8, width: 6, height: 30, fill: PDF_COLORS.accent }),
+        rect({ x: 56, y: y - 8, width: 500, height: 30, fill: [0.985, 0.989, 0.997] }),
+        rect({ x: 56, y: y - 8, width: 4, height: 30, fill: PDF_COLORS.accent }),
         ...drawWrappedText({
           value: block.text,
-          x: 74,
+          x: 72,
           y: y + 2,
           size: 13.5,
           bold: true,
-          maxLength: 56,
+          maxLength: 58,
           lineHeight: 16,
           fill: PDF_COLORS.ink,
         }).commands,
@@ -742,7 +710,7 @@ function createDraftPdfBuffer({ draft, context }) {
         lineHeight: 14,
         fill: PDF_COLORS.body,
       });
-      ensureSpace((wrapped.commands.length / 2) * 14 + 8, "Client Plan");
+      ensureSpace((wrapped.commands.length / 2) * 14 + 8, "Client Report");
       page.push(
         text({ value: "-", x: 72, y, size: 13, bold: true, fill: PDF_COLORS.accent }),
         ...drawWrappedText({
@@ -759,6 +727,25 @@ function createDraftPdfBuffer({ draft, context }) {
       continue;
     }
 
+    if (block.type === "numbered") {
+      const wrapped = drawWrappedText({
+        value: block.text,
+        x: 86,
+        y,
+        size: 10.4,
+        maxLength: 80,
+        lineHeight: 14,
+        fill: PDF_COLORS.body,
+      });
+      ensureSpace((wrapped.commands.length / 2) * 14 + 8, "Client Report");
+      page.push(
+        text({ value: `${block.number || ""}.`, x: 66, y, size: 10.6, bold: true, fill: PDF_COLORS.accent }),
+        ...wrapped.commands,
+      );
+      y = wrapped.y - 4;
+      continue;
+    }
+
     const paragraph = drawWrappedText({
       value: block.text,
       x: 56,
@@ -768,7 +755,7 @@ function createDraftPdfBuffer({ draft, context }) {
       lineHeight: 14,
       fill: PDF_COLORS.body,
     });
-    ensureSpace((paragraph.commands.length / 2) * 14 + 6, "Client Plan");
+    ensureSpace((paragraph.commands.length / 2) * 14 + 6, "Client Report");
     page.push(
       ...drawWrappedText({
         value: block.text,
