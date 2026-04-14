@@ -1176,9 +1176,13 @@ export async function uploadTailoredPlanPdf({ orderId, fileName, mimeType, dataB
     throw new Error("Paid order not found.");
   }
 
+  const normalizedMimeType = String(mimeType || "").trim().toLowerCase().startsWith("text/html")
+    ? "text/html; charset=utf-8"
+    : "application/pdf";
+
   order.actionPlanPdf = {
-    fileName: String(fileName || "albi-trust-action-plan.pdf"),
-    mimeType: mimeType === "application/pdf" ? mimeType : "application/pdf",
+    fileName: String(fileName || (normalizedMimeType.startsWith("text/html") ? "albi-trust-action-plan-report.html" : "albi-trust-action-plan.pdf")),
+    mimeType: normalizedMimeType,
     dataBase64,
     size: Number(size || 0),
     uploadedAt: new Date().toISOString(),
@@ -1203,12 +1207,12 @@ export async function getTailoredPlanPdfForUser({ orderId, userId }) {
   }
 
   if (!order.actionPlanPdf?.dataBase64) {
-    throw new Error("Action plan PDF is not ready yet.");
+    throw new Error("Action plan report is not ready yet.");
   }
 
   return {
-    fileName: order.actionPlanPdf.fileName || "albi-trust-action-plan.pdf",
-    mimeType: order.actionPlanPdf.mimeType || "application/pdf",
+    fileName: order.actionPlanPdf.fileName || "albi-trust-action-plan-report.html",
+    mimeType: order.actionPlanPdf.mimeType || "text/html; charset=utf-8",
     dataBase64: order.actionPlanPdf.dataBase64,
   };
 }

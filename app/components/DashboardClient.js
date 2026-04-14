@@ -270,7 +270,7 @@ export function DashboardClient() {
             ) : null}
             <div className="stack-actions" style={{ marginTop: 16 }}>
               {actionPlanOrder.downloadUrl ? (
-                <a href={actionPlanOrder.downloadUrl} className="button-primary" target="_blank" rel="noreferrer">
+                <a href={`/action-plans/${actionPlanOrder.id}`} className="button-primary">
                   Open report
                 </a>
               ) : (
