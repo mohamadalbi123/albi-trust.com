@@ -15,13 +15,15 @@ export async function GET(request, { params }) {
     }
 
     const { orderId } = await params;
-    const pdf = await getTailoredPlanPdfForUser({ orderId, userId: user.id });
-    const buffer = Buffer.from(pdf.dataBase64, "base64");
+    const report = await getTailoredPlanPdfForUser({ orderId, userId: user.id });
+    const buffer = Buffer.from(report.dataBase64, "base64");
+    const mimeType = String(report.mimeType || "application/octet-stream");
+    const disposition = mimeType.startsWith("text/html") ? "inline" : "attachment";
 
     return new NextResponse(buffer, {
       headers: {
-        "Content-Type": pdf.mimeType,
-        "Content-Disposition": `attachment; filename="${safeFileName(pdf.fileName)}"`,
+        "Content-Type": mimeType,
+        "Content-Disposition": `${disposition}; filename="${safeFileName(report.fileName)}"`,
         "Content-Length": String(buffer.length),
       },
     });
