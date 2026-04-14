@@ -1201,8 +1201,9 @@ export async function getTailoredPlanPdfForUser({ orderId, userId }) {
   }
 
   const order = (db.orders || []).find((entry) => entry.id === orderId && entry.status === "paid");
+  const orderOwner = order ? findUserByAnyId(db, order.userId) : null;
 
-  if (!order || order.userId !== currentUser.id) {
+  if (!order || !orderOwner || orderOwner.id !== currentUser.id) {
     throw new Error("Action plan not found.");
   }
 
