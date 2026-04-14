@@ -271,11 +271,11 @@ export function DashboardClient() {
             <div className="stack-actions" style={{ marginTop: 16 }}>
               {actionPlanOrder.downloadUrl ? (
                 <a href={actionPlanOrder.downloadUrl} className="button-primary">
-                  Download PDF
+                  Download report
                 </a>
               ) : (
                 <span className="button-secondary disabled-button" aria-disabled="true">
-                  PDF ready soon
+                  Report ready soon
                 </span>
               )}
             </div>

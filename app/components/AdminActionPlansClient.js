@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "./useCurrentUser";
+import { renderActionPlanReportHtml } from "../lib/actionPlanReport";
 
 const ADMIN_EMAIL = "mohalbi123@hotmail.com";
 
@@ -77,14 +78,11 @@ export function AdminActionPlansClient() {
   const [uploadingOrderId, setUploadingOrderId] = useState("");
   const [activeUserAction, setActiveUserAction] = useState("");
   const [generatingOrderId, setGeneratingOrderId] = useState("");
-  const [revisingDraft, setRevisingDraft] = useState(false);
-  const [chattingWithAi, setChattingWithAi] = useState(false);
-  const [previewingPdf, setPreviewingPdf] = useState(false);
+  const [applyingAdjustment, setApplyingAdjustment] = useState(false);
   const [deliveringDraft, setDeliveringDraft] = useState(false);
   const [generatorDraft, setGeneratorDraft] = useState("");
   const [generatorOrder, setGeneratorOrder] = useState(null);
   const [generatorPrompt, setGeneratorPrompt] = useState("");
-  const [generatorChat, setGeneratorChat] = useState([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
@@ -243,7 +241,6 @@ export function AdminActionPlansClient() {
     setNotice("");
     setGeneratorDraft("");
     setGeneratorOrder(null);
-    setGeneratorChat([]);
     setGeneratingOrderId(orderId);
 
     try {
@@ -263,8 +260,7 @@ export function AdminActionPlansClient() {
 
       setGeneratorDraft(data.draft || "");
       setGeneratorOrder(data.order || null);
-      setGeneratorChat([]);
-      setNotice("Draft generated. Review and edit it before creating the PDF.");
+      setNotice("Draft generated. Review the report, then apply any adjustment you want.");
     } catch {
       setError("Unable to generate action plan draft.");
     } finally {
@@ -272,25 +268,22 @@ export function AdminActionPlansClient() {
     }
   }
 
-  async function reviseActionPlanDraft() {
+  async function applyAiAdjustment() {
     if (!generatorOrder?.id || !generatorDraft.trim()) {
       setError("Generate a draft first.");
       return;
     }
 
-    const revisionInstruction =
-      generatorPrompt.trim() ||
-      [...generatorChat].reverse().find((entry) => entry.role === "admin")?.content ||
-      "";
+    const revisionInstruction = generatorPrompt.trim();
 
     if (!revisionInstruction) {
-      setError("Tell the model what to change first.");
+      setError("Type the adjustment you want first.");
       return;
     }
 
     setError("");
     setNotice("");
-    setRevisingDraft(true);
+    setApplyingAdjustment(true);
 
     try {
       const response = await fetch("/api/admin/action-plan-generator", {
@@ -301,7 +294,6 @@ export function AdminActionPlansClient() {
           orderId: generatorOrder.id,
           draft: generatorDraft,
           instructions: revisionInstruction,
-          chatHistory: generatorChat,
         }),
       });
       const data = await response.json();
@@ -313,148 +305,41 @@ export function AdminActionPlansClient() {
 
       setGeneratorDraft(data.draft || generatorDraft);
       setGeneratorOrder(data.order || generatorOrder);
-      setGeneratorChat((prev) => [
-        ...prev,
-        ...(generatorPrompt.trim()
-          ? [{ role: "admin", content: revisionInstruction }]
-          : []),
-        {
-          role: "model",
-          content: "Draft updated with your requested change. Review it and keep chatting if you want more adjustments.",
-        },
-      ]);
       setGeneratorPrompt("");
-      setNotice("Draft revised. Review it before delivery.");
+      setNotice("Adjustment applied to the report.");
     } catch {
       setError("Unable to revise action plan draft.");
     } finally {
-      setRevisingDraft(false);
+      setApplyingAdjustment(false);
     }
   }
 
-  async function askGeneratorAssistant() {
+  function openPrintableReport() {
     if (!generatorOrder?.id || !generatorDraft.trim()) {
       setError("Generate a draft first.");
       return;
     }
 
-    if (!generatorPrompt.trim()) {
-      setError("Type a message for the AI first.");
-      return;
-    }
-
     setError("");
     setNotice("");
-    setChattingWithAi(true);
-    const nextMessage = generatorPrompt.trim();
-
-    try {
-      const response = await fetch("/api/admin/action-plan-generator", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          orderId: generatorOrder.id,
-          draft: generatorDraft,
-          instructions: nextMessage,
-          chatHistory: generatorChat,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Unable to chat with the AI.");
-        return;
-      }
-
-      setGeneratorChat((prev) => [
-        ...prev,
-        { role: "admin", content: nextMessage },
-        { role: "model", content: data.reply || "No reply returned." },
-      ]);
-      setGeneratorPrompt("");
-      setNotice("AI reply added. If you want those ideas inside the document, click Apply to draft.");
-    } catch {
-      setError("Unable to chat with the AI.");
-    } finally {
-      setChattingWithAi(false);
-    }
-  }
-
-  function openBase64Pdf({ dataBase64, fileName, previewWindow }) {
-    const binary = window.atob(dataBase64);
-    const bytes = new Uint8Array(binary.length);
-
-    for (let index = 0; index < binary.length; index += 1) {
-      bytes[index] = binary.charCodeAt(index);
-    }
-
-    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    if (previewWindow && !previewWindow.closed) {
-      previewWindow.location.href = url;
-      previewWindow.document.title = fileName || "albi-trust-action-plan-preview.pdf";
-    } else {
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.target = "_blank";
-      link.rel = "noreferrer";
-      link.title = fileName || "albi-trust-action-plan-preview.pdf";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }
-
-    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  async function previewGeneratedPdf() {
-    if (!generatorOrder?.id || !generatorDraft.trim()) {
-      setError("Generate or paste a draft first.");
-      return;
-    }
-
-    setError("");
-    setNotice("");
-    setPreviewingPdf(true);
+    const reportHtml = renderActionPlanReportHtml({
+      draft: generatorDraft,
+      clientName: generatorOrder.fullName || generatorOrder.email || "Albi Trust Report",
+      reportLabel: "Client Report",
+      showToolbar: true,
+    });
     const previewWindow = window.open("", "_blank");
 
-    if (previewWindow) {
-      previewWindow.opener = null;
-      previewWindow.document.write("<title>Preparing PDF preview...</title><p style=\"font-family:system-ui;padding:24px\">Preparing PDF preview...</p>");
-      previewWindow.document.close();
+    if (!previewWindow) {
+      setError("Unable to open the printable report window.");
+      return;
     }
 
-    try {
-      const response = await fetch("/api/admin/action-plan-generator", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "preview_pdf",
-          orderId: generatorOrder.id,
-          draft: generatorDraft,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (previewWindow && !previewWindow.closed) {
-          previewWindow.close();
-        }
-        setError(data.error || "Unable to preview PDF.");
-        return;
-      }
-
-      openBase64Pdf({ ...data, previewWindow });
-      setNotice("PDF preview opened. Review it before delivery.");
-    } catch {
-      if (previewWindow && !previewWindow.closed) {
-        previewWindow.close();
-      }
-      setError("Unable to preview PDF.");
-    } finally {
-      setPreviewingPdf(false);
-    }
+    previewWindow.opener = null;
+    previewWindow.document.open();
+    previewWindow.document.write(reportHtml);
+    previewWindow.document.close();
+    setNotice("Printable report opened. You can print or save it as PDF from your browser.");
   }
 
   async function deliverGeneratedDraft() {
@@ -463,7 +348,7 @@ export function AdminActionPlansClient() {
       return;
     }
 
-    if (!window.confirm("Deliver this draft as the client's PDF action plan?")) {
+    if (!window.confirm("Deliver this report to the client dashboard?")) {
       return;
     }
 
@@ -490,13 +375,23 @@ export function AdminActionPlansClient() {
 
       await loadAdminData("generator");
       setGeneratorOrder(data.order || generatorOrder);
-      setNotice("Draft saved as PDF and delivered to the client dashboard.");
+      setNotice("Report delivered to the client dashboard.");
     } catch {
       setError("Unable to deliver draft.");
     } finally {
       setDeliveringDraft(false);
     }
   }
+
+  const reportPreviewHtml =
+    generatorOrder?.id && generatorDraft.trim()
+      ? renderActionPlanReportHtml({
+          draft: generatorDraft,
+          clientName: generatorOrder.fullName || generatorOrder.email || "Albi Trust Report",
+          reportLabel: "Client Report",
+          showToolbar: false,
+        })
+      : "";
 
   useEffect(() => {
     if (isAdmin) {
@@ -517,7 +412,7 @@ export function AdminActionPlansClient() {
       <section className="result-shell admin-action-plan-shell">
         <h1 className="page-title">Sign in as admin.</h1>
         <p className="page-lead">
-          Use the admin email and password to manage action-plan PDFs.
+          Use the admin email and password to manage action-plan reports.
         </p>
         <form className="auth-fields admin-login-form" style={{ marginTop: 24 }} onSubmit={handleAdminLogin}>
           <label className="form-field">
@@ -550,7 +445,7 @@ export function AdminActionPlansClient() {
   return (
     <section className="result-shell admin-action-plan-shell">
       <h1 className="page-title">Admin page.</h1>
-      <p className="page-lead">Manage paid orders, client records, and action-plan PDFs.</p>
+      <p className="page-lead">Manage paid orders, client records, and action-plan reports.</p>
 
       <div className="stack-actions" style={{ marginTop: 24 }}>
         <button
@@ -803,18 +698,18 @@ export function AdminActionPlansClient() {
                   <button
                     type="button"
                     className="button-secondary"
-                    onClick={previewGeneratedPdf}
-                    disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
+                    onClick={openPrintableReport}
+                    disabled={!generatorOrder?.id || !generatorDraft.trim() || applyingAdjustment || deliveringDraft}
                   >
-                    {previewingPdf ? "Opening preview..." : "Preview PDF"}
+                    Open printable report
                   </button>
                   <button
                     type="button"
                     className="button-primary"
                     onClick={deliverGeneratedDraft}
-                    disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
+                    disabled={!generatorOrder?.id || !generatorDraft.trim() || applyingAdjustment || deliveringDraft}
                   >
-                    {deliveringDraft ? "Delivering..." : "Save as PDF and deliver"}
+                    {deliveringDraft ? "Delivering..." : "Deliver report"}
                   </button>
                 </div>
               </div>
@@ -822,55 +717,27 @@ export function AdminActionPlansClient() {
               <div className="admin-generator-panels">
                 <div className="action-card admin-generator-chat-panel">
                   <div className="admin-generator-subhead">
-                    <strong>Conversation</strong>
-                    <p className="muted">Discuss additions, tone, diagnosis strength, and structure here. The model replies in the conversation area below.</p>
-                  </div>
-                  <div className="admin-generator-chat-thread">
-                    {generatorChat.length ? (
-                      <div className="admin-generator-chat">
-                        {generatorChat.map((entry, index) => (
-                          <div
-                            key={`${entry.role}-${index}`}
-                            className={`admin-generator-chat-bubble ${entry.role === "admin" ? "is-admin" : "is-model"}`}
-                          >
-                            <strong>{entry.role === "admin" ? "You" : "Model"}</strong>
-                            <p>{entry.content}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="admin-generator-chat-empty">
-                        <strong>No conversation yet</strong>
-                        <p className="muted">Ask the model what to add, remove, or improve once you have generated a draft.</p>
-                      </div>
-                    )}
+                    <strong>Adjustment Request</strong>
+                    <p className="muted">Type one clear instruction and the AI will update the report draft directly.</p>
                   </div>
                   <div className="admin-generator-prompt">
                     <label className="form-field">
-                      <span>Message</span>
+                      <span>What should change?</span>
                       <textarea
                         className="admin-generator-small-textarea"
                         value={generatorPrompt}
                         onChange={(event) => setGeneratorPrompt(event.target.value)}
-                        placeholder="Example: Add a stronger diagnosis about revenge trading, make the tone more direct, and mention London session timing."
+                        placeholder="Example: Make the psychology section more direct, mention London session timing, and tighten the blocker solution."
                       />
                     </label>
                     <div className="admin-generator-prompt-actions">
                       <button
                         type="button"
                         className="button-primary"
-                        onClick={askGeneratorAssistant}
-                        disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || chattingWithAi || revisingDraft || previewingPdf || deliveringDraft}
+                        onClick={applyAiAdjustment}
+                        disabled={!generatorOrder?.id || !generatorDraft.trim() || !generatorPrompt.trim() || applyingAdjustment || deliveringDraft}
                       >
-                        {chattingWithAi ? "Sending..." : "Send"}
-                      </button>
-                      <button
-                        type="button"
-                        className="button-secondary"
-                        onClick={reviseActionPlanDraft}
-                        disabled={!generatorOrder?.id || !generatorDraft.trim() || revisingDraft || chattingWithAi || previewingPdf || deliveringDraft}
-                      >
-                        {revisingDraft ? "Updating..." : "Update draft"}
+                        {applyingAdjustment ? "Applying..." : "Apply AI adjustment"}
                       </button>
                     </div>
                   </div>
@@ -878,8 +745,24 @@ export function AdminActionPlansClient() {
 
                 <div className="action-card admin-generator-draft-card">
                   <div className="admin-generator-subhead">
-                    <strong>Draft Action Plan</strong>
-                    <p className="muted">Edit manually if needed, then preview or deliver when it looks right.</p>
+                    <strong>Live Report Preview</strong>
+                    <p className="muted">This is the professional HTML report layout that can be printed or saved as PDF.</p>
+                  </div>
+                  {reportPreviewHtml ? (
+                    <iframe
+                      title="Action plan report preview"
+                      className="admin-generator-preview-frame"
+                      srcDoc={reportPreviewHtml}
+                    />
+                  ) : (
+                    <div className="admin-generator-chat-empty">
+                      <strong>No report yet</strong>
+                      <p className="muted">Select a paid order and generate the first draft to see the final report layout.</p>
+                    </div>
+                  )}
+                  <div className="admin-generator-subhead" style={{ marginTop: 18 }}>
+                    <strong>Report Draft</strong>
+                    <p className="muted">You can still edit the source text manually if you want.</p>
                   </div>
                   <textarea
                     className="admin-generator-draft"

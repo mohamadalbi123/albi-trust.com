@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getSessionCookieName, getTailoredPlanPdfForUser, getUserFromSessionToken } from "../../../../lib/localAuth";
 
 function safeFileName(value) {
-  const name = String(value || "albi-trust-action-plan.pdf").replace(/[^a-z0-9._-]+/gi, "-");
-  return name.toLowerCase().endsWith(".pdf") ? name : `${name}.pdf`;
+  const name = String(value || "albi-trust-action-plan-report.html").replace(/[^a-z0-9._-]+/gi, "-");
+  return name || "albi-trust-action-plan-report.html";
 }
 
 export async function GET(request, { params }) {
@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unable to download PDF." },
+      { error: error instanceof Error ? error.message : "Unable to download report." },
       { status: 400 },
     );
   }
