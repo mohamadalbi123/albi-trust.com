@@ -3,6 +3,30 @@ import { HomeHeroCard } from "./components/HomeHeroCard";
 import { SiteHeader } from "./components/SiteHeader";
 import { SiteFooter } from "./components/SiteFooter";
 import { TypewriterText } from "./components/TypewriterText";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "./lib/site";
+
+export const metadata = {
+  title: "Free Trading Assessment For Struggling Traders",
+  description:
+    "A free trading assessment for traders who are not yet consistently profitable. Discover your level, your biggest blocker, and your next step.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Free Trading Assessment For Struggling Traders",
+    description:
+      "Discover your biggest trading blocker and understand what is really holding you back.",
+    url: absoluteUrl("/"),
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free Trading Assessment For Struggling Traders",
+    description:
+      "Take the free assessment and understand your trader level and biggest blocker.",
+    images: [DEFAULT_OG_IMAGE],
+  },
+};
 
 export default function HomePage() {
   return (

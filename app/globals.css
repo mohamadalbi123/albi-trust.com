@@ -1888,6 +1888,23 @@ select {
   background: #ffffff;
 }
 
+.seo-landing-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.seo-metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seo-section {
+  padding-top: 8px;
+}
+
+.seo-cta-section {
+  padding-bottom: 12px;
+}
+
 .site-footer-inner {
   display: flex;
   align-items: center;

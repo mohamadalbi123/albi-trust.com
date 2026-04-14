@@ -3,6 +3,14 @@ import { CheckoutClient } from "../components/CheckoutClient";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 
+export const metadata = {
+  title: "Checkout",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function CheckoutPage() {
   return (
     <main className="app-shell">

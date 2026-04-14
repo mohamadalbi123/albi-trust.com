@@ -3,6 +3,14 @@ import { DashboardClient } from "../components/DashboardClient";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 
+export const metadata = {
+  title: "Dashboard",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function DashboardPage() {
   return (
     <main className="app-shell">
