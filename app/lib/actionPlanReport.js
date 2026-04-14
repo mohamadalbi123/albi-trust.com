@@ -542,7 +542,7 @@ export function renderActionPlanReportHtml({ draft, clientName, reportLabel = "C
             </span>
             <div class="report-brand-copy">
               <strong>Albi Trust</strong>
-              <span>Tailored trading performance improvement</span>
+              <span>Personalized Trading Action Plan</span>
             </div>
           </div>
         </header>
