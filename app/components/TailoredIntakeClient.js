@@ -287,7 +287,7 @@ export function TailoredIntakeClient() {
   const [form, setForm] = useState({
     tradingYears: "",
     profitableBefore: "",
-    traderWeaknesses: [],
+    traderWeaknesses: ["", "", ""],
     otherTraderWeakness: "",
     previousExperience: "",
     currentWorkStatus: "",
@@ -346,14 +346,16 @@ export function TailoredIntakeClient() {
     });
   }
 
-  function updateTraderWeaknesses(selectedOptions) {
+  function updateTraderWeaknessAt(index, value) {
     setStepError("");
-    const nextValues = selectedOptions.slice(0, 3);
+    const nextWeaknesses = form.traderWeaknesses.map((entry, entryIndex) => (
+      entryIndex === index ? value : entry
+    ));
 
     setForm((prev) => ({
       ...prev,
-      traderWeaknesses: nextValues,
-      otherTraderWeakness: nextValues.includes("Other (please specify)") ? prev.otherTraderWeakness : "",
+      traderWeaknesses: nextWeaknesses,
+      otherTraderWeakness: nextWeaknesses.includes("Other (please specify)") ? prev.otherTraderWeakness : "",
     }));
   }
 
@@ -408,12 +410,14 @@ export function TailoredIntakeClient() {
         return "Complete the core trading profile first so we can diagnose your style properly.";
       }
 
-      if (form.traderWeaknesses.length !== 3) {
-        return "Choose exactly 3 trading weaknesses so the plan can target the right problems first.";
+      const selectedWeaknesses = form.traderWeaknesses.filter(Boolean);
+
+      if (!selectedWeaknesses.length) {
+        return "Choose at least one trading weakness so the plan can target the right problem first.";
       }
 
       if (
-        form.traderWeaknesses.includes("Other (please specify)") &&
+        selectedWeaknesses.includes("Other (please specify)") &&
         !isFilled(form.otherTraderWeakness)
       ) {
         return "Add a short note for the 'Other' weakness you selected.";
@@ -649,27 +653,40 @@ export function TailoredIntakeClient() {
             <span className="intake-field-label">
               If you had to be brutally honest, what are your biggest 3 weaknesses as a trader?
             </span>
-            <select
-              className="tailored-mobile-select"
-              multiple
-              size={8}
-              value={form.traderWeaknesses}
-              onChange={(event) => {
-                const selectedValues = Array.from(event.target.selectedOptions, (option) => option.value);
-                updateTraderWeaknesses(selectedValues);
-              }}
-            >
-              {TRADER_WEAKNESS_OPTIONS.map((option) => (
-                <option
-                  key={option}
-                  value={option}
-                  disabled={!form.traderWeaknesses.includes(option) && form.traderWeaknesses.length >= 3}
-                >
-                  {option}
-                </option>
-              ))}
-            </select>
-            <small>Select exactly 3. On desktop, hold Command or Ctrl to choose multiple.</small>
+            <div className="tailored-question-grid">
+              {[0, 1, 2].map((index) => {
+                const currentValue = form.traderWeaknesses[index] || "";
+
+                return (
+                  <label key={index} className="form-field tailored-question-block">
+                    <span className="intake-field-label">
+                      {index === 0 ? "Weakness 1" : `Weakness ${index + 1} (optional)`}
+                    </span>
+                    <select
+                      className="tailored-mobile-select"
+                      value={currentValue}
+                      onChange={(event) => updateTraderWeaknessAt(index, event.target.value)}
+                    >
+                      <option value="">
+                        {index === 0 ? "Select at least one weakness" : "Optional"}
+                      </option>
+                      {TRADER_WEAKNESS_OPTIONS.map((option) => (
+                        <option
+                          key={`${index}-${option}`}
+                          value={option}
+                          disabled={form.traderWeaknesses.some((entry, entryIndex) => (
+                            entryIndex !== index && entry === option
+                          ))}
+                        >
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              })}
+            </div>
+            <small>You can choose up to 3 weaknesses. At least 1 is required.</small>
           </label>
 
           {form.traderWeaknesses.includes("Other (please specify)") ? (
