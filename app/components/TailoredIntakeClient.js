@@ -651,7 +651,7 @@ export function TailoredIntakeClient() {
 
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">
-              If you had to be brutally honest, what are your biggest 3 weaknesses as a trader?
+              If you had to be brutally honest, what are your biggest trading blockers right now?
             </span>
             <div className="tailored-question-grid">
               {[0, 1, 2].map((index) => {
@@ -660,7 +660,7 @@ export function TailoredIntakeClient() {
                 return (
                   <label key={index} className="form-field tailored-question-block">
                     <span className="intake-field-label">
-                      {index === 0 ? "Weakness 1" : `Weakness ${index + 1} (optional)`}
+                      {index === 0 ? "Blocker 1" : `Blocker ${index + 1} (optional)`}
                     </span>
                     <select
                       className="tailored-mobile-select"
