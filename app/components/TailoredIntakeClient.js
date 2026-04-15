@@ -443,7 +443,7 @@ export function TailoredIntakeClient() {
     }
 
     if (stepId === "reality") {
-      if (!form.currentWorkStatus || !form.dependsOnTradingIncome) {
+      if (!form.dependsOnTradingIncome) {
         return "Complete the personal reality questions so the plan can fit your routine.";
       }
 
@@ -846,16 +846,7 @@ export function TailoredIntakeClient() {
         <>
           <div className="tailored-question-grid">
             {renderSingleChoiceField({
-              label: "Current work status",
-              value: form.currentWorkStatus,
-              options: STEP_OPTIONS.currentWorkStatus,
-              onSelect: (value) => updateField("currentWorkStatus", value),
-              compact: true,
-              placeholder: "Select status",
-            })}
-
-            {renderSingleChoiceField({
-              label: "Do you depend on trading income?",
+              label: "Is trading your main source of income?",
               value: form.dependsOnTradingIncome,
               options: STEP_OPTIONS.dependsOnTradingIncome,
               onSelect: (value) => updateField("dependsOnTradingIncome", value),
