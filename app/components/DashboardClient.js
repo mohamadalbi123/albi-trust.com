@@ -250,20 +250,26 @@ export function DashboardClient() {
               </div>
               <div className="metric action-plan-date-metric">
                 <span>
-                  Estimated ready
-                  <button
-                    type="button"
-                    className="delivery-why-button"
-                    onClick={() => setShowDeliveryReason((prev) => !prev)}
-                    aria-expanded={showDeliveryReason}
-                  >
-                    Why?
-                  </button>
+                  {actionPlanOrder.status === "ready" ? (
+                    "Delivered on"
+                  ) : (
+                    <>
+                      Estimated delivery
+                      <button
+                        type="button"
+                        className="delivery-why-button"
+                        onClick={() => setShowDeliveryReason((prev) => !prev)}
+                        aria-expanded={showDeliveryReason}
+                      >
+                        Why?
+                      </button>
+                    </>
+                  )}
                 </span>
-                <strong>{formatDate(actionPlanOrder.estimatedReadyAt)}</strong>
+                <strong>{formatDate(actionPlanOrder.status === "ready" ? actionPlanOrder.uploadedAt : actionPlanOrder.estimatedReadyAt)}</strong>
               </div>
             </div>
-            {showDeliveryReason ? (
+            {actionPlanOrder.status !== "ready" && showDeliveryReason ? (
               <p className="delivery-reason">
                 We study your case carefully before writing the action plan. This includes your assessment answers, trading profile, strategy notes, screenshots, and the information you shared at checkout. A useful plan needs careful review and clear thinking, not a rushed one-hour template.
               </p>
