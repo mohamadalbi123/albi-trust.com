@@ -261,7 +261,8 @@ function reportStyles(showToolbar) {
       width: 210mm;
       min-height: 297mm;
       margin: 0 auto;
-      background: #ffffff;
+      background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+      border: 1px solid rgba(16, 33, 63, 0.08);
       box-shadow: 0 28px 80px rgba(16, 33, 63, 0.16);
       padding: 0 16mm 20mm;
     }
@@ -279,6 +280,16 @@ function reportStyles(showToolbar) {
       margin-right: -16mm;
       padding-left: 16mm;
       padding-right: 16mm;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .report-header::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(215, 176, 106, 0), rgba(215, 176, 106, 0.95) 22%, rgba(215, 176, 106, 0.55) 72%, rgba(215, 176, 106, 0));
     }
 
     .report-brand {
@@ -310,25 +321,28 @@ function reportStyles(showToolbar) {
 
     .report-brand-copy {
       display: grid;
-      gap: 4px;
+      gap: 6px;
     }
 
     .report-brand-copy strong {
-      font-size: 1.05rem;
-      letter-spacing: 0.05em;
+      font-size: 1.34rem;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #ffffff;
+      line-height: 1;
     }
 
     .report-brand-copy span {
-      color: rgba(233, 240, 250, 0.82);
-      font-size: 0.9rem;
+      color: rgba(239, 244, 252, 0.92);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.015em;
     }
 
     .report-intro {
-      margin-top: -6px;
-      margin-bottom: 22px;
-      padding: 0 0 18px;
+      margin-top: 0;
+      margin-bottom: 26px;
+      padding: 0 0 20px;
       border-bottom: 1px solid var(--report-line);
     }
 
@@ -342,6 +356,10 @@ function reportStyles(showToolbar) {
       color: #395279;
     }
 
+    .report-intro .report-meta-line:last-child {
+      margin-bottom: 0;
+    }
+
     .report-h1,
     .report-h2,
     .report-h3,
@@ -353,9 +371,10 @@ function reportStyles(showToolbar) {
     }
 
     .report-h1 {
-      font-size: 2rem;
-      line-height: 1.15;
-      margin-bottom: 16px;
+      font-size: 2.18rem;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      letter-spacing: -0.02em;
     }
 
     .report-h2 {
@@ -399,6 +418,8 @@ function reportStyles(showToolbar) {
 
     .report-meta-line strong {
       color: var(--report-ink);
+      min-width: 126px;
+      display: inline-block;
     }
 
     .report-divider {
@@ -420,11 +441,12 @@ function reportStyles(showToolbar) {
     }
 
     .report-table-wrap {
-      margin: 14px 0 16px;
+      margin: 16px 0 18px;
       border: 1px solid var(--report-line);
       border-radius: 16px;
       overflow: hidden;
       page-break-inside: avoid;
+      box-shadow: 0 10px 28px rgba(16, 33, 63, 0.06);
     }
 
     .report-table {
@@ -484,6 +506,7 @@ function reportStyles(showToolbar) {
         min-height: auto;
         margin: 0;
         box-shadow: none;
+        border: 0;
         padding: 14mm 14mm 16mm;
       }
 
