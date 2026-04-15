@@ -2920,6 +2920,41 @@ select {
     padding: 18px 14px 60px;
   }
 
+  .home-page {
+    border-radius: 24px;
+  }
+
+  .hero-copy.hero-copy-minimal {
+    padding: 22px 18px 20px;
+  }
+
+  .hero-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .hero-metric {
+    min-height: 112px;
+    padding: 14px 10px;
+    border-radius: 22px;
+    text-align: center;
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+  }
+
+  .hero-metric strong {
+    font-size: 2.1rem;
+    margin-bottom: 2px;
+  }
+
+  .hero-metric span {
+    font-size: 0.84rem;
+    line-height: 1.22;
+    text-align: center;
+  }
+
   .nav-links {
     flex-wrap: wrap;
     gap: 10px 14px;

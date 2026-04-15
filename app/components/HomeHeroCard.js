@@ -66,11 +66,11 @@ export function HomeHeroCard() {
         </div>
         <div className="hero-metric hero-metric-step-2">
           <strong>4</strong>
-          <span>Trader levels</span>
+          <span>Levels</span>
         </div>
         <div className="hero-metric hero-metric-step-3">
           <strong>1</strong>
-          <span>Clear next step</span>
+          <span>Next step</span>
         </div>
       </div>
     </div>
