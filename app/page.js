@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { HomeHeroCard } from "./components/HomeHeroCard";
+import { HomeVisitPopup } from "./components/HomeVisitPopup";
 import { SiteHeader } from "./components/SiteHeader";
 import { SiteFooter } from "./components/SiteFooter";
-import { TypewriterText } from "./components/TypewriterText";
 import { absoluteUrl, DEFAULT_OG_IMAGE } from "./lib/site";
 
 export const metadata = {
@@ -31,6 +31,7 @@ export const metadata = {
 export default function HomePage() {
   return (
     <main className="app-shell home-page">
+      <HomeVisitPopup />
       <SiteHeader />
 
       <section className="hero hero-minimal">
@@ -83,11 +84,6 @@ export default function HomePage() {
                 <p className="muted">
                   The goal is not to sell recycled trading lessons. It is to diagnose the real problem, understand the trader’s level and personal situation, and build a clear, doable, personalized action plan.
                 </p>
-                <TypewriterText
-                  className="muted home-typewriter"
-                  speed={16}
-                  text="When we go to a doctor, we do not all receive the same prescription, because not everyone is suffering from the same pain. Trading is no different. One trader may struggle with overtrading, while another struggles with fear of execution. Albi Trust is here to study your exact pain and give you a more tailored prescription."
-                />
               </div>
 
               <div className="split-card split-card-plain">
