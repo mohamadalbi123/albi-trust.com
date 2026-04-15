@@ -413,14 +413,14 @@ export function TailoredIntakeClient() {
       const selectedWeaknesses = form.traderWeaknesses.filter(Boolean);
 
       if (!selectedWeaknesses.length) {
-        return "Choose at least one trading weakness so the plan can target the right problem first.";
+        return "Choose at least one trading blocker so the plan can target the right problem first.";
       }
 
       if (
         selectedWeaknesses.includes("Other (please specify)") &&
         !isFilled(form.otherTraderWeakness)
       ) {
-        return "Add a short note for the 'Other' weakness you selected.";
+        return "Add a short note for the 'Other' blocker you selected.";
       }
 
       if (!form.tradedAssets.length) {
@@ -668,7 +668,7 @@ export function TailoredIntakeClient() {
                       onChange={(event) => updateTraderWeaknessAt(index, event.target.value)}
                     >
                       <option value="">
-                        {index === 0 ? "Select at least one weakness" : "Optional"}
+                        {index === 0 ? "Select at least one blocker" : "Optional"}
                       </option>
                       {TRADER_WEAKNESS_OPTIONS.map((option) => (
                         <option
@@ -686,15 +686,15 @@ export function TailoredIntakeClient() {
                 );
               })}
             </div>
-            <small>You can choose up to 3 weaknesses. At least 1 is required.</small>
+            <small>You can choose up to 3 blockers. At least 1 is required.</small>
           </label>
 
           {form.traderWeaknesses.includes("Other (please specify)") ? (
             <label className="form-field form-field-full tailored-question-block">
-              <span className="intake-field-label">What is the other weakness?</span>
+              <span className="intake-field-label">What is the other blocker?</span>
               <input
                 type="text"
-                placeholder="Describe the weakness briefly"
+                placeholder="Describe the blocker briefly"
                 value={form.otherTraderWeakness}
                 maxLength={200}
                 onChange={(event) => updateField("otherTraderWeakness", event.target.value)}
