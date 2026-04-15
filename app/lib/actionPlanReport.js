@@ -124,6 +124,12 @@ function parseDraftBlocks(draft) {
       continue;
     }
 
+    if (/^\*\*[^*]+:\*\*/.test(trimmed)) {
+      blocks.push({ type: "paragraph", text: trimmed });
+      index += 1;
+      continue;
+    }
+
     const paragraphLines = [];
     while (index < lines.length) {
       const candidate = cleanLine(lines[index]);
