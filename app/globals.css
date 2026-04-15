@@ -2985,18 +2985,10 @@ select {
     padding: 22px 18px 20px;
   }
 
-  .home-visit-popup-overlay {
-    align-items: end;
-    padding: 0;
-  }
-
   .home-visit-popup {
-    max-width: none;
-    border-radius: 28px 28px 0 0;
+    max-width: 92vw;
+    border-radius: 28px;
     padding: 20px 18px 24px;
-    border-left: 0;
-    border-right: 0;
-    border-bottom: 0;
   }
 
   .home-visit-popup-close {
