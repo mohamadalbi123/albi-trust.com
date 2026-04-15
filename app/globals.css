@@ -2443,10 +2443,11 @@ select {
 
 .intake-field-label {
   color: #173867;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  line-height: 1.4;
 }
 
 .tailored-intake-subgroup,
