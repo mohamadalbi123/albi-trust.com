@@ -857,33 +857,37 @@ export function TailoredIntakeClient() {
 
           <div className="tailored-question-grid">
             <label className="form-field tailored-question-block">
-              <span className="intake-field-label">Country where you live</span>
-              <input
-                type="text"
-                list="country-options"
-                placeholder="Current country of residence"
+              <span className="intake-field-label">Where do you live?</span>
+              <select
+                className="tailored-mobile-select"
                 value={form.country}
                 onChange={(event) => updateField("country", event.target.value)}
-              />
+              >
+                <option value="">Select country of residence</option>
+                {COUNTRY_OPTIONS.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="form-field tailored-question-block">
-              <span className="intake-field-label">Country you come from</span>
-              <input
-                type="text"
-                list="country-options"
-                placeholder="Country of origin"
+              <span className="intake-field-label">Where were you born?</span>
+              <select
+                className="tailored-mobile-select"
                 value={form.originCountry}
                 onChange={(event) => updateField("originCountry", event.target.value)}
-              />
+              >
+                <option value="">Select country of birth</option>
+                {COUNTRY_OPTIONS.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
-
-          <datalist id="country-options">
-            {COUNTRY_OPTIONS.map((country) => (
-              <option key={country} value={country} />
-            ))}
-          </datalist>
 
           <label className="form-field form-field-full tailored-question-block">
             <span className="intake-field-label">Tell us about your trading weekly and daily routine</span>
