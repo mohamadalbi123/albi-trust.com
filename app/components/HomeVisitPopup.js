@@ -53,7 +53,6 @@ export function HomeVisitPopup() {
           Close
         </button>
         <div className="eyebrow">A more tailored diagnosis</div>
-        <h2 className="page-title home-visit-popup-title">Not every trader is blocked by the same problem.</h2>
         <TypewriterText text={POPUP_COPY} speed={16} className="home-visit-popup-copy" />
         <p className="home-visit-popup-note">
           <strong>This is what Albi Trust is all about.</strong>

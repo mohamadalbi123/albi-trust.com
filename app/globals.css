@@ -680,20 +680,9 @@ select {
   box-shadow: 0 30px 90px rgba(10, 29, 63, 0.18);
 }
 
-.home-visit-popup-title {
-  max-width: 11ch;
-  margin: 16px 0 0;
-  font-size: clamp(2.15rem, 5vw, 3.45rem);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  color: #10213f;
-  font-weight: 700;
-  text-wrap: balance;
-}
-
 .home-visit-popup-copy {
   min-height: 8.2em;
-  margin: 20px 0 0;
+  margin: 16px 0 0;
   padding: 18px 20px;
   border-radius: 22px;
   background: linear-gradient(180deg, rgba(127, 196, 255, 0.16), rgba(127, 196, 255, 0.05));
@@ -3010,12 +2999,6 @@ select {
     top: 14px;
     right: 14px;
     padding: 9px 12px;
-  }
-
-  .home-visit-popup-title {
-    margin-top: 20px;
-    max-width: 12ch;
-    font-size: 2.18rem;
   }
 
   .home-visit-popup-copy {
