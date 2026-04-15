@@ -229,7 +229,7 @@ const STEP_OPTIONS = {
   riskPerTrade: ["Less than 0.5%", "0.5% - 1%", "1% - 2%", "More than 2%", "I do not use fixed risk"],
   averageHoldingTime: ["Minutes", "1-4 hours", "4-12 hours", "Several days"],
   tradingSession: ["Asia", "London", "New York"],
-  usualTradingTime: ["Before work", "During work", "After work", "Random"],
+  usualTradingTime: ["Before work", "During work", "After work", "I am a full-time trader", "Random"],
   usesTradingSignals: ["I trade on my own", "I rely on trading signals", "Both"],
   currentWorkStatus: ["Full-time", "Part-time", "Self-employed", "Unemployed", "Student"],
   employmentType: ["Fixed hours", "Flexible", "Self-employed"],
