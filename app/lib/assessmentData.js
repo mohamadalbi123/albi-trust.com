@@ -1,3 +1,5 @@
+export const ASSESSMENT_SCORING_VERSION = 2;
+
 export const answerOptions = [
   { label: "Rarely true", value: 1 },
   { label: "Sometimes true", value: 2 },
@@ -64,11 +66,11 @@ export const questions = [
   { id: 23, category: "emotions", text: "Impatience makes me want action even when waiting is the best decision." },
   { id: 24, category: "emotions", text: "I can feel when I am emotional, but I still trade anyway." },
   { id: 25, category: "emotions", text: "The hardest part of trading for me is managing myself, not reading the chart." },
-  { id: 26, category: "preparation", text: "I prepare for the week before it starts by reviewing higher-timeframe structure and important price levels." },
-  { id: 27, category: "preparation", text: "I check the economic calendar so I know where major market risk and volatility may appear." },
-  { id: 28, category: "preparation", text: "I review broader context such as seasonality, positioning, or macro drivers before building a weekly bias." },
-  { id: 29, category: "preparation", text: "I use tools like ATR or volume for a clear reason such as volatility measurement, confirmation, or risk management." },
-  { id: 30, category: "preparation", text: "My trading method is clear enough that I can explain why I use each tool and when I should stay out of the market." },
+  { id: 26, category: "preparation", text: "I start the week without properly reviewing higher-timeframe structure and important price levels." },
+  { id: 27, category: "preparation", text: "I ignore the economic calendar and only react to market volatility after it hits." },
+  { id: 28, category: "preparation", text: "I build trading ideas without reviewing broader context such as seasonality, positioning, or macro drivers." },
+  { id: 29, category: "preparation", text: "I use tools like ATR or volume without a clear reason such as volatility measurement, confirmation, or risk management." },
+  { id: 30, category: "preparation", text: "My trading method is not clear enough for me to explain why I use each tool and when I should stay out of the market." },
 ];
 
 export const levels = [
@@ -161,28 +163,32 @@ export const modules = {
   },
 };
 
-export function evaluateAnswers(answers) {
-  const rawScore = Object.values(answers).reduce((sum, value) => sum + value, 0);
-  const minRaw = questions.length;
-  const maxRaw = questions.length * 4;
-  const normalizedScore = Math.round(((maxRaw - rawScore) / (maxRaw - minRaw)) * 75 + 25);
+function clampScore(score) {
+  return Math.max(25, Math.min(100, Math.round(score)));
+}
 
-  const categoryScores = categories.map((category) => {
-    const related = questions.filter((question) => question.category === category.key);
-    const total = related.reduce((sum, question) => sum + (answers[question.id] || 0), 0);
-    const max = related.length * 4;
-    const percentage = Math.round(((max - total) / (max - related.length)) * 75 + 25);
+function categoryScoreFromRawTotal(rawTotal, questionCount) {
+  return clampScore(((questionCount * 4 - rawTotal) / (questionCount * 3)) * 75 + 25);
+}
 
-    return {
-      ...category,
-      score: Math.max(25, Math.min(100, percentage)),
-    };
-  });
+function overallScoreFromRawTotal(rawTotal, questionCount) {
+  return clampScore((((questionCount * 4) - rawTotal) / (questionCount * 3)) * 75 + 25);
+}
 
+function rawTotalFromCategoryScore(score) {
+  return Math.round((125 - Number(score || 25)) / 5);
+}
+
+function buildAssessmentResult(categoryScores) {
+  const questionCount = questions.length;
+  const totalRawScore = categoryScores.reduce(
+    (sum, entry) => sum + rawTotalFromCategoryScore(entry.score),
+    0,
+  );
+  const normalizedScore = overallScoreFromRawTotal(totalRawScore, questionCount);
   const level = levels.find(
     (item) => normalizedScore >= item.range[0] && normalizedScore <= item.range[1],
   ) || levels[0];
-
   const sortedWeaknesses = [...categoryScores].sort((a, b) => a.score - b.score);
   const primaryWeakness = sortedWeaknesses[0];
   const secondaryWeakness = sortedWeaknesses[1];
@@ -191,11 +197,58 @@ export function evaluateAnswers(answers) {
   return {
     overallScore: normalizedScore,
     level,
-    totalQuestions: questions.length,
+    totalQuestions: questionCount,
     categoryScores,
     primaryWeakness,
     secondaryWeakness,
     strongest,
     recommendedModules: [primaryWeakness.key, secondaryWeakness.key].map((key) => modules[key]),
+    scoringVersion: ASSESSMENT_SCORING_VERSION,
   };
+}
+
+export function evaluateAnswers(answers) {
+  const categoryScores = categories.map((category) => {
+    const related = questions.filter((question) => question.category === category.key);
+    const total = related.reduce((sum, question) => sum + (answers[question.id] || 0), 0);
+
+    return {
+      ...category,
+      score: categoryScoreFromRawTotal(total, related.length),
+    };
+  });
+
+  return {
+    ...buildAssessmentResult(categoryScores),
+    answerValues: answers,
+  };
+}
+
+export function migrateLegacyAssessmentResult(result) {
+  if (!result) return result;
+  if (Number(result.scoringVersion || 0) >= ASSESSMENT_SCORING_VERSION) {
+    return result;
+  }
+
+  if (result.answerValues && typeof result.answerValues === "object") {
+    return evaluateAnswers(result.answerValues);
+  }
+
+  const existingScores = new Map(
+    (result.categoryScores || []).map((entry) => [entry.key, Number(entry.score || 25)]),
+  );
+
+  const correctedCategoryScores = categories.map((category) => {
+    const legacyScore = existingScores.get(category.key);
+    const correctedScore = category.key === "preparation"
+      ? clampScore(125 - Number(legacyScore || 25))
+      : clampScore(legacyScore || 25);
+
+    return {
+      ...category,
+      score: correctedScore,
+    };
+  });
+
+  return buildAssessmentResult(correctedCategoryScores);
 }

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import fs from "fs";
 import { neon } from "@neondatabase/serverless";
 import path from "path";
+import { ASSESSMENT_SCORING_VERSION, migrateLegacyAssessmentResult } from "./assessmentData";
 
 const DATA_DIR =
   process.env.VERCEL || process.env.NODE_ENV === "production"
@@ -224,13 +225,43 @@ function makeEmptyDb() {
 }
 
 function normalizeDbShape(db) {
+  const users = Array.isArray(db?.users) ? db.users : [];
+  const orders = Array.isArray(db?.orders) ? db.orders : [];
+  const sessions = Array.isArray(db?.sessions) ? db.sessions : [];
+
   return {
-    users: Array.isArray(db?.users) ? db.users : [],
-    sessions: Array.isArray(db?.sessions) ? db.sessions : [],
-    orders: Array.isArray(db?.orders) ? db.orders : [],
+    users: users.map((user) => ({
+      ...user,
+      latestAssessment: migrateLegacyAssessmentResult(user?.latestAssessment || null),
+      assessments: Array.isArray(user?.assessments)
+        ? user.assessments.map((assessment) => ({
+            ...assessment,
+            result: migrateLegacyAssessmentResult(assessment?.result || null),
+          }))
+        : [],
+    })),
+    sessions,
+    orders: orders.map((order) => ({
+      ...order,
+      assessmentSnapshot: migrateLegacyAssessmentResult(order?.assessmentSnapshot || null),
+    })),
     outbox: Array.isArray(db?.outbox) ? db.outbox : [],
     deletedSessionEmails: Array.isArray(db?.deletedSessionEmails) ? db.deletedSessionEmails : [],
   };
+}
+
+function resultNeedsMigration(result) {
+  return Boolean(result && Number(result.scoringVersion || 0) < ASSESSMENT_SCORING_VERSION);
+}
+
+function dbNeedsAssessmentMigration(db) {
+  return Boolean(
+    (db.users || []).some((user) =>
+      resultNeedsMigration(user?.latestAssessment) ||
+      (user?.assessments || []).some((assessment) => resultNeedsMigration(assessment?.result)),
+    ) ||
+      (db.orders || []).some((order) => resultNeedsMigration(order?.assessmentSnapshot)),
+  );
 }
 
 function parseStoredDb(value) {
@@ -274,9 +305,10 @@ async function readDb() {
   if (shouldUsePostgres()) {
     await ensurePostgresDb();
     const rows = await runPostgresQuery((sql) => sql`SELECT data FROM app_state WHERE id = 'main'`);
-    const db = normalizeDbShape(parseStoredDb(rows[0]?.data));
+    const storedDb = parseStoredDb(rows[0]?.data);
+    const db = normalizeDbShape(storedDb);
 
-    if (ensureUserPublicIds(db)) {
+    if (ensureUserPublicIds(db) || dbNeedsAssessmentMigration(storedDb || {})) {
       await writeDb(db);
     }
 
@@ -292,8 +324,9 @@ async function readDb() {
       return emptyDb;
     }
 
-    const db = normalizeDbShape(JSON.parse(raw));
-    if (ensureUserPublicIds(db)) {
+    const storedDb = JSON.parse(raw);
+    const db = normalizeDbShape(storedDb);
+    if (ensureUserPublicIds(db) || dbNeedsAssessmentMigration(storedDb || {})) {
       fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
     }
     return db;
