@@ -43,6 +43,85 @@ export default function HomePage() {
           <section className="section home-section-light">
             <div className="section-head section-head-compact">
               <div className="home-copy-wrap">
+                <h2 className="section-title">Why traders stay stuck</h2>
+                <p className="page-lead">
+                  Most traders are not stuck because they need more information. They stay stuck because they do not yet know the exact weakness damaging their execution, risk behavior, or consistency.
+                </p>
+              </div>
+            </div>
+
+            <div className="stuck-grid">
+              <div className="stuck-card">
+                <strong>One trader overtrades.</strong>
+                <span className="muted">Good ideas get destroyed by impulse and the need to always be in the market.</span>
+              </div>
+              <div className="stuck-card">
+                <strong>Another hesitates.</strong>
+                <span className="muted">The setup is there, but fear of execution keeps turning clarity into missed trades.</span>
+              </div>
+              <div className="stuck-card">
+                <strong>Another breaks risk after losses.</strong>
+                <span className="muted">A single emotional reaction can undo days of patient work and discipline.</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="section section-split-clean">
+            <div className="insight-grid insight-grid-clean levels-preview-grid">
+              <div className="split-card split-card-plain">
+                <div className="eyebrow">Trader levels</div>
+                <h2 className="section-title" style={{ fontSize: "2.25rem", marginTop: 18 }}>
+                  A simple level system with clear meaning.
+                </h2>
+                <div className="levels-list">
+                  <div className="level-row">
+                    <strong>Level 1: Reactive Trader</strong>
+                    <span className="muted">Emotions, inconsistency, and impulse still control too many decisions.</span>
+                  </div>
+                  <div className="level-row">
+                    <strong>Level 2: Developing Trader</strong>
+                    <span className="muted">There is real potential, but weak structure and repeated habits still create leaks.</span>
+                  </div>
+                  <div className="level-row">
+                    <strong>Level 3: Structured Trader</strong>
+                    <span className="muted">The foundation is strong, but a few recurring behaviors are still limiting consistency.</span>
+                  </div>
+                  <div className="level-row">
+                    <strong>Level 4: Advanced Trader</strong>
+                    <span className="muted">Execution is disciplined and mature, with refinement focused on higher-level improvement.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="split-card split-card-plain sample-result-card">
+                <div className="eyebrow">Sample result preview</div>
+                <div className="sample-result-shell">
+                  <div className="sample-result-meta">What one trader might receive</div>
+                  <h3>Trader Level: Developing Trader</h3>
+                  <ul className="sample-result-list">
+                    <li>
+                      <strong>Main blocker:</strong> Fear of execution
+                    </li>
+                    <li>
+                      <strong>Pattern:</strong> Good understanding, but hesitation and second-guessing weaken consistency.
+                    </li>
+                    <li>
+                      <strong>Next step:</strong> Build stronger pre-trade structure and reduce emotional override.
+                    </li>
+                  </ul>
+                </div>
+                <div className="stack-actions">
+                  <Link href="/assessment" className="button-primary">
+                    Start with free assessment
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="section home-section-light">
+            <div className="section-head section-head-compact">
+              <div className="home-copy-wrap">
                 <h2 className="section-title">One focused system</h2>
                 <p className="page-lead">
                   Built to help you understand your level, eliminate repeated mistakes, and take practical, actionable steps to trade with structure instead of noise.

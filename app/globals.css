@@ -563,6 +563,100 @@ select {
   gap: 18px;
 }
 
+.stuck-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.stuck-card {
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 14px 30px rgba(54, 103, 164, 0.07);
+  text-align: left;
+  display: grid;
+  gap: 10px;
+}
+
+.stuck-card strong {
+  font-size: 1.04rem;
+  letter-spacing: -0.02em;
+}
+
+.levels-preview-grid {
+  align-items: stretch;
+}
+
+.levels-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.level-row {
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 18px 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.level-row strong {
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.sample-result-card {
+  display: grid;
+  gap: 18px;
+}
+
+.sample-result-shell {
+  border: 1px solid rgba(18, 53, 107, 0.08);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #10213f 0%, #173867 100%);
+  color: #f3f8ff;
+  padding: 26px 24px;
+  box-shadow: 0 22px 44px rgba(16, 33, 63, 0.16);
+}
+
+.sample-result-meta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(243, 248, 255, 0.72);
+}
+
+.sample-result-shell h3 {
+  margin: 14px 0 0;
+  font-size: 1.6rem;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.sample-result-list {
+  margin: 18px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 12px;
+  color: rgba(243, 248, 255, 0.88);
+}
+
+.sample-result-list li {
+  line-height: 1.7;
+}
+
+.sample-result-list strong {
+  color: #ffffff;
+}
+
 .home-page .progress-bar {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -848,6 +942,14 @@ select {
   font-size: 1rem;
   margin-bottom: 10px;
   letter-spacing: -0.01em;
+}
+
+@media (max-width: 900px) {
+  .stuck-grid,
+  .stats-grid-compact,
+  .levels-preview-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .home-section-light .stat-card strong {
