@@ -96,18 +96,19 @@ export default function HomePage() {
               <div className="split-card split-card-plain sample-result-card">
                 <div className="eyebrow">Sample result preview</div>
                 <div className="sample-result-shell">
-                  <div className="sample-result-meta">What one trader might receive</div>
+                  <div className="sample-result-meta">Professional checklist preview</div>
                   <h3>Trader Level: Developing Trader</h3>
-                  <ul className="sample-result-list">
-                    <li>
-                      <strong>Main blocker:</strong> Fear of execution
-                    </li>
-                    <li>
-                      <strong>Pattern:</strong> Good understanding, but hesitation and second-guessing weaken consistency.
-                    </li>
-                    <li>
-                      <strong>Next step:</strong> Build stronger pre-trade structure and reduce emotional override.
-                    </li>
+                  <ul className="sample-result-list sample-result-checklist">
+                    <li>Trader profile overview</li>
+                    <li>Observation based on core trading pillars</li>
+                    <li>Biggest blocker and solution</li>
+                    <li>Daily routine</li>
+                    <li>Weekly routine</li>
+                    <li>Risk management</li>
+                    <li>Economic calendar</li>
+                    <li>Chart analysis process</li>
+                    <li>Golden advice</li>
+                    <li>Execution at the right level</li>
                   </ul>
                 </div>
                 <div className="stack-actions">
